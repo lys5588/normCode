@@ -10,7 +10,7 @@ A self-contained desktop application that:
 This is the entry point for PyInstaller packaging.
 """
 
-__version__ = "1.0.2-alpha"
+__version__ = "1.0.3-alpha"
 
 import sys
 import os

@@ -12,6 +12,7 @@ including import/export and connection testing.
 import os
 import json
 import logging
+import shutil
 import time
 import yaml
 from pathlib import Path
@@ -27,19 +28,34 @@ from schemas.llm_schemas import (
     UpdateProviderRequest,
 )
 
+# Import centralized path utilities for frozen/dev mode support
+try:
+    from core.path_utils import get_data_dir, get_tools_dir, IS_FROZEN
+except ImportError:
+    # Fallback if path_utils not available
+    import sys
+    IS_FROZEN = getattr(sys, 'frozen', False)
+    def get_data_dir():
+        d = Path.home() / ".normcode-canvas"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+    def get_tools_dir():
+        if IS_FROZEN:
+            return Path(sys._MEIPASS) / "backend" / "tools"
+        return Path(__file__).parent.parent.parent / "tools"
+
 logger = logging.getLogger(__name__)
 
-# Settings location - same directory as the tools
-TOOLS_DIR = Path(__file__).parent.parent.parent / "tools"
-LLM_SETTINGS_FILE = TOOLS_DIR / "llm-settings.json"
+# User config directory - writable location for user settings
+USER_CONFIG_DIR = get_data_dir()
+LLM_SETTINGS_FILE = USER_CONFIG_DIR / "llm-settings.json"
 
-# Legacy settings.yaml location (for backward-compatible imports only, NOT for export)
-# This allows importing from existing settings.yaml files if llm-settings.json doesn't exist
-SETTINGS_YAML_FILE = TOOLS_DIR / "settings.yaml"
+# Bundled settings location (read-only, used as seed for first run)
+BUNDLED_TOOLS_DIR = get_tools_dir()
+BUNDLED_SETTINGS_FILE = BUNDLED_TOOLS_DIR / "llm-settings.json"
 
-# Fallback to user config dir
-USER_CONFIG_DIR = Path.home() / ".normcode-canvas"
-FALLBACK_SETTINGS_FILE = USER_CONFIG_DIR / "llm-settings.json"
+# Legacy settings.yaml location (for backward-compatible imports only)
+SETTINGS_YAML_FILE = BUNDLED_TOOLS_DIR / "settings.yaml"
 
 
 class LLMSettingsService:
@@ -58,20 +74,30 @@ class LLMSettingsService:
         self._settings_file = self._determine_settings_file()
     
     def _determine_settings_file(self) -> Path:
-        """Determine which settings file to use."""
-        # Prefer the tools directory
-        if TOOLS_DIR.exists():
-            return LLM_SETTINGS_FILE
-        # Fall back to user config dir
+        """Determine which settings file to use.
+        
+        Always uses user config directory for writable settings.
+        """
+        # Always use user config directory for writable settings
         USER_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        return FALLBACK_SETTINGS_FILE
+        return LLM_SETTINGS_FILE
     
     def _load_settings(self) -> LLMSettingsConfig:
         """Load settings from file."""
         if self._settings is not None:
             return self._settings
         
-        # Try loading from primary location
+        # If user config doesn't exist, seed from bundled settings
+        if not self._settings_file.exists():
+            if BUNDLED_SETTINGS_FILE.exists():
+                try:
+                    # Copy bundled settings to user config as seed
+                    shutil.copy(BUNDLED_SETTINGS_FILE, self._settings_file)
+                    logger.info(f"Seeded LLM settings from bundled file to {self._settings_file}")
+                except Exception as e:
+                    logger.warning(f"Failed to copy bundled settings: {e}")
+        
+        # Try loading from user config location
         if self._settings_file.exists():
             try:
                 with open(self._settings_file, 'r', encoding='utf-8') as f:
@@ -82,7 +108,7 @@ class LLMSettingsService:
             except Exception as e:
                 logger.error(f"Failed to load LLM settings: {e}")
         
-        # Try importing from settings.yaml if it exists
+        # Try importing from settings.yaml if it exists (legacy migration)
         if SETTINGS_YAML_FILE.exists():
             self._settings = self._create_default_settings()
             self._import_from_yaml(SETTINGS_YAML_FILE)

@@ -21,14 +21,22 @@ class Settings(BaseSettings):
     # API Keys
     dashscope_api_key: str | None = None
     
-    # Paths - relative to project root
+    # Paths - use centralized path utilities for frozen/dev mode compatibility
     @property
     def project_root(self) -> Path:
-        return Path(__file__).parent.parent.parent.parent
+        try:
+            from core.path_utils import get_app_dir
+            return get_app_dir()
+        except ImportError:
+            return Path(__file__).parent.parent.parent.parent
     
     @property
     def infra_path(self) -> Path:
-        return self.project_root / "infra"
+        try:
+            from core.path_utils import get_infra_dir
+            return get_infra_dir()
+        except ImportError:
+            return self.project_root / "infra"
     
     # Default LLM settings
     default_llm_model: str = "demo"

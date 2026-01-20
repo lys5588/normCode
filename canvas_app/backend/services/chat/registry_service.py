@@ -21,11 +21,22 @@ logger = logging.getLogger(__name__)
 # Built-in Projects Directory
 # =============================================================================
 
-# Directory containing built-in controller projects
-BUILT_IN_PROJECTS_DIR = Path(__file__).parent.parent.parent.parent / "built_in_projects"
-
-# Legacy paths (for backward compatibility during migration)
-LEGACY_COMPILER_DIR = Path(__file__).parent.parent.parent.parent / "compiler"
+# Import centralized path utilities for frozen/dev mode support
+try:
+    from core.path_utils import get_built_in_projects_dir, get_bundle_dir, IS_FROZEN
+    BUILT_IN_PROJECTS_DIR = get_built_in_projects_dir()
+    # Legacy compiler dir only relevant in dev mode
+    LEGACY_COMPILER_DIR = None if IS_FROZEN else get_bundle_dir() / "compiler"
+except ImportError:
+    # Fallback if path_utils not available
+    import sys
+    IS_FROZEN = getattr(sys, 'frozen', False)
+    if IS_FROZEN:
+        BUILT_IN_PROJECTS_DIR = Path(sys._MEIPASS) / "built_in_projects"
+        LEGACY_COMPILER_DIR = None
+    else:
+        BUILT_IN_PROJECTS_DIR = Path(__file__).parent.parent.parent.parent / "built_in_projects"
+        LEGACY_COMPILER_DIR = Path(__file__).parent.parent.parent.parent / "compiler"
 
 
 class ControllerRegistryService:
@@ -125,8 +136,8 @@ class ControllerRegistryService:
         else:
             logger.debug(f"Built-in projects directory not found: {BUILT_IN_PROJECTS_DIR}")
         
-        # Check legacy compiler location for backward compatibility
-        if LEGACY_COMPILER_DIR.exists():
+        # Check legacy compiler location for backward compatibility (dev mode only)
+        if LEGACY_COMPILER_DIR is not None and LEGACY_COMPILER_DIR.exists():
             controller = self._load_controller_from_dir(LEGACY_COMPILER_DIR)
             if controller:
                 # Check if we already have this ID

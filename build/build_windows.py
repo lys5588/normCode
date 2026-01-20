@@ -705,6 +705,8 @@ Examples:
         output_dir = BUILD_DIR / "output"
         installers = list(output_dir.glob("*.exe")) if output_dir.exists() else []
         if installers:
+            # Sort by modification time, newest first
+            installers.sort(key=lambda p: p.stat().st_mtime, reverse=True)
             print(f"  Installer: {installers[0]}")
     
     print("\n  The app will open in a native desktop window (no browser needed)!")
