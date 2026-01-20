@@ -1581,6 +1581,36 @@ export const portableApi = {
       method: 'POST',
       body: JSON.stringify(request),
     }),
+
+  /**
+   * Upload an archive file via drag-and-drop.
+   * Saves to ~/.normcode-canvas/uploads/ and returns the path.
+   */
+  uploadArchive: async (file: File): Promise<{ success: boolean; file_path: string; filename: string; size: number; message: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE}/portable/upload`, {
+      method: 'POST',
+      body: formData,
+      // Don't set Content-Type header - browser will set it with boundary for FormData
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new ApiError(response.status, error.detail || 'Upload failed');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Delete an uploaded file after import.
+   */
+  deleteUploadedFile: (filename: string): Promise<{ success: boolean; message: string }> =>
+    fetchJson(`${API_BASE}/portable/upload/${encodeURIComponent(filename)}`, {
+      method: 'DELETE',
+    }),
 };
 
 export { ApiError };
