@@ -104,9 +104,19 @@ class CanvasLLMTool:
         
         # Fall back to settings.yaml
         if settings_path is None:
-            # Try common locations - prefer same directory as this tool
+            # Import path utilities for frozen mode support
+            try:
+                from core.path_utils import get_data_dir, get_tools_dir
+                data_dir = get_data_dir()
+                tools_dir = get_tools_dir()
+            except ImportError:
+                data_dir = Path.home() / ".normcode-canvas"
+                tools_dir = Path(__file__).parent
+            
+            # Try locations in preference order
             possible_paths = [
-                os.path.join(os.path.dirname(__file__), "settings.yaml"),  # Same dir as llm_tool.py
+                str(data_dir / "settings.yaml"),  # User config (writable)
+                str(tools_dir / "settings.yaml"),  # Bundled fallback
             ]
             
             try:
@@ -115,10 +125,7 @@ class CanvasLLMTool:
             except ImportError:
                 pass
             
-            possible_paths.extend([
-                os.path.join(os.getcwd(), "settings.yaml"),
-                os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "settings.yaml"),
-            ])
+            possible_paths.append(os.path.join(os.getcwd(), "settings.yaml"))
             
             for p in possible_paths:
                 if os.path.exists(p):
@@ -713,9 +720,19 @@ def get_available_llm_models(settings_path: Optional[str] = None) -> List[str]:
         List of model names
     """
     if settings_path is None:
-        # Try common locations - prefer same directory as this tool
+        # Import path utilities for frozen mode support
+        try:
+            from core.path_utils import get_data_dir, get_tools_dir
+            data_dir = get_data_dir()
+            tools_dir = get_tools_dir()
+        except ImportError:
+            data_dir = Path.home() / ".normcode-canvas"
+            tools_dir = Path(__file__).parent
+        
+        # Try locations in preference order
         possible_paths = [
-            os.path.join(os.path.dirname(__file__), "settings.yaml"),  # Same dir as llm_tool.py
+            str(data_dir / "settings.yaml"),  # User config
+            str(tools_dir / "settings.yaml"),  # Bundled fallback
         ]
         
         try:

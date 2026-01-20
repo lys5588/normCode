@@ -5,12 +5,12 @@
  * Supports export/import of portable project archives.
  */
 import { useState, useEffect } from 'react';
-import { 
-  FolderOpen, 
-  Plus, 
-  Clock, 
-  X, 
-  ChevronDown, 
+import {
+  FolderOpen,
+  Plus,
+  Clock,
+  X,
+  ChevronDown,
   ChevronRight,
   Folder,
   RefreshCw,
@@ -27,6 +27,7 @@ import {
 import { useProjectStore } from '../../stores/projectStore';
 import { usePortableStore } from '../../stores/portableStore';
 import { projectApi } from '../../services/api';
+import { PathInput } from '../common/PathInput';
 import type { RegisteredProject, DiscoveredPathsResponse } from '../../types/project';
 
 type TabType = 'open' | 'create' | 'recent' | 'all' | 'export' | 'import';
@@ -412,13 +413,13 @@ export function ProjectPanel() {
                   Project Directory
                 </label>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
+                  <PathInput
                     value={openPath}
-                    onChange={(e) => { setOpenPath(e.target.value); setScannedProjects([]); }}
+                    onChange={(value) => { setOpenPath(value); setScannedProjects([]); }}
                     placeholder="C:\path\to\project"
-                    className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    browseMode="directory"
                     onKeyDown={(e) => e.key === 'Enter' && handleScanDirectory()}
+                    className="flex-1"
                   />
                   <button
                     onClick={handleScanDirectory}
@@ -471,13 +472,13 @@ export function ProjectPanel() {
                   Project Directory *
                 </label>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
+                  <PathInput
                     value={createPath}
-                    onChange={(e) => handleCreatePathChange(e.target.value)}
+                    onChange={handleCreatePathChange}
                     placeholder="C:\path\to\project"
-                    className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    browseMode="directory"
                     onKeyDown={(e) => e.key === 'Enter' && handleDiscoverPaths()}
+                    className="flex-1"
                   />
                   <button
                     onClick={handleDiscoverPaths}
@@ -753,12 +754,11 @@ export function ProjectPanel() {
                       <label className="block text-sm font-medium text-slate-700 mb-1">
                         Output Directory
                       </label>
-                      <input
-                        type="text"
+                      <PathInput
                         value={exportOutputDir}
-                        onChange={(e) => setExportOutputDir(e.target.value)}
+                        onChange={setExportOutputDir}
                         placeholder={projectPath || 'Project directory (default)'}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                        browseMode="directory"
                       />
                       <p className="text-xs text-slate-500 mt-1">
                         Leave empty to export to project directory
@@ -877,12 +877,14 @@ export function ProjectPanel() {
                       Archive Path
                     </label>
                     <div className="flex gap-2">
-                      <input
-                        type="text"
+                      <PathInput
                         value={importPath}
-                        onChange={(e) => { setImportPath(e.target.value); clearPreview(); }}
-                        placeholder="C:\path\to\project.normcode-portable.zip"
-                        className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                        onChange={(value) => { setImportPath(value); clearPreview(); }}
+                        placeholder="C:\path\to\project.normcode-portable.zip (or drag & drop)"
+                        browseMode="file"
+                        fileExtensions={['.zip']}
+                        allowFileUpload={true}
+                        className="flex-1"
                       />
                       <button
                         onClick={() => previewArchive(importPath)}
@@ -960,12 +962,11 @@ export function ProjectPanel() {
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Import Location
                     </label>
-                    <input
-                      type="text"
+                    <PathInput
                       value={importTargetDir}
-                      onChange={(e) => setImportTargetDir(e.target.value)}
+                      onChange={setImportTargetDir}
                       placeholder="C:\path\to\projects"
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                      browseMode="directory"
                     />
                     <p className="text-xs text-slate-500 mt-1">
                       Project will be created in a subdirectory: <span className="font-mono text-orange-600">

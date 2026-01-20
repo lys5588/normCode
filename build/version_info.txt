@@ -33,12 +33,12 @@ VSVersionInfo(
           [
             StringStruct(u'CompanyName', u'NormCode'),
             StringStruct(u'FileDescription', u'NormCode Canvas - Visual Agent Builder'),
-            StringStruct(u'FileVersion', u'1.0.2-alpha'),
+            StringStruct(u'FileVersion', u'1.0.3-alpha'),
             StringStruct(u'InternalName', u'NormCodeCanvas'),
             StringStruct(u'LegalCopyright', u'Copyright (c) 2024-2026 Psylens.AI'),
             StringStruct(u'OriginalFilename', u'NormCodeCanvas.exe'),
             StringStruct(u'ProductName', u'NormCode Canvas'),
-            StringStruct(u'ProductVersion', u'1.0.2-alpha'),
+            StringStruct(u'ProductVersion', u'1.0.3-alpha'),
           ]
         )
       ]

@@ -244,13 +244,14 @@ def collect_backend_files(backend_dir: Path, dest_prefix: str = "backend"):
         'data',           # Data directories
         'logs',           # Log directories
         '*.log',          # Log files
-        'llm-settings.json',  # Runtime LLM settings (user data)
-        'settings.yaml',  # Runtime settings in tools (user data)
+        # Note: llm-settings.json is now INCLUDED as a seed file for first-run
+        # User modifications are saved to ~/.normcode-canvas/llm-settings.json
+        'settings.yaml',  # Runtime settings in tools (user data only)
     }
     
     exclude_dirs = {'__pycache__', 'data', 'logs', '.git', 'node_modules'}
     exclude_extensions = {'.db', '.sqlite', '.sqlite3', '.pyc', '.pyo', '.log'}
-    exclude_files = {'llm-settings.json', 'settings.yaml'}
+    exclude_files = {'settings.yaml'}  # Only exclude user-only config; llm-settings.json is bundled as seed
     
     for root, dirs, files in os.walk(backend_dir):
         # Skip excluded directories

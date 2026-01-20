@@ -6,12 +6,17 @@ This router provides endpoints for:
 - Importing portable archives
 - Previewing archives before import
 - Listing available exports
+- Uploading archives via drag-and-drop
 """
 import logging
+import shutil
+from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
+
+from services.project import get_app_data_dir
 
 from schemas.portable_schemas import (
     ExportOptions,
@@ -221,7 +226,7 @@ async def quick_export(request: QuickExportRequest):
 async def quick_import(request: QuickImportRequest):
     """
     Quick import with sensible defaults.
-    
+
     Imports a portable archive to the specified directory.
     """
     options = ImportOptions(
@@ -230,19 +235,121 @@ async def quick_import(request: QuickImportRequest):
         import_database=True,
         import_runs=True,
     )
-    
+
     try:
         result = portable_project_service.import_project(
             archive_path=request.archive_path,
             options=options,
         )
-        
+
         if not result.success:
             raise HTTPException(status_code=400, detail=result.message)
-        
+
         return result
-        
+
     except Exception as e:
         logger.exception(f"Quick import failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# File Upload Endpoints
+# =============================================================================
+
+class UploadResult(BaseModel):
+    """Result of file upload."""
+    success: bool
+    file_path: str
+    filename: str
+    size: int
+    message: str
+
+
+@router.post("/upload", response_model=UploadResult)
+async def upload_archive(file: UploadFile = File(...)):
+    """
+    Upload a portable archive file via drag-and-drop.
+
+    Saves the uploaded file to ~/.normcode-canvas/uploads/ and returns the path.
+    This allows users to drag-drop archive files in the browser since browsers
+    don't provide file paths for security reasons.
+
+    The uploaded file can then be used with the import/preview endpoints.
+    """
+    try:
+        # Validate file extension
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No filename provided")
+
+        filename = file.filename
+        if not filename.endswith('.zip'):
+            raise HTTPException(
+                status_code=400,
+                detail="Only .zip files are supported for import"
+            )
+
+        # Create uploads directory
+        uploads_dir = get_app_data_dir() / "uploads"
+        uploads_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate unique filename if it already exists
+        dest_path = uploads_dir / filename
+        counter = 1
+        while dest_path.exists():
+            name_without_ext = filename.rsplit('.', 1)[0]
+            dest_path = uploads_dir / f"{name_without_ext}_{counter}.zip"
+            counter += 1
+
+        # Save the file
+        with open(dest_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Get file size
+        file_size = dest_path.stat().st_size
+
+        logger.info(f"Uploaded archive: {dest_path} ({file_size} bytes)")
+
+        return UploadResult(
+            success=True,
+            file_path=str(dest_path),
+            filename=dest_path.name,
+            size=file_size,
+            message=f"File uploaded successfully to {dest_path}"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Upload failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/upload/{filename}")
+async def delete_uploaded_file(filename: str):
+    """
+    Delete an uploaded file from the uploads directory.
+
+    Call this after a successful import to clean up the uploaded file.
+    """
+    try:
+        uploads_dir = get_app_data_dir() / "uploads"
+        file_path = uploads_dir / filename
+
+        # Security check: ensure the file is within uploads directory
+        if not file_path.resolve().is_relative_to(uploads_dir.resolve()):
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+
+        file_path.unlink()
+        logger.info(f"Deleted uploaded file: {file_path}")
+
+        return {"success": True, "message": f"Deleted {filename}"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Delete failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
