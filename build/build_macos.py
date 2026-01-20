@@ -32,6 +32,8 @@ import sys
 import shutil
 import argparse
 import platform
+import re
+import datetime
 from pathlib import Path
 
 # Verify we're on macOS
@@ -48,11 +50,49 @@ FRONTEND_DIR = CANVAS_APP / "frontend"
 BACKEND_DIR = CANVAS_APP / "backend"
 DIST_DIR = BUILD_DIR / "dist"
 WORK_DIR = BUILD_DIR / "build"
+RESOURCES_DIR = BUILD_DIR / "resources"
+ISS_FILE = BUILD_DIR / "installer.iss"
 
-# App info
+
+def get_version_from_iss():
+    """Get version from Windows installer.iss file to keep versions in sync."""
+    if not ISS_FILE.exists():
+        print(f"[WARN] installer.iss not found at {ISS_FILE}")
+        return "1.0.0"
+    
+    try:
+        content = ISS_FILE.read_text()
+        match = re.search(r'#define MyAppVersion "([^"]+)"', content)
+        if match:
+            return match.group(1)
+        else:
+            print("[WARN] Could not find MyAppVersion in installer.iss")
+            return "1.0.0"
+    except Exception as e:
+        print(f"[WARN] Error reading installer.iss: {e}")
+        return "1.0.0"
+
+
+def get_app_name_from_iss():
+    """Get app name from Windows installer.iss file."""
+    if not ISS_FILE.exists():
+        return "NormCode Canvas"
+    
+    try:
+        content = ISS_FILE.read_text()
+        match = re.search(r'#define MyAppName "([^"]+)"', content)
+        if match:
+            return match.group(1)
+        return "Norm Code Canvas"
+    except Exception:
+        return "Norm Code Canvas"
+
+
+# App info - sync with Windows version
+APP_VERSION = get_version_from_iss()
+APP_DISPLAY_NAME = get_app_name_from_iss()
 APP_NAME = "NormCodeCanvas"
 APP_BUNDLE_ID = "com.normcode.canvas"
-APP_VERSION = "1.0.0"
 
 # Required Python packages for building
 BUILD_REQUIREMENTS = [
@@ -346,6 +386,16 @@ def ensure_icon():
     """Ensure icon.icns exists with all required sizes."""
     print_step("Checking/Creating application icon...")
     
+    # Verify iconutil is available (macOS only)
+    iconutil_path = shutil.which("iconutil")
+    if not iconutil_path:
+        print("  [ERROR] iconutil not found")
+        print("  [INFO] iconutil is part of Xcode Command Line Tools")
+        print("  [INFO] Install with: xcode-select --install")
+        return None
+    
+    print(f"  [INFO] iconutil found at: {iconutil_path}")
+    
     resources_dir = BUILD_DIR / "resources"
     png_path = resources_dir / "Psylensai_log_raw.png"
     icns_path = resources_dir / "icon.icns"
@@ -446,9 +496,12 @@ NormCode Canvas - macOS PyInstaller Spec File
 ==============================================
 
 Auto-generated spec file for macOS build.
+Version: {APP_VERSION}
+Display Name: {APP_DISPLAY_NAME}
 """
 
 import sys
+import datetime
 from pathlib import Path
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
@@ -598,14 +651,16 @@ app = BUNDLE(
     icon={icon_str},
     bundle_identifier='{APP_BUNDLE_ID}',
     info_plist={{
-        'CFBundleName': '{APP_NAME}',
-        'CFBundleDisplayName': 'NormCode Canvas',
+        'CFBundleName': '{APP_DISPLAY_NAME}',
+        'CFBundleDisplayName': '{APP_DISPLAY_NAME}',
         'CFBundleVersion': '{APP_VERSION}',
         'CFBundleShortVersionString': '{APP_VERSION}',
         'CFBundleIdentifier': '{APP_BUNDLE_ID}',
         'NSHighResolutionCapable': True,
-        'LSMinimumSystemVersion': '10.15.0',
         'NSRequiresAquaSystemAppearance': False,  # Support dark mode
+        'LSMinimumSystemVersion': '10.15.0',
+        'NSPrincipalClass': 'NSApplication',
+        'NSHumanReadableCopyright': '© {datetime.datetime.now().year} NormCode. All rights reserved.',
     }},
 )
 '''
@@ -692,7 +747,7 @@ def codesign_app(identity: str = None):
 
 
 def create_dmg():
-    """Create a DMG installer for distribution."""
+    """Create a DMG installer for distribution with optimized settings."""
     print_step("Creating DMG installer...")
     
     # Find the app bundle
@@ -717,33 +772,57 @@ def create_dmg():
         shutil.rmtree(dmg_temp)
     dmg_temp.mkdir()
     
-    # Copy app to temp directory
-    shutil.copytree(app_path, dmg_temp / f"{APP_NAME}.app", symlinks=True)
-    
-    # Create Applications symlink for drag-and-drop install
-    applications_link = dmg_temp / "Applications"
-    applications_link.symlink_to("/Applications")
-    
-    # Create DMG using hdiutil
-    cmd = [
-        "hdiutil", "create",
-        "-volname", APP_NAME,
-        "-srcfolder", str(dmg_temp),
-        "-ov",
-        "-format", "UDZO",  # Compressed
-        str(dmg_path)
-    ]
-    
-    if not run_command_safe(cmd):
-        print("  [ERROR] DMG creation failed")
-        shutil.rmtree(dmg_temp)
+    try:
+        # Copy app to temp directory
+        print(f"  Copying app to temp directory...")
+        shutil.copytree(app_path, dmg_temp / f"{APP_NAME}.app", symlinks=True)
+        
+        # Create Applications symlink for drag-and-drop install
+        print(f"  Creating Applications symlink...")
+        applications_link = dmg_temp / "Applications"
+        applications_link.symlink_to("/Applications")
+        
+        # Optional: Add custom background (if available)
+        background_dir = dmg_temp / ".background"
+        background_img = RESOURCES_DIR / "dmg-background.png"
+        if background_img.exists():
+            background_dir.mkdir(exist_ok=True)
+            shutil.copy(background_img, background_dir / "background.png")
+            print(f"  [INFO] Using custom DMG background")
+        else:
+            print(f"  [INFO] No custom background found, using default")
+        
+        # Create DMG using hdiutil with optimized settings
+        print(f"  Creating DMG image (this may take a moment)...")
+        cmd = [
+            "hdiutil", "create",
+            "-volname", APP_DISPLAY_NAME,  # Use display name for volume
+            "-srcfolder", str(dmg_temp),
+            "-ov",
+            "-format", "UDZO",  # Compressed format
+            "-imagekey", "zlib-level=9",  # Maximum compression
+            "-fs", "HFS+",  # File system format
+            str(dmg_path)
+        ]
+        
+        if not run_command_safe(cmd):
+            print("  [ERROR] DMG creation failed")
+            return False
+        
+        # Get DMG file size for reporting
+        dmg_size = dmg_path.stat().st_size
+        dmg_size_mb = dmg_size / (1024 * 1024)
+        print(f"  [OK] Created: {dmg_path}")
+        print(f"  [INFO] DMG size: {dmg_size_mb:.2f} MB")
+        return True
+        
+    except Exception as e:
+        print(f"  [ERROR] DMG creation failed with exception: {e}")
         return False
-    
-    # Cleanup
-    shutil.rmtree(dmg_temp)
-    
-    print(f"  [OK] Created: {dmg_path}")
-    return True
+    finally:
+        # Cleanup temp directory
+        if dmg_temp.exists():
+            shutil.rmtree(dmg_temp)
 
 
 def copy_settings_example():
@@ -826,6 +905,8 @@ Examples:
     print_header("NormCode Canvas - macOS Build")
     print(f"  Project Root: {PROJECT_ROOT}")
     print(f"  Build Dir: {BUILD_DIR}")
+    print(f"  Version: {APP_VERSION}")
+    print(f"  Display Name: {APP_DISPLAY_NAME}")
     print(f"  macOS: {platform.mac_ver()[0]}")
     print(f"  Architecture: {platform.machine()}")
     
@@ -894,6 +975,7 @@ Examples:
     
     if args.dmg:
         print(f"  DMG Installer: {DIST_DIR / f'{APP_NAME}-{APP_VERSION}.dmg'}")
+        print(f"  Volume Name: {APP_DISPLAY_NAME}")
     
     print("\n  To run: open the .app bundle or drag it to Applications")
     print("  To distribute: use the DMG or ZIP file")
