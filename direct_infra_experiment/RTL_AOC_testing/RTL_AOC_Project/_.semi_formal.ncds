@@ -1,0 +1,117 @@
+/: The Root
+:<:{Verification Report}
+    <= ::(combine to a report with AOC, AOC validity, Trace, verification per Cycle)
+
+    /: Phase 1: AOC Schema Generation
+    <- {AOC Definitions}
+        <= $. ({all AOC Schema}) /: returns this AOC schema as output
+
+        /: Input 1: The Raw ISA Specification
+        <* {ISA Spec Text}
+            <= ::({Load File})
+            <* {File Path} %:{location_string}("specs/isa_v1.md")
+
+        /: Input 2: Micro-Architecture Constraints (Optional)
+        <* {MA Spec Text}
+            <= ::({Load File})
+            <* {File Path} %:{location_string}("specs/uarch_v2.md")
+
+        /: Step 1: Decomposition (Split text into atomic intent blocks)
+        <* {Intent Blocks}
+            <= :>:(user clarification of the inputted specs)
+            <- {ISA Spec Text}
+            <- {MA Spec Text}
+
+        <* [All user inputs: {ISA}, {MA}, {Intent Blocks}]
+            <= &[{}] %>[{ISA}, {MA}, {Intent Blocks}]
+            <- {ISA}
+            <- {MA}
+            <- {Intent Blocks}
+
+        <* {counters}
+            <* $% ({%(1)}) /: initate counters with only a 1.
+
+        /： use continuation logic to initiate a loop of termination (unless)
+        <* {AOC schemas per connonical}
+            <= *. %>({counter}) %*({Current counter})
+
+                <= $.({the new AOC})
+
+                <* {all AOC schemas per connonicals up to now}
+                    <= &[#] {AOC schemas per connonicals}
+                    <- {AOC schemas per connonicals}
+
+                <- {the new AOC}
+                    <= ::(extract a new action-obligation connonicals) /: we will provide a prompt with llm action for this imperative 
+                    <- [All user inputs: {ISA}, {MA}, {Intent Blocks}] /: with derelations interpretations added
+                    <- {all AOC schemas per connonicals up to now}
+
+                <* <there are no more connonicals to process> /: termination conditions
+                    <= ::(judge if there are more connonicals to process)<ALL True> /: Judgement of terminations, will be driven by prompts
+                    <- [All user inputs: {ISA}, {MA}, {Intent Blocks}] /: with derelations interpretations added
+
+                /:  continuation unless termination (unless)
+                <* {counters}
+                    <= $+ ({%(n)})
+                        <= @:! (<there are no more connonicals to process>)
+                        <- <there are no more connonicals to process> /: no passing of data, here to make execution flow correct. Judge after the proposition has value.
+                        <* <there are no more connonicals to process>
+                    <- {counters}
+                    <- {next counter}
+                        <= :: (next counter = current counter + 1)
+                        <= {current counter}
+
+            <- {counters} /: the collection to loop over
+            <* {current counter}<$({counters})*>
+
+        <- {all AOC Schema}
+            <= ::(clean-up and collect the AOC schemas into one) /: final proof-writing revision with llm help
+            <- {all AOC schemas per connonicals up to now}
+
+    <- <the AOC is valid>
+        <= ::(validate AOC rules)<ALL True> /: JUDGEMENT added
+        <- {AOC Definitions}
+
+
+    /: Phase 2: Imposing the AOC on the RTL Trace for Verification
+    /: The Input: The raw source of truth (Context)
+    <- {RTL Simulation Trace}
+        <= ::(validate and load aoc rules from spec) /: This represents the external RTL sim process
+        <- {trace file}
+
+    /: Context: The trace split into discrete ticks
+    <* {Trace per cycle}
+        <= ::(individuate cycles)
+        <- {RTL Simulation Trace}
+
+    /: The Core Loop: Produce a status for every cycle
+    <- {verification per cycle}
+        <= *. %>({Trace per cycle}) %*({Current Cycle Trace}) %:({Cycle}) %^({Pervious Active Rules}) %@(1)
+
+            <= $. %>({verification})
+                /: Specification: Select the verification result for this iteration
+                <= @: <the AOC is valid>
+                    /: Proceed only if AOC is valid
+                <* <the AOC is valid>
+
+            /: Update Active Rules Logic
+            <- {Active Rules}
+                <= ::(update active rules)<ALL Valid> /: JUDGEMENT added
+                    /: Input 1: Current Trace (assigned by loop)
+                <- {current cycle trace}
+                    /: Input 2: Previous State (Carried)
+                <- {Pervious Active Rules}
+                    /: Input 3: The Static Rules (From Outside Loop)
+                <- {AOC Definitions}
+            
+            <- {verification}
+                <= ::(verify trace per cycle)
+                    /: Input: The data for *this* specific cycle
+                <- {current cycle trace} /: (assigned by loop)
+                <- {Active Rules}
+            
+        <- {Trace per cycle} /: the collection to loop over.
+        <* {Current Cycle Trace}<$({Trace per cycle})*>
+            /: Context: The explicit handle for the current item (for reference)
+        <* {Previous Active Rules}<$({Active Rules})*-1>
+            /: Defines the carrying over.

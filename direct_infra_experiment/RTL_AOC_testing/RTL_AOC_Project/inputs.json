@@ -1,0 +1,54 @@
+{
+  "_comment": "Input file for RTL AOC Verification Workflow",
+  "_instructions": "This provides the required ground concepts for the verification process",
+  "_note": "File paths are plain strings - the paradigm handles reading",
+  "_execution_note": "Phase 1 extracts AOC schemas from specs, Phase 2 verifies RTL trace against AOC rules",
+  
+  "_ground_concepts_overview": {
+    "{ISA file path}": "Path to ISA specification file (input)",
+    "{MA file path}": "Path to microarchitecture specification file (input)",
+    "{trace file path}": "Path to RTL simulation trace file (input)",
+    "[counters]": "Initial counter list for iterative AOC extraction loop",
+    "{previous active rules}": "Initial empty state for active rules (first iteration default)"
+  },
+  
+  "{ISA file path}": {
+    "_description": "Path to the ISA specification file",
+    "_type": "literal file path",
+    "_note": "Contains normative text about instruction behaviors, resolution rules, atomicity requirements",
+    "data": [["provisions/inputs/specs/isa_v1.md"]],
+    "axes": ["_none_axis"]
+  },
+  
+  "{MA file path}": {
+    "_description": "Path to the microarchitecture specification file",
+    "_type": "literal file path",
+    "_note": "Contains implementation details about issue queue, LSU, reservation handling",
+    "data": [["provisions/inputs/specs/uarch_v2.md"]],
+    "axes": ["_none_axis"]
+  },
+  
+  "{trace file path}": {
+    "_description": "Path to the RTL simulation trace file",
+    "_type": "literal file path",
+    "_note": "JSON trace of simulation events with time, signal, and value fields",
+    "data": [["provisions/inputs/trace/rtl_trace.json"]],
+    "axes": ["_none_axis"]
+  },
+  
+  "[counters]": {
+    "_description": "Initial counter list for the AOC extraction loop",
+    "_type": "list of integers",
+    "_note": "Starts with [1], grows via $+ continuation until extraction is complete",
+    "data": [[1]],
+    "axes": ["counter"]
+  },
+  
+  "{previous active rules}": {
+    "_description": "Initial state for active rules in verification loop",
+    "_type": "dict",
+    "_note": "Empty on first iteration, carries forward via %^ modifier",
+    "data": [{}],
+    "axes": ["_none_axis"]
+  }
+}
