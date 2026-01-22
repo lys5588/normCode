@@ -479,49 +479,107 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
         paradigm = get_annotation_value(func_comments, "norm_input")
         body_faculty = get_annotation_value(func_comments, "body_faculty")
         
-        # Build value_order from value concepts - ONLY those with explicit <:{N}> bindings
+        # Build value_order and value_selectors from value concepts
         value_order = {}
+        value_selectors = {}
         has_any_binding = any(re.search(r"<:\{(\d+)\}>", vc.get("nc_main", "")) for vc in value_concepts)
         
         for i, vc in enumerate(value_concepts):
             vc_name = vc.get("concept_name")
             if vc_name:
                 nc_main = vc.get("nc_main", "")
+                vc_comments = vc.get("attached_comments", [])
                 binding_match = re.search(r"<:\{(\d+)\}>", nc_main)
+                formatted_name = format_concept_name(vc_name, vc.get("concept_type", "object"))
+                
                 if binding_match:
                     # Explicit binding - use the specified order
-                    value_order[format_concept_name(vc_name, vc.get("concept_type", "object"))] = int(binding_match.group(1))
+                    value_order[formatted_name] = int(binding_match.group(1))
+                    
+                    # Check for value_selector annotations
+                    selector = {}
+                    source_concept = get_annotation_value(vc_comments, "selector_source")
+                    select_key = get_annotation_value(vc_comments, "selector_key")
+                    select_index = get_annotation_value(vc_comments, "selector_index")
+                    is_packed = get_annotation_value(vc_comments, "selector_packed")
+                    should_unpack = get_annotation_value(vc_comments, "selector_unpack")
+                    
+                    if source_concept:
+                        selector["source_concept"] = source_concept
+                    if select_key:
+                        selector["key"] = select_key
+                    if select_index:
+                        selector["index"] = int(select_index)
+                    if is_packed and is_packed.lower() == "true":
+                        selector["packed"] = True
+                    if should_unpack and should_unpack.lower() == "true":
+                        selector["unpack"] = True
+                    
+                    if selector:
+                        value_selectors[formatted_name] = selector
+                        
                 elif not has_any_binding:
                     # No bindings in any value_concept - fall back to position-based ordering
-                    value_order[format_concept_name(vc_name, vc.get("concept_type", "object"))] = i + 1
+                    value_order[formatted_name] = i + 1
                 # If has_any_binding but this concept doesn't have one, skip it (it's a tree descendant, not an input)
         
         wi["paradigm"] = paradigm
         wi["body_faculty"] = body_faculty
         wi["value_order"] = value_order
+        if value_selectors:
+            wi["value_selectors"] = value_selectors
     
     elif sequence_type == "judgement":
         # Same as imperative plus assertion_condition
         paradigm = get_annotation_value(func_comments, "norm_input")
         body_faculty = get_annotation_value(func_comments, "body_faculty")
         
-        # Build value_order - ONLY those with explicit <:{N}> bindings
+        # Build value_order and value_selectors - ONLY those with explicit <:{N}> bindings
         value_order = {}
+        value_selectors = {}
         has_any_binding = any(re.search(r"<:\{(\d+)\}>", vc.get("nc_main", "")) for vc in value_concepts)
         
         for i, vc in enumerate(value_concepts):
             vc_name = vc.get("concept_name")
             if vc_name:
                 nc_main = vc.get("nc_main", "")
+                vc_comments = vc.get("attached_comments", [])
                 binding_match = re.search(r"<:\{(\d+)\}>", nc_main)
+                formatted_name = format_concept_name(vc_name, vc.get("concept_type", "object"))
+                
                 if binding_match:
-                    value_order[format_concept_name(vc_name, vc.get("concept_type", "object"))] = int(binding_match.group(1))
+                    value_order[formatted_name] = int(binding_match.group(1))
+                    
+                    # Check for value_selector annotations
+                    selector = {}
+                    source_concept = get_annotation_value(vc_comments, "selector_source")
+                    select_key = get_annotation_value(vc_comments, "selector_key")
+                    select_index = get_annotation_value(vc_comments, "selector_index")
+                    is_packed = get_annotation_value(vc_comments, "selector_packed")
+                    should_unpack = get_annotation_value(vc_comments, "selector_unpack")
+                    
+                    if source_concept:
+                        selector["source_concept"] = source_concept
+                    if select_key:
+                        selector["key"] = select_key
+                    if select_index:
+                        selector["index"] = int(select_index)
+                    if is_packed and is_packed.lower() == "true":
+                        selector["packed"] = True
+                    if should_unpack and should_unpack.lower() == "true":
+                        selector["unpack"] = True
+                    
+                    if selector:
+                        value_selectors[formatted_name] = selector
+                        
                 elif not has_any_binding:
-                    value_order[format_concept_name(vc_name, vc.get("concept_type", "object"))] = i + 1
+                    value_order[formatted_name] = i + 1
         
         wi["paradigm"] = paradigm
         wi["body_faculty"] = body_faculty
         wi["value_order"] = value_order
+        if value_selectors:
+            wi["value_selectors"] = value_selectors
         
         # Extract assertion from function concept
         nc_main = func_concept.get("nc_main", "")

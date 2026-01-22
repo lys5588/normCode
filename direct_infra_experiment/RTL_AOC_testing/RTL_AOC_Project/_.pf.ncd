@@ -132,11 +132,11 @@
         /: ----------------------------------------
         <- [AOC schemas records] | ?{flow_index}: 1.2.7
             | %{ref_axes}: [canonical]
-            | %{ref_shape}: (0,)
+            | %{ref_shape}: (1,)
             | %{ref_element}: dict(id: str, trigger: dict, obligation: dict, timing: dict, abort: dict)
-            <= $% %>([%([])]) | ?{flow_index}: 1.2.7.1 | ?{sequence}: assigning
-                /: ABSTRACTION: Initialize AOC schemas records to empty list
-                | %{literal<$% aoc_schemas_records>}: []
+            <= $% %>([%({"__placeholder__": true})]) | ?{flow_index}: 1.2.7.1 | ?{sequence}: assigning
+                /: ABSTRACTION: Initialize AOC schemas records with placeholder (ensures non-empty shape for packed values)
+                | %{literal<$% aoc_schemas_records>}: [{"__placeholder__": true}]
         
         /: ----------------------------------------
         /: Iterative extraction loop
@@ -164,9 +164,11 @@
                     <- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.2.2
                         | %{ref_axes}: [_none_axis]
                         | %{ref_element}: dict
+                        | %{selector_packed}: true
                     <- [AOC schemas extracted so far]<:{2}> | ?{flow_index}: 1.2.8.1.2.3
                         | %{ref_axes}: [canonical]
                         | %{ref_element}: dict
+                        | %{selector_packed}: true
                         <= &[#] %>[{AOC schema record}] %+(canonical) | ?{flow_index}: 1.2.8.1.2.3.1 | ?{sequence}: grouping
                             /: GROUPING: Collect all AOC schemas from records
                         <- [AOC schemas records] | ?{flow_index}: 1.2.8.1.2.3.2
@@ -200,6 +202,7 @@
                     <- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.4.1.1
                         | %{ref_axes}: [_none_axis]
                         | %{ref_element}: dict
+                        | %{selector_packed}: true
                 
                 /: Continue unless done: append next counter if NOT terminated
                 <- [counters] | ?{flow_index}: 1.2.8.1.5
@@ -251,6 +254,7 @@
             <- [AOC schemas records]<:{1}> | ?{flow_index}: 1.2.9.1.1
                 | %{ref_axes}: [canonical]
                 | %{ref_element}: dict
+                | %{selector_packed}: true
     
     /: ----------------------------------------
     /: Validate the generated AOC

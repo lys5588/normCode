@@ -221,6 +221,59 @@ else:
 
 ---
 
+## 8. Value Selectors for Input Control
+
+### Problem
+When bundled data (like `{all user inputs}` containing a dict) or lists are passed to imperatives, the MVP step may unpack them into multiple inputs unexpectedly.
+
+### Solution
+Added value_selectors support with annotations to control how inputs are processed:
+
+```ncd
+<- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.2.2
+    | %{ref_axes}: [_none_axis]
+    | %{ref_element}: dict
+    | %{selector_packed}: true
+```
+
+### Available Selector Annotations
+
+| Annotation | Purpose | Example |
+|------------|---------|---------|
+| `%{selector_packed}: true` | Keep as single input (don't unpack lists/dicts) | Bundled data stays bundled |
+| `%{selector_source}: {concept}` | Read from another concept | Select from a different source |
+| `%{selector_key}: key_name` | Select specific key from dict | `key: isa` extracts "isa" field |
+| `%{selector_index}: N` | Select item at index from list | `index: 0` gets first item |
+| `%{selector_unpack}: true` | Explicitly unpack list into separate inputs | Each item becomes a separate input |
+
+### Advanced Example: Selecting Fields from Bundled Data
+
+```ncd
+/: Original bundled input
+<- {all user inputs} | ?{flow_index}: 1.2.5
+    | %{ref_element}: dict(isa: str, ma: str, intent_blocks: list)
+
+/: Using selectors to extract specific fields as separate inputs
+<- {isa_spec}<:{1}> | ?{flow_index}: 1.2.8.1.2.2
+    | %{selector_source}: {all user inputs}
+    | %{selector_key}: isa
+
+<- {ma_spec}<:{2}> | ?{flow_index}: 1.2.8.1.2.3
+    | %{selector_source}: {all user inputs}
+    | %{selector_key}: ma
+
+<- {intent_list}<:{3}> | ?{flow_index}: 1.2.8.1.2.4
+    | %{selector_source}: {all user inputs}
+    | %{selector_key}: intent_blocks
+```
+
+### Changes in `_.activate_nci.py`
+Added parsing for selector annotations in imperative and judgement working_interpretation:
+- Extracts `selector_source`, `selector_key`, `selector_index`, `selector_packed`, `selector_unpack`
+- Builds `value_selectors` dict in `working_interpretation`
+
+---
+
 ## Summary of Key Patterns for Automation
 
 | Pattern | Annotation/Syntax | Purpose |
@@ -230,6 +283,89 @@ else:
 | Literal abstraction | `%{literal<$% name>}: value` | Initialize with literal values |
 | Loop records pattern | Initialize before loop, update inside | Accumulate results across iterations |
 | Context concept indices | Siblings of function, not children | Proper flow hierarchy |
+| Packed input | `%{selector_packed}: true` | Keep bundled data as single input |
+| Key selection | `%{selector_source}` + `%{selector_key}` | Extract field from dict |
+| Placeholder for empty lists | `{"__placeholder__": true}` | Ensure non-empty shape for packed values |
+| LLM output format | `{"thinking": ..., "result": ...}` | Required by `GenerateThinkJson` paradigm |
+
+---
+
+## 10. Placeholder Pattern for Empty List Initialization
+
+### Problem
+When a list concept (e.g., `[AOC schemas records]`) is initialized as truly empty `[]` with shape `(0,)`, and it's used as a `packed: true` input to an imperative, the MVP's `cross_product` produces empty results. This is because cross product with a (0,) dimension yields nothing.
+
+### Solution
+Initialize list concepts with a placeholder entry `{"__placeholder__": true}` instead of empty. This ensures shape `(1,)` instead of `(0,)`, allowing MVP to produce valid input combinations.
+
+### Changes in `.pf.ncd`
+```ncd
+<- [AOC schemas records] | ?{flow_index}: 1.2.7
+    | %{ref_axes}: [canonical]
+    | %{ref_shape}: (1,)  # NOT (0,)
+    | %{ref_element}: dict(...)
+    <= $% %>([%({"__placeholder__": true})]) | ?{flow_index}: 1.2.7.1 | ?{sequence}: assigning
+        /: ABSTRACTION: Initialize with placeholder (ensures non-empty shape)
+        | %{literal<$% aoc_schemas_records>}: [{"__placeholder__": true}]
+```
+
+### Prompt Updates Required
+Prompts that receive this data must be updated to ignore placeholders:
+```markdown
+**Note:** Ignore any entries with `"__placeholder__": true` - these are system placeholders, not real schemas.
+```
+
+### Key Points
+- Shape must be `(1,)` not `(0,)` when using `packed: true`
+- Placeholder is filtered out by LLM during processing
+- Alternative: Modify MVP to handle empty packed values (but this changes core infrastructure)
+
+---
+
+## 11. LLM Output Format for GenerateThinkJson Paradigm
+
+### Problem
+The `v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal` paradigm expects LLM responses to have a specific JSON structure. The paradigm's composition plan:
+1. Calls LLM with filled prompt
+2. Cleans response (removes markdown code fences)
+3. Parses as JSON
+4. Extracts `result` field using `formatter_tool.get(key='result')`
+5. Wraps as literal
+
+If prompts don't instruct the LLM to output this format, the `get(key='result')` step returns `None`.
+
+### Solution
+All prompts that use the `GenerateThinkJson` paradigm must instruct the LLM to output JSON with exactly two top-level keys:
+
+```json
+{
+  "thinking": "Your reasoning process...",
+  "result": { ... actual output ... }
+}
+```
+
+### Prompt Template
+```markdown
+## Output Format
+
+Return JSON with `thinking` and `result` fields:
+\```json
+{
+  "thinking": "Your analysis...",
+  "result": {
+    // actual structured output here
+  }
+}
+\```
+
+**Important:** Your response MUST be valid JSON with exactly these two top-level keys: `thinking` and `result`.
+```
+
+### Key Points
+- The `thinking` field captures LLM reasoning (useful for debugging)
+- The `result` field contains the actual output that gets passed to downstream concepts
+- The paradigm discards `thinking` and only preserves `result`
+- All prompts in `provisions/prompts/` have been updated to use this format
 
 ---
 
@@ -239,6 +375,9 @@ else:
 2. `_.ncds` - NormCode design specification
 3. `_.activate_nci.py` - Activator script (is_invariant parsing)
 4. `provisions/paradigms/v_PromptLocation-h_Literal-c_UserTextEditor-o_JsonLiteral.json` - New paradigm
+5. `provisions/prompts/phase1/*.md` - All phase1 prompts (updated for thinking/result format)
+6. `provisions/prompts/phase2/*.md` - All phase2 prompts (updated for thinking/result format)
+7. `provisions/prompts/combine_verification_report.md` - Final report prompt (updated for thinking/result format)
 
 ---
 

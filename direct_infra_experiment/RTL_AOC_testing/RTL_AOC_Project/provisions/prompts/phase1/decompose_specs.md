@@ -2,11 +2,15 @@
 
 Break down the ISA and microarchitecture specifications into atomic intent blocks.
 
-## Input
+## Input Data
 
-You will receive:
-1. **ISA Spec Text**: The Instruction Set Architecture specification
-2. **MA Spec Text**: The Microarchitecture specification
+<isa_specification>
+$input_1
+</isa_specification>
+
+<microarchitecture_specification>
+$input_2
+</microarchitecture_specification>
 
 ## Task
 
@@ -35,8 +39,7 @@ Return JSON:
       "text": "Pipeline flush may cancel younger in-flight instructions",
       "type": "exception",
       "source": "ISA Section 1"
-    },
-    ...
+    }
   ]
 }
 ```
@@ -48,4 +51,3 @@ Return JSON:
 - **ordering**: Relative order requirements
 - **atomicity**: Indivisibility requirements
 - **exception**: Valid deviations from normal behavior
-

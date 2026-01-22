@@ -2,11 +2,17 @@
 
 Extract one Action-Obligation Canonical (AOC) rule from the specification.
 
-## Input
+## Input Data
 
-You will receive:
-1. **All User Inputs**: Combined ISA spec, MA spec, and intent blocks
-2. **Previously Extracted Schemas**: AOC canonicals already extracted
+<user_inputs>
+$input_1
+</user_inputs>
+
+<previously_extracted_schemas>
+$input_2
+</previously_extracted_schemas>
+
+**Note:** Ignore any entries with `"__placeholder__": true` - these are system placeholders, not real schemas.
 
 ## Task
 
@@ -21,31 +27,36 @@ An AOC canonical has:
 
 ## Output Format
 
-Return JSON:
+Return JSON with `thinking` and `result` fields:
 ```json
 {
-  "id": "C001_InstrResolution",
-  "trigger": {
-    "signal": "instr_issued",
-    "description": "When an instruction is officially issued to the backend"
-  },
-  "obligation": {
-    "type": "any_of",
-    "conditions": [
-      {"signal": "commit", "description": "Instruction commits"},
-      {"signal": "trap_taken", "description": "Trap is taken"}
-    ]
-  },
-  "timing": {
-    "max_cycles": 10000,
-    "description": "Liveness timeout for verification"
-  },
-  "abort": {
-    "signal": "flush_event",
-    "description": "Microarchitectural flush cancels younger instructions"
+  "thinking": "Your reasoning process here - which spec section you're analyzing, why this canonical is important, etc.",
+  "result": {
+    "id": "C001_InstrResolution",
+    "trigger": {
+      "signal": "instr_issued",
+      "description": "When an instruction is officially issued to the backend"
+    },
+    "obligation": {
+      "type": "any_of",
+      "conditions": [
+        {"signal": "commit", "description": "Instruction commits"},
+        {"signal": "trap_taken", "description": "Trap is taken"}
+      ]
+    },
+    "timing": {
+      "max_cycles": 10000,
+      "description": "Liveness timeout for verification"
+    },
+    "abort": {
+      "signal": "flush_event",
+      "description": "Microarchitectural flush cancels younger instructions"
+    }
   }
 }
 ```
+
+**Important:** Your response MUST be valid JSON with exactly these two top-level keys: `thinking` and `result`.
 
 ## Guidelines
 
@@ -53,5 +64,4 @@ Return JSON:
 2. Identify action-response pairs
 3. Note timing constraints
 4. Identify valid cancellation events
-5. Don't repeat already-extracted canonicals
-
+5. Don't repeat already-extracted canonicals (check `<previously_extracted_schemas>`)

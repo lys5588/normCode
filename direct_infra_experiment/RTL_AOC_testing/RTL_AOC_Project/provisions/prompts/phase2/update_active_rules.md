@@ -2,12 +2,19 @@
 
 Update the set of active AOC rules based on the current cycle's events.
 
-## Input
+## Input Data
 
-You will receive:
-1. **Current Cycle Trace**: Events that occurred in this cycle
-2. **Previous Active Rules**: Active rule instances from prior cycle
-3. **AOC Definitions**: The static set of all AOC rules
+<current_cycle_trace>
+$input_1
+</current_cycle_trace>
+
+<previous_active_rules>
+$input_2
+</previous_active_rules>
+
+<aoc_definitions>
+$input_3
+</aoc_definitions>
 
 ## Task
 
@@ -41,13 +48,17 @@ Process the current cycle and update the active rules:
 
 ## Output Format
 
-Return JSON:
+Return JSON with `thinking` and `result` fields:
 ```json
 {
-  "rules": [...],
-  "pending": [...],
-  "triggered": [...],
-  "completed": [...]
+  "thinking": "Your analysis - which triggers fired, which obligations were met, etc.",
+  "result": {
+    "rules": [...],
+    "pending": [...],
+    "triggered": [...],
+    "completed": [...]
+  }
 }
 ```
 
+**Important:** Your response MUST be valid JSON with exactly these two top-level keys: `thinking` and `result`.

@@ -572,7 +572,7 @@
             "flow_index": "1.2.7",
             "type": "comment",
             "depth": 3,
-            "nc_comment": "| %{ref_shape}: (0,)"
+            "nc_comment": "| %{ref_shape}: (1,)"
           },
           {
             "flow_index": "1.2.7",
@@ -1347,7 +1347,7 @@
           "flow_index": "1.2.7",
           "type": "comment",
           "depth": 3,
-          "nc_comment": "| %{ref_shape}: (0,)"
+          "nc_comment": "| %{ref_shape}: (1,)"
         },
         {
           "flow_index": "1.2.7",
@@ -1361,7 +1361,7 @@
       "flow_index": "1.2.7.1",
       "type": "main",
       "depth": 3,
-      "nc_main": "<= $% %>([%([])])",
+      "nc_main": "<= $% %>([%({\"__placeholder__\": true})])",
       "inference_marker": "<=",
       "concept_type": "operator",
       "operator_type": "abstraction",
@@ -1377,13 +1377,13 @@
           "flow_index": "1.2.7.1",
           "type": "comment",
           "depth": 4,
-          "nc_comment": "/: ABSTRACTION: Initialize AOC schemas records to empty list"
+          "nc_comment": "/: ABSTRACTION: Initialize AOC schemas records with placeholder (ensures non-empty shape for packed values)"
         },
         {
           "flow_index": "1.2.7.1",
           "type": "comment",
           "depth": 4,
-          "nc_comment": "| %{literal<$% aoc_schemas_records>}: []"
+          "nc_comment": "| %{literal<$% aoc_schemas_records>}: [{\"__placeholder__\": true}]"
         },
         {
           "flow_index": "1.2.7.1",
@@ -1862,6 +1862,12 @@
             "type": "comment",
             "depth": 6,
             "nc_comment": "| %{ref_element}: dict"
+          },
+          {
+            "flow_index": "1.2.8.1.2.2",
+            "type": "comment",
+            "depth": 6,
+            "nc_comment": "| %{selector_packed}: true"
           }
         ]
       },
@@ -1892,6 +1898,12 @@
             "type": "comment",
             "depth": 6,
             "nc_comment": "| %{ref_element}: dict"
+          },
+          {
+            "flow_index": "1.2.8.1.2.3",
+            "type": "comment",
+            "depth": 6,
+            "nc_comment": "| %{selector_packed}: true"
           }
         ]
       }
@@ -1926,6 +1938,12 @@
           "type": "comment",
           "depth": 6,
           "nc_comment": "| %{ref_element}: dict"
+        },
+        {
+          "flow_index": "1.2.8.1.2.3",
+          "type": "comment",
+          "depth": 6,
+          "nc_comment": "| %{selector_packed}: true"
         }
       ]
     },
@@ -1958,11 +1976,11 @@
         "flow_index": "1.2.8.1.2.3.2",
         "type": "main",
         "depth": 6,
-        "nc_main": "<- {AOC schema record}",
+        "nc_main": "<- [AOC schemas records]",
         "inference_marker": "<-",
-        "concept_type": "object",
+        "concept_type": "relation",
         "operator_type": null,
-        "concept_name": "AOC schema record",
+        "concept_name": "AOC schemas records",
         "attached_comments": [
           {
             "flow_index": "1.2.8.1.2.3.2",
@@ -1983,96 +2001,8 @@
             "nc_comment": "| %{ref_element}: dict"
           }
         ]
-      },
-      {
-        "flow_index": "1.2.8.1.2.3.3",
-        "type": "main",
-        "depth": 6,
-        "nc_main": "<- [AOC schemas records]",
-        "inference_marker": "<-",
-        "concept_type": "relation",
-        "operator_type": null,
-        "concept_name": "AOC schemas records",
-        "attached_comments": [
-          {
-            "flow_index": "1.2.8.1.2.3.3",
-            "type": "inline_comment",
-            "depth": 6,
-            "nc_comment": "?{flow_index}: 1.2.8.1.2.3.3"
-          },
-          {
-            "flow_index": "1.2.8.1.2.3.3",
-            "type": "comment",
-            "depth": 7,
-            "nc_comment": "| %{ref_axes}: [canonical]"
-          },
-          {
-            "flow_index": "1.2.8.1.2.3.3",
-            "type": "comment",
-            "depth": 7,
-            "nc_comment": "| %{ref_element}: dict"
-          }
-        ]
       }
     ],
-    "other_concepts": []
-  },
-  {
-    "concept_to_infer": {
-      "flow_index": "1.2.8.1.2.3.2",
-      "type": "main",
-      "depth": 6,
-      "nc_main": "<- {AOC schema record}",
-      "inference_marker": "<-",
-      "concept_type": "object",
-      "operator_type": null,
-      "concept_name": "AOC schema record",
-      "attached_comments": [
-        {
-          "flow_index": "1.2.8.1.2.3.2",
-          "type": "inline_comment",
-          "depth": 6,
-          "nc_comment": "?{flow_index}: 1.2.8.1.2.3.2"
-        },
-        {
-          "flow_index": "1.2.8.1.2.3.2",
-          "type": "comment",
-          "depth": 7,
-          "nc_comment": "| %{ref_axes}: [canonical]"
-        },
-        {
-          "flow_index": "1.2.8.1.2.3.2",
-          "type": "comment",
-          "depth": 7,
-          "nc_comment": "| %{ref_element}: dict"
-        }
-      ]
-    },
-    "function_concept": {
-      "flow_index": "1.2.8.1.2.3.2.1",
-      "type": "main",
-      "depth": 7,
-      "nc_main": "<= $. %>([AOC schemas records])",
-      "inference_marker": "<=",
-      "concept_type": "operator",
-      "operator_type": "specification",
-      "concept_name": null,
-      "attached_comments": [
-        {
-          "flow_index": "1.2.8.1.2.3.2.1",
-          "type": "inline_comment",
-          "depth": 7,
-          "nc_comment": "?{flow_index}: 1.2.8.1.2.3.2.1 | ?{sequence}: assigning"
-        },
-        {
-          "flow_index": "1.2.8.1.2.3.2.1",
-          "type": "comment",
-          "depth": 8,
-          "nc_comment": "/: SPECIFICATION: Select from AOC schemas records"
-        }
-      ]
-    },
-    "value_concepts": [],
     "other_concepts": []
   },
   {
@@ -2319,6 +2249,12 @@
             "type": "comment",
             "depth": 6,
             "nc_comment": "| %{ref_element}: dict"
+          },
+          {
+            "flow_index": "1.2.8.1.4.1.1",
+            "type": "comment",
+            "depth": 6,
+            "nc_comment": "| %{selector_packed}: true"
           },
           {
             "flow_index": "1.2.8.1.4.1.1",
@@ -2771,6 +2707,12 @@
             "type": "comment",
             "depth": 4,
             "nc_comment": "| %{ref_element}: dict"
+          },
+          {
+            "flow_index": "1.2.9.1.1",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{selector_packed}: true"
           },
           {
             "flow_index": "1.2.9.1.1",

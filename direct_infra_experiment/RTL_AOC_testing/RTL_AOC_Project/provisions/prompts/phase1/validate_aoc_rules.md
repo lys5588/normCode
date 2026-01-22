@@ -2,10 +2,11 @@
 
 Judge whether the generated AOC rules are valid and complete.
 
-## Input
+## Input Data
 
-You will receive:
-- **AOC Definitions**: The consolidated AOC schema
+<aoc_definitions>
+$input_1
+</aoc_definitions>
 
 ## Task
 
@@ -36,26 +37,33 @@ Validate the AOC rules for:
 
 ## Output Format
 
-Return JSON:
+Return JSON with `thinking` and `result` fields:
 ```json
 {
-  "valid": true,
-  "issues": [],
-  "warnings": [
-    "Rule C003 has unbounded timing - consider adding max_cycles for verification"
-  ]
+  "thinking": "Your validation analysis - checking each rule for required fields, semantic consistency, etc.",
+  "result": {
+    "valid": true,
+    "issues": [],
+    "warnings": [
+      "Rule C003 has unbounded timing - consider adding max_cycles for verification"
+    ]
+  }
 }
 ```
 
 Or if invalid:
 ```json
 {
-  "valid": false,
-  "issues": [
-    "Rule C002 is missing trigger field",
-    "Rules C004 and C005 have conflicting obligations for same trigger"
-  ],
-  "warnings": []
+  "thinking": "Found problems during validation...",
+  "result": {
+    "valid": false,
+    "issues": [
+      "Rule C002 is missing trigger field",
+      "Rules C004 and C005 have conflicting obligations for same trigger"
+    ],
+    "warnings": []
+  }
 }
 ```
 
+**Important:** Your response MUST be valid JSON with exactly these two top-level keys: `thinking` and `result`.

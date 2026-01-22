@@ -199,7 +199,7 @@
     },
     "inference_sequence": "assigning",
     "concept_to_infer": "[AOC schemas records]",
-    "function_concept": "$% %>([%([])])",
+    "function_concept": "$% %>([%({\"__placeholder__\": true})])",
     "value_concepts": [],
     "context_concepts": [],
     "working_interpretation": {
@@ -209,7 +209,7 @@
       },
       "syntax": {
         "marker": "%",
-        "face_value": [],
+        "face_value": "%([{\"__placeholder__\": true}])",
         "axis_names": [
           "canonical"
         ]
@@ -298,6 +298,14 @@
       "value_order": {
         "{all user inputs}": 1,
         "[AOC schemas extracted so far]": 2
+      },
+      "value_selectors": {
+        "{all user inputs}": {
+          "packed": true
+        },
+        "[AOC schemas extracted so far]": {
+          "packed": true
+        }
       }
     }
   },
@@ -309,7 +317,6 @@
     "concept_to_infer": "[AOC schemas extracted so far]",
     "function_concept": "&[#] %>[{AOC schema record}] %+(canonical)",
     "value_concepts": [
-      "{AOC schema record}",
       "[AOC schemas records]"
     ],
     "context_concepts": [],
@@ -324,26 +331,6 @@
           "{AOC schema record}"
         ],
         "create_axis": "canonical"
-      }
-    }
-  },
-  {
-    "flow_info": {
-      "flow_index": "1.2.8.1.2.3.2"
-    },
-    "inference_sequence": "assigning",
-    "concept_to_infer": "{AOC schema record}",
-    "function_concept": "$. %>([AOC schemas records])",
-    "value_concepts": [],
-    "context_concepts": [],
-    "working_interpretation": {
-      "workspace": {},
-      "flow_info": {
-        "flow_index": "1.2.8.1.2.3.2"
-      },
-      "syntax": {
-        "marker": ".",
-        "assign_source": null
       }
     }
   },
@@ -390,6 +377,11 @@
       "body_faculty": "llm",
       "value_order": {
         "{all user inputs}": 1
+      },
+      "value_selectors": {
+        "{all user inputs}": {
+          "packed": true
+        }
       },
       "assertion_condition": {
         "quantifiers": {
@@ -490,6 +482,11 @@
       "body_faculty": "llm",
       "value_order": {
         "[AOC schemas records]": 1
+      },
+      "value_selectors": {
+        "[AOC schemas records]": {
+          "packed": true
+        }
       }
     }
   },
