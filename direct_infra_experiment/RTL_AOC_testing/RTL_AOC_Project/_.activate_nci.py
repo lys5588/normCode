@@ -66,6 +66,53 @@ def get_annotation_value(attached_comments: list, key: str) -> str | None:
     return None
 
 
+def get_literal_annotation(attached_comments: list, marker: str = None) -> tuple[str | None, any]:
+    """
+    Extract literal value from %{literal<$% name>}: value annotations.
+    
+    Args:
+        attached_comments: List of comment objects
+        marker: Optional marker to match (e.g., "$%")
+    
+    Returns:
+        Tuple of (concept_name, wrapped_value) or (None, None) if not found
+        The value is wrapped in literal notation like %(value)
+    """
+    import ast
+    
+    for comment in attached_comments:
+        nc_comment = comment.get("nc_comment", "")
+        # Pattern: | %{literal<$% name>}: value
+        pattern = r"\|\s*%\{literal<\$([%=.+-])\s*([^>]+)>\}:\s*(.+)"
+        match = re.search(pattern, nc_comment)
+        if match:
+            found_marker = match.group(1)
+            concept_name = match.group(2).strip()
+            value_str = match.group(3).strip()
+            
+            # If marker specified, check it matches
+            if marker and found_marker != marker:
+                continue
+            
+            # Parse the value and wrap each element in literal notation
+            try:
+                parsed_value = ast.literal_eval(value_str)
+                # Wrap in literal notation
+                if isinstance(parsed_value, list):
+                    # Wrap each element: [1, 2] -> [%(1), %(2)]
+                    wrapped_value = [f"%({item})" for item in parsed_value]
+                else:
+                    # Single value: 1 -> %(1)
+                    wrapped_value = f"%({parsed_value})"
+            except (ValueError, SyntaxError):
+                # If parsing fails, wrap the string as-is
+                wrapped_value = f"%({value_str})"
+            
+            return concept_name, wrapped_value
+    
+    return None, None
+
+
 def get_sequence_type(attached_comments: list) -> str | None:
     """Extract sequence type from inline comments"""
     for comment in attached_comments:
@@ -250,8 +297,10 @@ def build_concept_repo(nci_data: list) -> list:
         element_type = get_annotation_value(attached_comments, "ref_element")
         shape_str = get_annotation_value(attached_comments, "ref_shape")
         file_location = extract_file_location(attached_comments)
+        is_invariant_str = get_annotation_value(attached_comments, "is_invariant")
         
         is_ground = is_ground_concept(data, attached_comments)
+        is_invariant = is_invariant_str and is_invariant_str.lower() == "true"
         
         # Build reference_data for ground concepts
         reference_data = None
@@ -272,6 +321,7 @@ def build_concept_repo(nci_data: list) -> list:
             "description": None,
             "is_ground_concept": is_ground,
             "is_final_concept": data.get("is_final", False),
+            "is_invariant": is_invariant,
             "reference_data": reference_data,
             "reference_axis_names": parse_axes(axes_str),
             "reference_element_type": element_type,
@@ -285,13 +335,19 @@ def build_concept_repo(nci_data: list) -> list:
         operator_type = data.get("operator_type")
         concept_type = data.get("concept_type", "operator")
         
+        # Strip the <= marker first (it's inference syntax, not part of the concept)
+        concept_name = re.sub(r"^<=\s*", "", nc_main)
+        
         # Determine function concept type marker
-        if (")<{" in nc_main) or ("<{" in nc_main and "}>" in nc_main):
+        # Check for imperative markers: :: (standard), :>: (user-facing), :<: (final)
+        is_imperative = bool(re.match(r'^:[:><]?:', concept_name))
+        
+        if (")<{" in concept_name) or ("<{" in concept_name and "}>" in concept_name):
             # Judgement: ::(...).<{...}> (new) or ::<{...}><...> (legacy)
             func_type_marker = "<{}>"
             element_type = "paradigm"
-        elif "::" in nc_main and ")<{" not in nc_main:
-            # Imperative
+        elif is_imperative and ")<{" not in concept_name:
+            # Imperative (::, :>:, :<:)
             func_type_marker = "({})"
             element_type = "paradigm"
         else:
@@ -299,28 +355,26 @@ def build_concept_repo(nci_data: list) -> list:
             func_type_marker = "({})"
             element_type = "operator"
         
-        # Generate natural name from nc_main
-        natural_name = nc_main
-        # Try to extract a cleaner name
-        name_match = re.search(r"::\(([^)]+)\)", nc_main)
+        # Generate natural name from concept_name (already stripped of <=)
+        natural_name = concept_name
+        # Try to extract a cleaner name for imperatives/judgements
+        # Handle all imperative variants: ::(...), :>:(...), :<:(...)
+        name_match = re.search(r':[:><]?:\(([^)]+)\)', concept_name)
         if name_match:
             natural_name = name_match.group(1)
         else:
             # Try new syntax first: ::(name)<{...}>
-            name_match = re.search(r"::\(([^)]+)\)<\{", nc_main)
+            name_match = re.search(r':[:><]?:\(([^)]+)\)<\{', concept_name)
             if not name_match:
                 # Fall back to legacy: ::<{name}><...>
-                name_match = re.search(r"::<\{([^}]+)\}>", nc_main)
+                name_match = re.search(r"::<\{([^}]+)\}>", concept_name)
             if name_match:
                 natural_name = name_match.group(1)
         
         # Generate unique ID
         func_id = "fc-" + re.sub(r"[^a-z0-9]+", "-", natural_name.lower()).strip("-")[:50]
         
-        # Strip the <= marker from concept_name (it's inference syntax, not part of the concept)
-        concept_name = re.sub(r"^<=\s*", "", nc_main)
-        
-        # Build reference field for paradigms with vertical inputs
+        # Build reference field for function concepts
         reference_data = None
         if element_type == "paradigm":
             # Check for vertical inputs (v_input_provision annotation)
@@ -345,6 +399,9 @@ def build_concept_repo(nci_data: list) -> list:
             else:
                 # No vertical inputs - use dummy reference
                 reference_data = ["%{dummy}(_)"]
+        else:
+            # Operators and other function concepts also get dummy reference
+            reference_data = ["%{dummy}(_)"]
         
         concept_entry = {
             "id": func_id,
@@ -481,7 +538,23 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
         
         assign_source = None
         
-        if marker == ".":
+        if marker == "%":
+            # ABSTRACTION ($%) - create reference from literal face value
+            # Extract face_value from %{literal<$% name>}: value annotation
+            _, face_value = get_literal_annotation(func_comments, "%")
+            
+            # Extract axis_names from the concept_to_infer's ref_axes annotation
+            cti_comments = cti.get("attached_comments", [])
+            axes_str = get_annotation_value(cti_comments, "ref_axes")
+            axis_names = parse_axes(axes_str) if axes_str else None
+            
+            wi["syntax"] = {
+                "marker": marker,
+                "face_value": face_value,
+                "axis_names": axis_names,
+            }
+        
+        elif marker == ".":
             # SPECIFICATION ($.) - "select first available"
             # The assign_source should be a LIST of candidate sources from value_concepts,
             # EXCLUDING condition concepts (propositions like <...>)
@@ -513,9 +586,14 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
                     f"Assigning inference with marker '.' has no valid source candidates. "
                     f"value_concepts: {[vc.get('concept_name') for vc in value_concepts]}"
                 )
+            
+            wi["syntax"] = {
+                "marker": marker,
+                "assign_source": assign_source,
+            }
         
         else:
-            # Other assigning operators (=, %, +, -) - use legacy extraction
+            # Other assigning operators (=, +, -) - use legacy extraction
             source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
             source_match_list = re.search(r"%>\[([^\]]+)\]", nc_main)
             
@@ -524,11 +602,11 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
             elif source_match_list:
                 # Multiple sources from explicit list
                 assign_source = source_match_list.group(1)
-        
-        wi["syntax"] = {
-            "marker": marker,
-            "assign_source": assign_source,
-        }
+            
+            wi["syntax"] = {
+                "marker": marker,
+                "assign_source": assign_source,
+            }
     
     elif sequence_type == "grouping":
         nc_main = func_concept.get("nc_main", "")
@@ -603,27 +681,57 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
     elif sequence_type == "looping":
         nc_main = func_concept.get("nc_main", "")
         
-        # Extract components from *. %>(...) %<(...) %:(...) %@(...)
+        # Extract components from *. %>(...) %<(...) %:(...) %^(...) %@(...)
         base_match = re.search(r"%>\(\[?([^\])\]]+)\]?\)", nc_main)
         result_match = re.search(r"%<\(\{([^}]+)\}\)", nc_main)
         axis_match = re.search(r"%:\(\{([^}]+)\}\)", nc_main)
+        carry_match = re.search(r"%\^\(\{([^}]+)\}\)", nc_main)  # Carry state
         index_match = re.search(r"%@\((\d+)\)", nc_main)
         
-        # Get context concept (current element)
+        # Get context concepts (current element and carry state)
         current_element = None
+        current_element_source = None
+        carry_element = None
+        carry_element_source = None
+        
         for oc in other_concepts:
             if oc.get("inference_marker") == "<*":
-                current_element = oc.get("concept_name")
-                break
+                oc_nc_main = oc.get("nc_main", "")
+                oc_name = oc.get("concept_name")
+                
+                # Extract source from <$([source])*> or <$({source})*-1>
+                source_match = re.search(r"<\$\(([^)]+)\)\*(-?\d+)?", oc_nc_main)
+                
+                if source_match:
+                    source_concept = source_match.group(1)
+                    offset = source_match.group(2)  # e.g., "-1" for carry state
+                    
+                    if offset and int(offset) < 0:
+                        # This is a carry state (e.g., previous active rules)
+                        carry_element = oc_name
+                        carry_element_source = source_concept
+                    else:
+                        # This is the current loop element
+                        current_element = oc_name
+                        current_element_source = source_concept
+                else:
+                    # No source specified, assume it's the current element
+                    current_element = oc_name
         
         wi["syntax"] = {
             "marker": "every",
             "loop_index": int(index_match.group(1)) if index_match else 1,
             "LoopBaseConcept": f"[{base_match.group(1)}]" if base_match else None,
-            "CurrentLoopBaseConcept": f"{{{current_element}}}*1" if current_element else None,
+            "CurrentLoopBaseConcept": f"{{{current_element}}}" if current_element else None,
+            "CurrentLoopBaseSource": current_element_source,
             "group_base": axis_match.group(1) if axis_match else None,
             "ConceptToInfer": [f"{{{result_match.group(1)}}}"] if result_match else [],
         }
+        
+        # Add carry state info if present
+        if carry_element:
+            wi["syntax"]["CarryStateConcept"] = f"{{{carry_element}}}"
+            wi["syntax"]["CarryStateSource"] = carry_element_source
     
     return wi
 

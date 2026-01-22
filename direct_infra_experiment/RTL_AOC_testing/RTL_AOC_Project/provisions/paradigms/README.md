@@ -27,12 +27,16 @@ Prefixes:
 - `v_ScriptLocation-h_Literal-c_Execute-o_Literal.json` - Execute Python script, return scalar
 - `v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral.json` - Execute Python script, return list (enables axis creation)
 
+### User Input Paradigms
+- `v_PromptLocation-h_Literal-c_UserTextEditor-o_JsonLiteral.json` - Show prompt to user via text editor, get JSON response
+
 ## Paradigm Usage in RTL AOC Verification
 
 | Paradigm | Used For |
 |----------|----------|
 | `h_LiteralPath-c_ReadFile-o_Literal` | Loading ISA spec, MA spec, RTL trace |
-| `v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal` | Decomposing specs, extracting AOC, consolidating schemas, updating rules, verifying cycles, generating report |
+| `v_PromptLocation-h_Literal-c_UserTextEditor-o_JsonLiteral` | Asking user to decompose specs into intent blocks |
+| `v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal` | Extracting AOC, consolidating schemas, updating rules, verifying cycles, generating report |
 | `v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean` | Judging if more canonicals remain, validating AOC rules |
 | `v_ScriptLocation-h_Literal-c_Execute-o_Literal` | Incrementing loop counter |
 | `v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral` | Splitting trace into cycles |
@@ -49,4 +53,16 @@ LLM paradigms expect prompts to return JSON with this structure:
 ```
 
 For boolean paradigms, the `result` field should be `true` or `false`.
+
+## User Input Paradigm
+
+The user input paradigm (`v_PromptLocation-h_Literal-c_UserTextEditor-o_JsonLiteral`) uses the Canvas app's `user_input_tool` to:
+
+1. Read the prompt template from the specified path
+2. Fill the template with horizontal input data (context)
+3. Show a text editor to the user with the filled prompt
+4. Wait for user to provide JSON response
+5. Parse and return the JSON as a literal
+
+This paradigm is used for user-facing imperatives marked with `:>:` in NormCode.
 

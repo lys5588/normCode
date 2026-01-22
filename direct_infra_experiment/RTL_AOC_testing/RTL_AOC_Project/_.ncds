@@ -32,6 +32,12 @@
             <- ISA spec text
             <- MA spec text
             <- intent blocks
+
+        <- counters
+            <= initialize to list containing only 1
+
+        <- AOC schemas records
+            <= initialize to empty list
         
         /: Iterative extraction loop
         <- all AOC schemas
@@ -44,8 +50,13 @@
                     <- all user inputs
                     <- AOC schemas extracted so far
                         <= collect all AOC schemas from previous iterations
-                        <- AOC schemas per canonical
+                        <- AOC schemas records
                 
+                <- AOC schemas records
+                    <= append next new AOC to AOC schemas records
+                    <- AOC schemas records
+                    <- new AOC
+
                 <- no more canonicals to process?
                     <= judge if there are more canonicals to process
                     <- all user inputs
@@ -61,7 +72,6 @@
                         <- current counter
             
             <- counters
-                <= initialize to list containing only 1
             <* current counter from counters
         
         <- all AOC schema

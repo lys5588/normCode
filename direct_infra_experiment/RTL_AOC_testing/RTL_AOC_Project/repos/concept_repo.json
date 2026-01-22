@@ -9,6 +9,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": true,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -27,7 +28,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}cf6(provisions/prompts/combine_verification_report.md)"
+      "%{prompt_location}466(provisions/prompts/combine_verification_report.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -40,7 +41,6 @@
     "concept_name": "{AOC definitions}",
     "type": "{}",
     "flow_indices": [
-      "1.1.1",
       "1.2",
       "1.3.1.1",
       "1.6.1.2.1.3"
@@ -48,6 +48,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -56,77 +57,23 @@
     "natural_name": "AOC definitions"
   },
   {
-    "id": "c-aoc-is-valid",
-    "concept_name": "<AOC is valid>",
-    "type": "<>",
-    "flow_indices": [
-      "1.1.2",
-      "1.3",
-      "1.6.1.1.2"
-    ],
-    "description": null,
-    "is_ground_concept": false,
-    "is_final_concept": false,
-    "reference_data": null,
-    "reference_axis_names": [
-      "_none_axis"
-    ],
-    "reference_element_type": "%{truth_value}",
-    "natural_name": "AOC is valid"
-  },
-  {
-    "id": "c-trace-per-cycle",
-    "concept_name": "[trace per cycle]",
-    "type": "[]",
-    "flow_indices": [
-      "1.1.3",
-      "1.5",
-      "1.6.2"
-    ],
-    "description": null,
-    "is_ground_concept": false,
-    "is_final_concept": false,
-    "reference_data": null,
-    "reference_axis_names": [
-      "cycle"
-    ],
-    "reference_element_type": "dict(cycle_num: int, events: list)",
-    "natural_name": "trace per cycle"
-  },
-  {
-    "id": "c-verification-per-cycle",
-    "concept_name": "[verification per cycle]",
-    "type": "[]",
-    "flow_indices": [
-      "1.1.4",
-      "1.6"
-    ],
-    "description": null,
-    "is_ground_concept": false,
-    "is_final_concept": false,
-    "reference_data": null,
-    "reference_axis_names": [
-      "cycle"
-    ],
-    "reference_element_type": "dict",
-    "natural_name": "verification per cycle"
-  },
-  {
     "id": "fc-all-aoc-schema",
     "concept_name": "$. %>({all AOC schema})",
     "type": "({})",
     "flow_indices": [
       "1.2.1"
     ],
-    "description": "<= $. %>({all AOC schema})",
+    "description": "$. %>({all AOC schema})",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= $. %>({all AOC schema})"
+    "natural_name": "$. %>({all AOC schema})"
   },
   {
     "id": "c-isa-spec-text",
@@ -140,6 +87,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -176,6 +124,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -195,6 +144,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -231,6 +181,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -249,6 +200,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "intent_block"
@@ -263,15 +215,17 @@
     "flow_indices": [
       "1.2.4.1"
     ],
-    "description": "<= :>:(ask user to clarify and decompose the specs into intent blocks)",
+    "description": "ask user to clarify and decompose the specs into intent blocks",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{prompt_location}f84(provisions/prompts/phase1/decompose_specs.md)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
-    "reference_element_type": "operator",
-    "natural_name": "<= :>:(ask user to clarify and decompose the specs into intent blocks)"
+    "reference_element_type": "paradigm",
+    "natural_name": "ask user to clarify and decompose the specs into intent blocks"
   },
   {
     "id": "c-all-user-inputs",
@@ -279,12 +233,13 @@
     "type": "{}",
     "flow_indices": [
       "1.2.5",
-      "1.2.6.1.2.1.1",
-      "1.2.6.1.3.1.1"
+      "1.2.8.1.2.2",
+      "1.2.8.1.4.1.1"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -299,26 +254,110 @@
     "flow_indices": [
       "1.2.5.1"
     ],
-    "description": "<= &[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)",
+    "description": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= &[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)"
+    "natural_name": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)"
+  },
+  {
+    "id": "c-counters",
+    "concept_name": "[counters]",
+    "type": "[]",
+    "flow_indices": [
+      "1.2.6",
+      "1.2.8.1.5",
+      "1.2.8.1.5.1.3",
+      "1.2.8.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": true,
+    "reference_data": null,
+    "reference_axis_names": [
+      "counter"
+    ],
+    "reference_element_type": "int",
+    "natural_name": "counters"
+  },
+  {
+    "id": "fc-1",
+    "concept_name": "$% %>([%(1)])",
+    "type": "({})",
+    "flow_indices": [
+      "1.2.6.1"
+    ],
+    "description": "$% %>([%(1)])",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$% %>([%(1)])"
+  },
+  {
+    "id": "c-aoc-schemas-records",
+    "concept_name": "[AOC schemas records]",
+    "type": "[]",
+    "flow_indices": [
+      "1.2.7",
+      "1.2.8.1.2.3.3",
+      "1.2.8.1.3",
+      "1.2.8.1.3.1.1",
+      "1.2.9.1.1"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": true,
+    "reference_data": null,
+    "reference_axis_names": [
+      "canonical"
+    ],
+    "reference_element_type": "dict(id: str, trigger: dict, obligation: dict, timing: dict, abort: dict)",
+    "natural_name": "AOC schemas records"
+  },
+  {
+    "id": "fc-",
+    "concept_name": "$% %>([%([])])",
+    "type": "({})",
+    "flow_indices": [
+      "1.2.7.1"
+    ],
+    "description": "$% %>([%([])])",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$% %>([%([])])"
   },
   {
     "id": "c-all-aoc-schemas",
     "concept_name": "[all AOC schemas]",
     "type": "[]",
     "flow_indices": [
-      "1.2.6"
+      "1.2.8"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "canonical"
@@ -331,45 +370,51 @@
     "concept_name": "*. %>([counters]) %<({new AOC}) %:({counter}) %@(1)",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1"
+      "1.2.8.1"
     ],
-    "description": "<= *. %>([counters]) %<({new AOC}) %:({counter}) %@(1)",
+    "description": "*. %>([counters]) %<({new AOC}) %:({counter}) %@(1)",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= *. %>([counters]) %<({new AOC}) %:({counter}) %@(1)"
+    "natural_name": "*. %>([counters]) %<({new AOC}) %:({counter}) %@(1)"
   },
   {
     "id": "fc-new-aoc",
     "concept_name": "$. %>({new AOC})",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1.1"
+      "1.2.8.1.1"
     ],
-    "description": "<= $. %>({new AOC})",
+    "description": "$. %>({new AOC})",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= $. %>({new AOC})"
+    "natural_name": "$. %>({new AOC})"
   },
   {
     "id": "c-new-aoc",
     "concept_name": "{new AOC}",
     "type": "{}",
     "flow_indices": [
-      "1.2.6.1.2"
+      "1.2.8.1.2",
+      "1.2.8.1.3.1.2"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -382,13 +427,13 @@
     "concept_name": "::(extract a new action-obligation canonical from specs)",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1.2.1"
+      "1.2.8.1.2.1"
     ],
     "description": "extract a new action-obligation canonical from specs",
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}867(provisions/prompts/phase1/extract_aoc_canonical.md)"
+      "%{prompt_location}3c4(provisions/prompts/phase1/extract_aoc_canonical.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -401,13 +446,12 @@
     "concept_name": "[AOC schemas extracted so far]",
     "type": "[]",
     "flow_indices": [
-      "1.2.6.1.2.1.2",
-      "1.2.6.1.3.1.2",
-      "1.2.7.1.1"
+      "1.2.8.1.2.3"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "canonical"
@@ -416,50 +460,92 @@
     "natural_name": "AOC schemas extracted so far"
   },
   {
-    "id": "fc-aoc-schemas-per-canonical-canonical",
-    "concept_name": "&[#] %>[{AOC schemas per canonical}] %+(canonical)",
+    "id": "fc-aoc-schema-record-canonical",
+    "concept_name": "&[#] %>[{AOC schema record}] %+(canonical)",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1.2.1.2.1"
+      "1.2.8.1.2.3.1"
     ],
-    "description": "<= &[#] %>[{AOC schemas per canonical}] %+(canonical)",
+    "description": "&[#] %>[{AOC schema record}] %+(canonical)",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= &[#] %>[{AOC schemas per canonical}] %+(canonical)"
+    "natural_name": "&[#] %>[{AOC schema record}] %+(canonical)"
   },
   {
-    "id": "c-aoc-schemas-per-canonical",
-    "concept_name": "{AOC schemas per canonical}",
+    "id": "c-aoc-schema-record",
+    "concept_name": "{AOC schema record}",
     "type": "{}",
     "flow_indices": [
-      "1.2.6.1.2.1.2.1.1"
+      "1.2.8.1.2.3.2"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "canonical"
     ],
     "reference_element_type": "dict",
-    "natural_name": "AOC schemas per canonical"
+    "natural_name": "AOC schema record"
+  },
+  {
+    "id": "fc-aoc-schemas-records",
+    "concept_name": "$. %>([AOC schemas records])",
+    "type": "({})",
+    "flow_indices": [
+      "1.2.8.1.2.3.2.1"
+    ],
+    "description": "$. %>([AOC schemas records])",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$. %>([AOC schemas records])"
+  },
+  {
+    "id": "fc-aoc-schemas-records-new-aoc-canonical",
+    "concept_name": "$+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)",
+    "type": "({})",
+    "flow_indices": [
+      "1.2.8.1.3.1"
+    ],
+    "description": "$+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)"
   },
   {
     "id": "c-no-more-canonicals-to-process",
     "concept_name": "<no more canonicals to process>",
     "type": "<>",
     "flow_indices": [
-      "1.2.6.1.3",
-      "1.2.6.1.4.1.2"
+      "1.2.8.1.4",
+      "1.2.8.1.5.1.2"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -472,13 +558,13 @@
     "concept_name": "::(judge if there are more canonicals to process)<ALL True>",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1.3.1"
+      "1.2.8.1.4.1"
     ],
     "description": "judge if there are more canonicals to process",
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}b3c(provisions/prompts/phase1/judge_more_canonicals.md)"
+      "%{prompt_location}89a(provisions/prompts/phase1/judge_more_canonicals.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -487,68 +573,54 @@
     "natural_name": "judge if there are more canonicals to process"
   },
   {
-    "id": "c-counters",
-    "concept_name": "[counters]",
-    "type": "[]",
-    "flow_indices": [
-      "1.2.6.1.4",
-      "1.2.6.1.4.1.3",
-      "1.2.6.2"
-    ],
-    "description": null,
-    "is_ground_concept": false,
-    "is_final_concept": false,
-    "reference_data": null,
-    "reference_axis_names": [
-      "counter"
-    ],
-    "reference_element_type": "int",
-    "natural_name": "counters"
-  },
-  {
     "id": "fc-counters-next-counter-counter",
     "concept_name": "$+ %>([counters]) %<({next counter}) %:(counter)",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1.4.1"
+      "1.2.8.1.5.1"
     ],
-    "description": "<= $+ %>([counters]) %<({next counter}) %:(counter)",
+    "description": "$+ %>([counters]) %<({next counter}) %:(counter)",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= $+ %>([counters]) %<({next counter}) %:(counter)"
+    "natural_name": "$+ %>([counters]) %<({next counter}) %:(counter)"
   },
   {
     "id": "fc-no-more-canonicals-to-process",
     "concept_name": "@:!(<no more canonicals to process>)",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1.4.1.1"
+      "1.2.8.1.5.1.1"
     ],
-    "description": "<= @:!(<no more canonicals to process>)",
+    "description": "@:!(<no more canonicals to process>)",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= @:!(<no more canonicals to process>)"
+    "natural_name": "@:!(<no more canonicals to process>)"
   },
   {
     "id": "c-next-counter",
     "concept_name": "{next counter}",
     "type": "{}",
     "flow_indices": [
-      "1.2.6.1.4.1.4"
+      "1.2.8.1.5.1.4"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -561,13 +633,13 @@
     "concept_name": "::(compute next counter as current counter plus one)",
     "type": "({})",
     "flow_indices": [
-      "1.2.6.1.4.1.4.1"
+      "1.2.8.1.5.1.4.1"
     ],
     "description": "compute next counter as current counter plus one",
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{script_location}eb9(provisions/scripts/increment_counter.py)"
+      "%{script_location}7f8(provisions/scripts/increment_counter.py)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -580,12 +652,13 @@
     "concept_name": "{current counter}",
     "type": "{}",
     "flow_indices": [
-      "1.2.6.1.4.1.4.1.1",
-      "1.2.6.3"
+      "1.2.8.1.5.1.4.1.1",
+      "1.2.8.3"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -594,32 +667,16 @@
     "natural_name": "current counter"
   },
   {
-    "id": "fc-1",
-    "concept_name": "$% %>([%(1)])",
-    "type": "({})",
-    "flow_indices": [
-      "1.2.6.2.1"
-    ],
-    "description": "<= $% %>([%(1)])",
-    "is_ground_concept": true,
-    "is_final_concept": false,
-    "reference_data": null,
-    "reference_axis_names": [
-      "_none_axis"
-    ],
-    "reference_element_type": "operator",
-    "natural_name": "<= $% %>([%(1)])"
-  },
-  {
     "id": "c-all-aoc-schema",
     "concept_name": "{all AOC schema}",
     "type": "{}",
     "flow_indices": [
-      "1.2.7"
+      "1.2.9"
     ],
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -632,19 +689,38 @@
     "concept_name": "::(clean up and consolidate all AOC schemas into unified definition)",
     "type": "({})",
     "flow_indices": [
-      "1.2.7.1"
+      "1.2.9.1"
     ],
     "description": "clean up and consolidate all AOC schemas into unified definition",
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}55d(provisions/prompts/phase1/consolidate_aoc_schemas.md)"
+      "%{prompt_location}8f7(provisions/prompts/phase1/consolidate_aoc_schemas.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "paradigm",
     "natural_name": "clean up and consolidate all AOC schemas into unified definition"
+  },
+  {
+    "id": "c-aoc-is-valid",
+    "concept_name": "<AOC is valid>",
+    "type": "<>",
+    "flow_indices": [
+      "1.3",
+      "1.6.1.1.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "%{truth_value}",
+    "natural_name": "AOC is valid"
   },
   {
     "id": "fc-judge-if-all-aoc-rules-are-valid",
@@ -657,7 +733,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}a2f(provisions/prompts/phase1/validate_aoc_rules.md)"
+      "%{prompt_location}47f(provisions/prompts/phase1/validate_aoc_rules.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -676,6 +752,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -712,12 +789,32 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "str",
     "natural_name": "trace file path"
+  },
+  {
+    "id": "c-trace-per-cycle",
+    "concept_name": "[trace per cycle]",
+    "type": "[]",
+    "flow_indices": [
+      "1.5",
+      "1.6.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "reference_axis_names": [
+      "cycle"
+    ],
+    "reference_element_type": "dict(cycle_num: int, events: list)",
+    "natural_name": "trace per cycle"
   },
   {
     "id": "fc-split-rtl-trace-into-discrete-cycles",
@@ -730,7 +827,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{script_location}431(provisions/scripts/split_trace_to_cycles.py)"
+      "%{script_location}456(provisions/scripts/split_trace_to_cycles.py)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -739,21 +836,41 @@
     "natural_name": "split RTL trace into discrete cycles"
   },
   {
+    "id": "c-verification-per-cycle",
+    "concept_name": "[verification per cycle]",
+    "type": "[]",
+    "flow_indices": [
+      "1.6"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "reference_axis_names": [
+      "cycle"
+    ],
+    "reference_element_type": "dict(cycle_num: int, status: str, violations: list, active_rules: list)",
+    "natural_name": "verification per cycle"
+  },
+  {
     "id": "fc-trace-per-cycle-verification-cycle-trace-previous-",
     "concept_name": "*. %>([trace per cycle]) %<({verification}) %:({cycle trace}) %^({previous active rules}) %@(1)",
     "type": "({})",
     "flow_indices": [
       "1.6.1"
     ],
-    "description": "<= *. %>([trace per cycle]) %<({verification}) %:({cycle trace}) %^({previous active rules}) %@(1)",
+    "description": "*. %>([trace per cycle]) %<({verification}) %:({cycle trace}) %^({previous active rules}) %@(1)",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= *. %>([trace per cycle]) %<({verification}) %:({cycle trace}) %^({previous active rules}) %@(1)"
+    "natural_name": "*. %>([trace per cycle]) %<({verification}) %:({cycle trace}) %^({previous active rules}) %@(1)"
   },
   {
     "id": "fc-verification",
@@ -762,15 +879,17 @@
     "flow_indices": [
       "1.6.1.1"
     ],
-    "description": "<= $. %>({verification})",
+    "description": "$. %>({verification})",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= $. %>({verification})"
+    "natural_name": "$. %>({verification})"
   },
   {
     "id": "fc-aoc-is-valid",
@@ -779,15 +898,17 @@
     "flow_indices": [
       "1.6.1.1.1"
     ],
-    "description": "<= @:'(<AOC is valid>)",
+    "description": "@:'(<AOC is valid>)",
     "is_ground_concept": true,
     "is_final_concept": false,
-    "reference_data": null,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "<= @:'(<AOC is valid>)"
+    "natural_name": "@:'(<AOC is valid>)"
   },
   {
     "id": "c-active-rules",
@@ -800,6 +921,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -818,7 +940,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}969(provisions/prompts/phase2/update_active_rules.md)"
+      "%{prompt_location}337(provisions/prompts/phase2/update_active_rules.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -838,6 +960,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -856,6 +979,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -873,6 +997,7 @@
     "description": null,
     "is_ground_concept": false,
     "is_final_concept": false,
+    "is_invariant": null,
     "reference_data": null,
     "reference_axis_names": [
       "_none_axis"
@@ -891,7 +1016,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}881(provisions/prompts/phase2/verify_cycle.md)"
+      "%{prompt_location}9bf(provisions/prompts/phase2/verify_cycle.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
