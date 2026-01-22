@@ -3,7 +3,7 @@
  * Project-based NormCode Canvas - opens like a PyCharm/IDE project
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   FolderOpen, 
   Settings, 
@@ -24,6 +24,9 @@ import {
   Workflow,
   Rocket,
   Globe,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from 'lucide-react';
 import { GraphCanvas } from './components/graph/GraphCanvas';
 import { ControlPanel } from './components/panels/ControlPanel';
@@ -40,13 +43,14 @@ import { UserInputModal } from './components/panels/UserInputModal';
 import { ProjectTabs } from './components/panels/ProjectTabs';
 import { ChatPanel } from './components/panels/ChatPanel';
 import { DeploymentPanel } from './components/panels/DeploymentPanel';
-import { ToastContainer } from './components/common/ToastNotification';
+import { ToastContainer, ResizeDivider } from './components/common';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useGraphStore } from './stores/graphStore';
 import { useExecutionStore } from './stores/executionStore';
 import { useProjectStore } from './stores/projectStore';
 import { useChatStore } from './stores/chatStore';
 import { useNotificationStore } from './stores/notificationStore';
+import { useLayoutStore, ZOOM_LIMITS } from './stores/layoutStore';
 
 // View modes for the main content area
 type ViewMode = 'canvas' | 'editor';
@@ -186,11 +190,60 @@ function App() {
   const showError = useNotificationStore((s) => s.showError);
   const showWarning = useNotificationStore((s) => s.showWarning);
   
+  // Layout state (zoom and panel sizes)
+  const zoom = useLayoutStore((s) => s.zoom);
+  const zoomIn = useLayoutStore((s) => s.zoomIn);
+  const zoomOut = useLayoutStore((s) => s.zoomOut);
+  const resetZoom = useLayoutStore((s) => s.resetZoom);
+  const panelSizes = useLayoutStore((s) => s.panelSizes);
+  const setPanelSize = useLayoutStore((s) => s.setPanelSize);
+  
   // Track shown error logs to avoid duplicates
   const [lastErrorLogCount, setLastErrorLogCount] = useState(0);
   
   // Chat state
   const { isOpen: isChatOpen, togglePanel: toggleChatPanel, controllerStatus } = useChatStore();
+  
+  // Keyboard shortcuts for zoom
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Plus = Zoom In
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+        e.preventDefault();
+        zoomIn();
+      }
+      // Ctrl/Cmd + Minus = Zoom Out
+      if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        zoomOut();
+      }
+      // Ctrl/Cmd + 0 = Reset Zoom
+      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        resetZoom();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [zoomIn, zoomOut, resetZoom]);
+  
+  // Panel resize handlers
+  const handleDetailPanelResize = useCallback((delta: number) => {
+    setPanelSize('detailPanel', Math.max(200, Math.min(600, panelSizes.detailPanel - delta)));
+  }, [panelSizes.detailPanel, setPanelSize]);
+  
+  const handleLogPanelResize = useCallback((delta: number) => {
+    setPanelSize('logPanel', Math.max(100, Math.min(500, panelSizes.logPanel - delta)));
+  }, [panelSizes.logPanel, setPanelSize]);
+  
+  const handleWorkersPanelResize = useCallback((delta: number) => {
+    setPanelSize('workersPanel', Math.max(200, Math.min(500, panelSizes.workersPanel + delta)));
+  }, [panelSizes.workersPanel, setPanelSize]);
+  
+  const handleAgentPanelResize = useCallback((delta: number) => {
+    setPanelSize('agentPanel', Math.max(200, Math.min(500, panelSizes.agentPanel + delta)));
+  }, [panelSizes.agentPanel, setPanelSize]);
   
   
   // Project state
@@ -429,6 +482,44 @@ function App() {
           
           <div className="w-px h-6 bg-slate-200 mx-1" />
           
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1 bg-slate-100 rounded-lg px-1 py-0.5">
+            <button
+              onClick={zoomOut}
+              disabled={zoom <= ZOOM_LIMITS.min}
+              className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Zoom out (Ctrl+-)"
+            >
+              <ZoomOut size={14} />
+            </button>
+            <button
+              onClick={resetZoom}
+              className="px-1.5 py-0.5 text-xs font-mono text-slate-600 hover:bg-slate-200 rounded min-w-[42px] text-center transition-colors"
+              title="Click to reset zoom (Ctrl+0)"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              onClick={zoomIn}
+              disabled={zoom >= ZOOM_LIMITS.max}
+              className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Zoom in (Ctrl++)"
+            >
+              <ZoomIn size={14} />
+            </button>
+            {zoom !== 1 && (
+              <button
+                onClick={resetZoom}
+                className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                title="Reset to 100%"
+              >
+                <RotateCcw size={12} />
+              </button>
+            )}
+          </div>
+          
+          <div className="w-px h-6 bg-slate-200 mx-1" />
+          
           {/* Settings */}
           <button
             onClick={() => setShowSettingsPanel(!showSettingsPanel)}
@@ -535,7 +626,7 @@ function App() {
           />
 
           {/* Main Content */}
-          <main className="flex-1 flex flex-col overflow-hidden relative z-0">
+          <main className="flex-1 flex flex-col overflow-hidden">
             {viewMode === 'editor' ? (
               // Editor View
               <EditorPanel />
@@ -573,36 +664,86 @@ function App() {
             {showLogPanel && <LogPanel />}
           </>
         ) : (
-          // Canvas View
-          <>
+          // Canvas View with zoom transform
+          <div 
+            className="flex-1 flex flex-col overflow-hidden origin-top-left"
+            style={{ 
+              transform: `scale(${zoom})`,
+              width: `${100 / zoom}%`,
+              height: `${100 / zoom}%`,
+            }}
+          >
             <div className="flex-1 flex overflow-hidden">
-              {/* Left side panels */}
-              {showWorkersPanel && <WorkersPanel />}
-              {showAgentPanel && <AgentPanel />}
+              {/* Left side panels with resize handles */}
+              {showWorkersPanel && (
+                <>
+                  <div 
+                    className="bg-white border-r border-slate-200 flex flex-col overflow-hidden"
+                    style={{ width: panelSizes.workersPanel }}
+                  >
+                    <WorkersPanel />
+                  </div>
+                  <ResizeDivider direction="horizontal" onResize={handleWorkersPanelResize} />
+                </>
+              )}
+              {showAgentPanel && (
+                <>
+                  <div 
+                    className="bg-white border-r border-slate-200 flex flex-col overflow-hidden"
+                    style={{ width: panelSizes.agentPanel }}
+                  >
+                    <AgentPanel />
+                  </div>
+                  <ResizeDivider direction="horizontal" onResize={handleAgentPanelResize} />
+                </>
+              )}
               
               {/* Graph Canvas */}
               <div className="flex-1 overflow-hidden">
                 <GraphCanvas />
               </div>
 
-              {/* Detail Panel */}
+              {/* Detail Panel with resize handle */}
               {graphData && showDetailPanel && !detailPanelFullscreen && (
-                <DetailPanel 
-                  isFullscreen={false}
-                  onToggleFullscreen={() => setDetailPanelFullscreen(true)}
-                />
+                <>
+                  <ResizeDivider direction="horizontal" onResize={handleDetailPanelResize} />
+                  <div style={{ width: panelSizes.detailPanel }}>
+                    <DetailPanel 
+                      isFullscreen={false}
+                      onToggleFullscreen={() => setDetailPanelFullscreen(true)}
+                    />
+                  </div>
+                </>
               )}
             </div>
 
-            {/* Log Panel */}
-            {graphData && showLogPanel && <LogPanel />}
-          </>
+            {/* Log Panel with resize handle */}
+            {graphData && showLogPanel && (
+              <>
+                <ResizeDivider direction="vertical" onResize={handleLogPanelResize} />
+                <div style={{ height: panelSizes.logPanel }} className="overflow-hidden">
+                  <LogPanel />
+                </div>
+              </>
+            )}
+          </div>
         )}
           </main>
         </div>
 
         {/* Chat Panel - appears on right side, independent of view mode */}
-        <ChatPanel />
+        {isChatOpen && (
+          <>
+            <ResizeDivider 
+              direction="horizontal" 
+              onResize={(delta) => setPanelSize('chatPanel', Math.max(300, Math.min(600, panelSizes.chatPanel - delta)))} 
+            />
+            <div style={{ width: panelSizes.chatPanel }} className="h-full flex-shrink-0">
+              <ChatPanel />
+            </div>
+          </>
+        )}
+        {!isChatOpen && <ChatPanel />}
       </div>
 
       {/* Fullscreen Detail Panel */}
@@ -679,6 +820,16 @@ function App() {
           )}
         </div>
         <div className="flex items-center gap-4">
+          {/* Zoom level indicator */}
+          {zoom !== 1 && (
+            <span 
+              className="text-slate-400 cursor-pointer hover:text-slate-600" 
+              onClick={resetZoom}
+              title="Click to reset zoom"
+            >
+              Zoom: {Math.round(zoom * 100)}%
+            </span>
+          )}
           <span className="text-slate-400 truncate max-w-xs" title={projectPath || ''}>
             {projectPath}
           </span>

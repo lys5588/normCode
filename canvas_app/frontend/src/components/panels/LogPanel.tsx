@@ -97,7 +97,7 @@ export function LogPanel() {
   }
 
   return (
-    <div className="border-t border-slate-200 bg-white flex flex-col h-48">
+    <div className="border-t border-slate-200 bg-white flex flex-col h-full w-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100">
         <div className="flex items-center gap-4">

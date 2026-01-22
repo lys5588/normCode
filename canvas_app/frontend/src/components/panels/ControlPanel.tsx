@@ -138,7 +138,7 @@ export function ControlPanel({ onCheckpointToggle, checkpointPanelOpen }: Contro
   };
 
   return (
-    <div className="border-b px-4 py-2 relative z-10 bg-white border-slate-200">
+    <div className="border-b px-4 py-2 bg-white border-slate-200">
       <div className="flex items-center gap-4">
         {/* Execution controls */}
         <div className="flex items-center gap-1">

@@ -395,7 +395,7 @@ export function ChatPanel() {
   if (!isOpen) return null;
   
   return (
-    <div className="w-80 h-full flex flex-col bg-slate-50 border-l border-slate-200 shadow-lg">
+    <div className="w-full h-full flex flex-col bg-slate-50 border-l border-slate-200 shadow-lg">
       {/* Header */}
       <div className="px-3 py-2 bg-white border-b border-slate-200">
         {/* Top row: Controller selector and controls */}

@@ -774,7 +774,7 @@ export function AgentPanel() {
   };
   
   return (
-    <div className="h-full flex flex-col bg-slate-50 border-r w-72">
+    <div className="h-full w-full flex flex-col bg-slate-50">
       {/* Agent List Section - Collapsible */}
       <div className={`overflow-hidden flex flex-col ${agentsCollapsed ? '' : 'shrink-0'} min-h-0`}>
         <div 

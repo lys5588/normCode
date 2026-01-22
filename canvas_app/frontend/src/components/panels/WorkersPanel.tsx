@@ -458,7 +458,7 @@ export function WorkersPanel() {
   };
   
   return (
-    <div className="h-full flex flex-col bg-slate-50 border-r w-72">
+    <div className="h-full w-full flex flex-col bg-slate-50">
       {/* Header */}
       <div className="p-2 border-b bg-white flex items-center justify-between">
         <h3 className="font-semibold text-sm flex items-center gap-2">

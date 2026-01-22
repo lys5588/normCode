@@ -208,13 +208,13 @@ export function DetailPanel({ isFullscreen = false, onToggleFullscreen }: Detail
   // Base panel classes - changes based on fullscreen state
   const panelBaseClasses = isFullscreen
     ? 'fixed inset-0 z-50 bg-white flex flex-col'
-    : 'w-80 bg-white border-l border-slate-200 flex flex-col h-full overflow-hidden';
+    : 'w-full h-full bg-white border-l border-slate-200 flex flex-col overflow-hidden';
 
   if (!selectedNodeId) {
     return (
       <div className={isFullscreen 
         ? 'fixed inset-0 z-50 bg-white p-4 flex items-center justify-center text-slate-500 text-sm'
-        : 'w-80 bg-white border-l border-slate-200 p-4 flex items-center justify-center text-slate-500 text-sm'
+        : 'w-full h-full bg-white border-l border-slate-200 p-4 flex items-center justify-center text-slate-500 text-sm'
       }>
         {isFullscreen && (
           <button
@@ -234,7 +234,7 @@ export function DetailPanel({ isFullscreen = false, onToggleFullscreen }: Detail
     return (
       <div className={isFullscreen 
         ? 'fixed inset-0 z-50 bg-white p-4'
-        : 'w-80 bg-white border-l border-slate-200 p-4'
+        : 'w-full h-full bg-white border-l border-slate-200 p-4'
       }>
         {isFullscreen && (
           <button
