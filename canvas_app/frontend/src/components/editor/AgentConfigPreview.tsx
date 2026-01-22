@@ -287,7 +287,7 @@ interface AgentInlineEditorProps {
 function AgentInlineEditor({ agent, filePath, onClose, onSaved }: AgentInlineEditorProps) {
   const [name, setName] = useState(agent.name);
   const [description, setDescription] = useState(agent.description || '');
-  const [tools, setTools] = useState<AgentToolsConfig>(agent.tools);
+  const [tools, setTools] = useState<AgentToolsConfig>(agent.tools as AgentToolsConfig);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -435,7 +435,7 @@ interface AgentCardProps {
   onEdit: (agent: NormalizedAgent) => void;
 }
 
-function AgentCard({ agent, isDefault, filePath, onEdit }: AgentCardProps) {
+function AgentCard({ agent, isDefault, filePath: _filePath, onEdit }: AgentCardProps) {
   // Default agent starts expanded
   const [isExpanded, setIsExpanded] = useState(isDefault);
   

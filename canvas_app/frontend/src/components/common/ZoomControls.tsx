@@ -3,7 +3,7 @@
  * Provides zoom in/out buttons, percentage display, and reset
  */
 
-import { ZoomIn, ZoomOut, RotateCcw, Maximize } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { useLayoutStore, ZOOM_LIMITS } from '../../stores/layoutStore';
 
 interface ZoomControlsProps {

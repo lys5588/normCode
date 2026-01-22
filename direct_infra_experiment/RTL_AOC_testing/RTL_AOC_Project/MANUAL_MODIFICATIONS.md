@@ -287,6 +287,7 @@ Added parsing for selector annotations in imperative and judgement working_inter
 | Key selection | `%{selector_source}` + `%{selector_key}` | Extract field from dict |
 | Placeholder for empty lists | `{"__placeholder__": true}` | Ensure non-empty shape for packed values |
 | LLM output format | `{"thinking": ..., "result": ...}` | Required by `GenerateThinkJson` paradigm |
+| Continuation syntax | `$+ %>([dest]) %<({src}) %:(axis)` | Append element to list along axis |
 
 ---
 
@@ -369,15 +370,80 @@ Return JSON with `thinking` and `result` fields:
 
 ---
 
+## 12. Continuation Operator Syntax Extraction
+
+### Problem
+The continuation operator `$+` was not properly handled by the activator. The AR step failed with:
+```
+AR failed for continuation (+): Both 'assign_source' and 'assign_destination' must be specified.
+```
+
+### Syntax
+The continuation operator has the form:
+```
+$+ %>([destination_list]) %<({source_element}) %:(axis_name)
+```
+
+Where:
+- `%>([dest])` - the destination list to append to
+- `%<({src})` - the source element to append
+- `%:(axis)` - the axis name for the new dimension
+
+### Solution
+Updated `_.activate_nci.py` to properly extract:
+- `assign_destination` from `%>([...])` pattern
+- `assign_source` from `%<({...})` pattern
+- `by_axes` from `%:(...)` pattern
+
+### Generated working_interpretation
+```json
+"syntax": {
+  "marker": "+",
+  "assign_source": "{new AOC}",
+  "assign_destination": "[AOC schemas records]",
+  "by_axes": "canonical"
+}
+```
+
+---
+
+## 13. Perception Literal Evaluation Fix
+
+### Problem
+The `perceive` method in `PerceptionRouter` was returning literal signifiers as strings instead of evaluating them. For example, `%(1)` was being perceived as the string `'1'` instead of the integer `1`. This caused script executions to fail with:
+```
+'can only concatenate str (not "int") to str'
+```
+
+### Solution
+Updated the fallback case in `perceive` to use `ast.literal_eval` (same as `strip_sign` does):
+
+```python
+# Fallback: Unknown Norm -> Try to evaluate as Python literal
+import ast
+try:
+    return ast.literal_eval(content)
+except (ValueError, SyntaxError):
+    return content
+```
+
+### Key Point
+- `%(1)` now perceives to integer `1` instead of string `'1'`
+- `%({'key': 'value'})` now perceives to dict `{'key': 'value'}` instead of string
+- Non-literal strings remain as strings
+
+---
+
 ## Files Modified
 
 1. `_.pf.ncd` - Main NormCode plan
 2. `_.ncds` - NormCode design specification
-3. `_.activate_nci.py` - Activator script (is_invariant parsing)
+3. `_.activate_nci.py` - Activator script (is_invariant parsing, continuation syntax extraction)
 4. `provisions/paradigms/v_PromptLocation-h_Literal-c_UserTextEditor-o_JsonLiteral.json` - New paradigm
 5. `provisions/prompts/phase1/*.md` - All phase1 prompts (updated for thinking/result format)
 6. `provisions/prompts/phase2/*.md` - All phase2 prompts (updated for thinking/result format)
 7. `provisions/prompts/combine_verification_report.md` - Final report prompt (updated for thinking/result format)
+8. `infra/_agent/_models/_perception_router.py` - Literal evaluation in perceive fallback
 
 ---
 

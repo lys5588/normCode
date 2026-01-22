@@ -353,7 +353,9 @@
       },
       "syntax": {
         "marker": "+",
-        "assign_source": null
+        "assign_source": "{new AOC}",
+        "assign_destination": "[AOC schemas records]",
+        "by_axes": "canonical"
       }
     }
   },
@@ -410,7 +412,9 @@
       },
       "syntax": {
         "marker": "+",
-        "assign_source": null
+        "assign_source": "{next counter}",
+        "assign_destination": "[counters]",
+        "by_axes": "counter"
       }
     }
   },
@@ -441,7 +445,7 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.2.8.1.5.1.4"
+      "flow_index": "1.2.8.1.5.3"
     },
     "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{next counter}",
@@ -453,7 +457,7 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.2.8.1.5.1.4"
+        "flow_index": "1.2.8.1.5.3"
       },
       "paradigm": "v_ScriptLocation-h_Literal-c_Execute-o_Literal",
       "body_faculty": "python_interpreter",

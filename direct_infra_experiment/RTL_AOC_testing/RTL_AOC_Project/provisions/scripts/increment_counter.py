@@ -7,7 +7,10 @@ def increment(n: int) -> int:
     """Return n + 1."""
     return n + 1
 
-def main(input_1: int) -> int:
+def main(input_1) -> int:
     """Entry point for NormCode execution."""
+    # Handle string input (MVP may pass '1' instead of 1)
+    if isinstance(input_1, str):
+        input_1 = int(input_1)
     return increment(input_1)
 

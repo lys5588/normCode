@@ -650,8 +650,41 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
                 "assign_source": assign_source,
             }
         
+        elif marker == "+":
+            # CONTINUATION ($+) - append element to list
+            # Syntax: $+ %>([dest_list]) %<({source_element}) %:(axis)
+            # - %>([dest]) is the destination list
+            # - %<({source}) is the element to append
+            # - %:(axis) is the axis name
+            
+            assign_source = None
+            assign_destination = None
+            by_axes = None
+            
+            # Extract destination list from %>([...])
+            dest_match = re.search(r"%>\(\[([^\]]+)\]\)", nc_main)
+            if dest_match:
+                assign_destination = f"[{dest_match.group(1)}]"
+            
+            # Extract source element from %<({...})
+            source_match = re.search(r"%<\(\{([^}]+)\}\)", nc_main)
+            if source_match:
+                assign_source = f"{{{source_match.group(1)}}}"
+            
+            # Extract axis from %:(...)
+            axis_match = re.search(r"%:\(([^)]+)\)", nc_main)
+            if axis_match:
+                by_axes = axis_match.group(1)
+            
+            wi["syntax"] = {
+                "marker": marker,
+                "assign_source": assign_source,
+                "assign_destination": assign_destination,
+                "by_axes": by_axes,
+            }
+        
         else:
-            # Other assigning operators (=, +, -) - use legacy extraction
+            # Other assigning operators (=, -) - use legacy extraction
             source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
             source_match_list = re.search(r"%>\[([^\]]+)\]", nc_main)
             
@@ -873,16 +906,44 @@ def build_nested_operator_inference(oc: dict) -> dict | None:
         operator_type = oc.get("operator_type", "specification")
         marker = extract_operator_marker(operator_type)
         
-        # Extract assign_source from %>(...)
-        assign_source = None
-        source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
-        if source_match:
-            assign_source = f"{{{source_match.group(1)}}}"
-        
-        wi["syntax"] = {
-            "marker": marker,
-            "assign_source": assign_source,
-        }
+        if marker == "+":
+            # CONTINUATION ($+) - append element to list
+            assign_source = None
+            assign_destination = None
+            by_axes = None
+            
+            # Extract destination list from %>([...])
+            dest_match = re.search(r"%>\(\[([^\]]+)\]\)", nc_main)
+            if dest_match:
+                assign_destination = f"[{dest_match.group(1)}]"
+            
+            # Extract source element from %<({...})
+            source_match = re.search(r"%<\(\{([^}]+)\}\)", nc_main)
+            if source_match:
+                assign_source = f"{{{source_match.group(1)}}}"
+            
+            # Extract axis from %:(...)
+            axis_match = re.search(r"%:\(([^)]+)\)", nc_main)
+            if axis_match:
+                by_axes = axis_match.group(1)
+            
+            wi["syntax"] = {
+                "marker": marker,
+                "assign_source": assign_source,
+                "assign_destination": assign_destination,
+                "by_axes": by_axes,
+            }
+        else:
+            # Other assigning operators - extract assign_source from %>(...)
+            assign_source = None
+            source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
+            if source_match:
+                assign_source = f"{{{source_match.group(1)}}}"
+            
+            wi["syntax"] = {
+                "marker": marker,
+                "assign_source": assign_source,
+            }
     
     # Map sequence to inference_sequence
     sequence_mapping = {

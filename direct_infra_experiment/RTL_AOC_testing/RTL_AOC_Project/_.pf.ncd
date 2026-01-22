@@ -215,20 +215,20 @@
                         <= @:!(<no more canonicals to process>) | ?{flow_index}: 1.2.8.1.5.1.1 | ?{sequence}: timing
                             /: TIMING GATE: Only execute if NOT done
                         <* <no more canonicals to process> | ?{flow_index}: 1.2.8.1.5.1.2
-                    <- [counters]<:{1}> | ?{flow_index}: 1.2.8.1.5.1.3
+                    <- [counters]<:{1}> | ?{flow_index}: 1.2.8.1.5.2
                         | %{ref_axes}: [counter]
                         | %{ref_element}: int
-                    <- {next counter}<:{2}> | ?{flow_index}: 1.2.8.1.5.1.4
+                    <- {next counter}<:{2}> | ?{flow_index}: 1.2.8.1.5.3
                         | %{ref_axes}: [_none_axis]
                         | %{ref_element}: int
-                        <= ::(compute next counter as current counter plus one) | ?{flow_index}: 1.2.8.1.5.1.4.1 | ?{sequence}: imperative
+                        <= ::(compute next counter as current counter plus one) | ?{flow_index}: 1.2.8.1.5.3.1 | ?{sequence}: imperative
                             | %{norm_input}: v_ScriptLocation-h_Literal-c_Execute-o_Literal
                             | %{v_input_norm}: script_location
                             | %{v_input_provision}: provisions/scripts/increment_counter.py
                             | %{v_function_name}: increment
                             | %{h_input_norm}: Literal
                             | %{body_faculty}: python_interpreter
-                        <- {current counter}<:{1}> | ?{flow_index}: 1.2.8.1.5.1.4.1.1
+                        <- {current counter}<:{1}> | ?{flow_index}: 1.2.8.1.5.3.2
                             | %{ref_axes}: [_none_axis]
                             | %{ref_element}: int
             
