@@ -33,12 +33,6 @@ def grouping_references(states: States) -> States:
     if per_ref_by_axes is not None:
         by_axes_for_grouper = per_ref_by_axes  # List[List[str]]
         logging.debug(f"Using per-ref by_axes: {by_axes_for_grouper}, create_axis: {create_axis}")
-    elif create_axis is not None and not legacy_by_axes:
-        # Auto-detect: when create_axis is set but no by_axes specified,
-        # collapse all axes from value references to get individual elements
-        # This enables axis elimination for flat list results
-        by_axes_for_grouper = [list(ref.axes) for ref in value_refs if ref]
-        logging.debug(f"Auto-detecting by_axes to collapse all axes: {by_axes_for_grouper}, create_axis: {create_axis}")
     else:
         by_axes_for_grouper = legacy_by_axes  # List[str]
         logging.debug(f"Using legacy by_axes: {by_axes_for_grouper}")
@@ -46,13 +40,10 @@ def grouping_references(states: States) -> States:
     grouper = Grouper()
     result_ref = None
 
-    # Check if by_axes_for_grouper is in per-ref format (list of lists)
-    is_per_ref_format = by_axes_for_grouper and isinstance(by_axes_for_grouper[0], list) if by_axes_for_grouper else False
-    
     if states.syntax.marker == "in":
         # Determine by_axes (backward compatible)
-        if is_per_ref_format:
-            # New format: per-reference axes from syntax or auto-detected
+        if per_ref_by_axes is not None:
+            # New format: per-reference axes from syntax
             logging.debug(f"Performing 'and_in' grouping with per-ref by_axes: {by_axes_for_grouper}")
             result_ref = grouper.and_in(
                 value_refs,
