@@ -401,7 +401,7 @@ def build_concept_repo(nci_data: list) -> list:
                 reference_data = ["%{dummy}(_)"]
         else:
             # Operators and other function concepts also get dummy reference
-            reference_data = ["%{dummy}(_)"]
+                reference_data = ["%{dummy}(_)"]
         
         concept_entry = {
             "id": func_id,
@@ -693,11 +693,11 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
             elif source_match_list:
                 # Multiple sources from explicit list
                 assign_source = source_match_list.group(1)
-            
-            wi["syntax"] = {
-                "marker": marker,
-                "assign_source": assign_source,
-            }
+        
+        wi["syntax"] = {
+            "marker": marker,
+            "assign_source": assign_source,
+        }
     
     elif sequence_type == "grouping":
         nc_main = func_concept.get("nc_main", "")
@@ -942,15 +942,15 @@ def build_nested_operator_inference(oc: dict) -> dict | None:
             }
         else:
             # Other assigning operators - extract assign_source from %>(...)
-            assign_source = None
-            source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
-            if source_match:
-                assign_source = f"{{{source_match.group(1)}}}"
-            
-            wi["syntax"] = {
-                "marker": marker,
-                "assign_source": assign_source,
-            }
+        assign_source = None
+        source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
+        if source_match:
+            assign_source = f"{{{source_match.group(1)}}}"
+        
+        wi["syntax"] = {
+            "marker": marker,
+            "assign_source": assign_source,
+        }
     
     # Map sequence to inference_sequence
     sequence_mapping = {

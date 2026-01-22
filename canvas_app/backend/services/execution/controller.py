@@ -733,12 +733,32 @@ class ExecutionController:
         self._add_log("info", "", f"Execution paused at {self.current_inference or 'start'}")
     
     async def resume(self):
-        """Resume from paused state."""
+        """Resume from paused state.
+        
+        If there's no running task (e.g., after resume_from_checkpoint), 
+        this will create one like start() does.
+        """
+        if self.orchestrator is None:
+            raise RuntimeError("No repositories loaded. Call load_repositories first.")
+        
+        self._main_loop = asyncio.get_running_loop()
+        self._attach_infra_log_handlers()
+        
         self.status = ExecutionStatus.RUNNING
         self._pause_event.set()
         self._sync_status_to_registry()
+        
+        # If no task is running, create one (handles resume after checkpoint load)
+        if self._run_task is None or self._run_task.done():
+            self._stop_requested = False
+            if hasattr(self, 'chat_tool') and self.chat_tool:
+                self.chat_tool.set_execution_active(True)
+            self._run_task = asyncio.create_task(self._run_loop())
+            self._add_log("info", "", "Execution started (from resume)")
+        else:
+            self._add_log("info", "", "Execution resumed")
+        
         await self._emit("execution:resumed", {})
-        self._add_log("info", "", "Execution resumed")
     
     async def step(self):
         """Execute single inference then pause."""
