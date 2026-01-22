@@ -41,6 +41,15 @@ def load_config_from_file(config_path: Path) -> ProjectConfig:
     """
     Load a project configuration from a file.
     
+    Handles backward compatibility for legacy configs that have:
+    - execution.llm_model
+    - execution.paradigm_dir
+    - execution.base_dir
+    
+    These fields are now stored in .agent.json files. When loading a legacy
+    config without an agent_config reference, this function auto-migrates
+    by creating an agent.json file with the legacy settings.
+    
     Args:
         config_path: Path to the config file
         
@@ -56,10 +65,59 @@ def load_config_from_file(config_path: Path) -> ProjectConfig:
     with open(config_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
+    config_updated = False
+    
     # Handle legacy configs without ID
     if 'id' not in data:
         data['id'] = generate_project_id()
-        # Save updated config with ID
+        config_updated = True
+    
+    # =========================================================================
+    # BACKWARD COMPATIBILITY: Auto-migrate legacy execution settings to agent config
+    # Legacy configs have execution.llm_model, execution.paradigm_dir, execution.base_dir
+    # New configs have execution.agent_config pointing to a .agent.json file
+    # =========================================================================
+    exec_data = data.get('execution', {})
+    has_legacy_fields = any([
+        exec_data.get('llm_model'),
+        exec_data.get('paradigm_dir'),
+        exec_data.get('base_dir'),
+    ])
+    has_agent_config = exec_data.get('agent_config')
+    
+    if has_legacy_fields and not has_agent_config:
+        logger.info(f"Detected legacy project config, migrating to agent-centric format...")
+        
+        project_dir = config_path.parent
+        project_name = data.get('name', config_path.stem)
+        
+        # Extract legacy settings
+        legacy_llm_model = exec_data.get('llm_model', 'demo')
+        legacy_paradigm_dir = exec_data.get('paradigm_dir')
+        legacy_base_dir = exec_data.get('base_dir')
+        
+        # Create agent config file with legacy settings
+        try:
+            from services.agent.project_config import project_agent_config_service
+            
+            agent_config, agent_config_path = project_agent_config_service.create_default_config(
+                project_dir=project_dir,
+                project_name=project_name,
+                default_llm_model=legacy_llm_model,
+                paradigm_dir=legacy_paradigm_dir,
+                base_dir=legacy_base_dir,
+            )
+            
+            # Update project config to reference the new agent config
+            data['execution']['agent_config'] = agent_config_path.name
+            config_updated = True
+            
+            logger.info(f"Migrated legacy config: created {agent_config_path.name} with llm={legacy_llm_model}, paradigm_dir={legacy_paradigm_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to auto-migrate legacy config: {e}")
+    
+    # Save updated config if we made changes
+    if config_updated:
         with open(config_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, default=str)
     

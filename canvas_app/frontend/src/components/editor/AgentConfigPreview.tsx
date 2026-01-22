@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Bot,
   Users,
@@ -29,7 +30,15 @@ import {
   XCircle,
   Code,
   FileText,
+  Edit,
+  Save,
+  Loader2,
+  MessagesSquare,
+  Layout,
+  FileCode2,
 } from 'lucide-react';
+import { AgentToolsConfig } from '../../stores/agentStore';
+import { EmbeddedToolConfig } from '../panels/ToolConfigCards';
 
 // =============================================================================
 // Types
@@ -61,12 +70,19 @@ interface UserInputToolConfigDef {
   mode: string;
 }
 
+interface CanvasIntegrationConfigDef {
+  chat?: { enabled: boolean };
+  canvas?: { enabled: boolean };
+  parser?: { enabled: boolean };
+}
+
 interface AgentToolsConfigDef {
   llm: LLMToolConfigDef;
   paradigm: ParadigmToolConfigDef;
   file_system: FileSystemToolConfigDef;
   python_interpreter: PythonInterpreterToolConfigDef;
   user_input: UserInputToolConfigDef;
+  canvas_integration?: CanvasIntegrationConfigDef;
 }
 
 interface AgentDefinition {
@@ -123,6 +139,7 @@ function normalizeAgent(agent: AgentDefinition): NormalizedAgent {
           enabled: agent.tools.user_input?.enabled ?? true,
           mode: agent.tools.user_input?.mode || 'blocking',
         },
+        canvas_integration: agent.tools.canvas_integration,
       },
     };
   }
@@ -256,22 +273,182 @@ function Section({ title, icon, badge, children, defaultExpanded = true }: Secti
 // Agent Card Component
 // =============================================================================
 
+// =============================================================================
+// Agent Inline Editor Modal
+// =============================================================================
+
+interface AgentInlineEditorProps {
+  agent: NormalizedAgent;
+  filePath: string;
+  onClose: () => void;
+  onSaved: () => void;
+}
+
+function AgentInlineEditor({ agent, filePath, onClose, onSaved }: AgentInlineEditorProps) {
+  const [name, setName] = useState(agent.name);
+  const [description, setDescription] = useState(agent.description || '');
+  const [tools, setTools] = useState<AgentToolsConfig>(agent.tools);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    
+    try {
+      // Update the agent in the file
+      const res = await fetch('/api/agents/update-in-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file_path: filePath,
+          agent_id: agent.id,
+          updates: {
+            name,
+            description: description || null,
+            tools,
+          },
+        }),
+      });
+      
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Failed to save' }));
+        throw new Error(err.detail || 'Failed to save agent');
+      }
+      
+      onSaved();
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  return createPortal(
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-lg shadow-xl w-[500px] max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b flex items-center justify-between shrink-0">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Bot size={18} className="text-purple-500" />
+            Edit Agent: {agent.name}
+          </h3>
+          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded">
+            <X size={18} />
+          </button>
+        </div>
+        
+        {/* Form - scrollable */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {error && (
+            <div className="p-2 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+          
+          {/* Basic Info */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">ID</label>
+                <input
+                  type="text"
+                  value={agent.id}
+                  disabled
+                  className="w-full px-3 py-2 border rounded text-sm bg-slate-100 text-slate-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 border rounded text-sm"
+                  placeholder="Display name"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <input
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-3 py-2 border rounded text-sm"
+                placeholder="Optional description"
+              />
+            </div>
+          </div>
+          
+          {/* Divider */}
+          <div className="border-t pt-4">
+            <div className="text-xs uppercase tracking-wider text-slate-500 font-semibold mb-3">
+              Tool Configuration
+            </div>
+            
+            {/* Embedded Tool Config */}
+            <EmbeddedToolConfig 
+              tools={tools}
+              onChange={setTools}
+            />
+          </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="p-4 border-t flex justify-end gap-2 shrink-0">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm border rounded hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 text-sm bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50 flex items-center gap-2"
+          >
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            Save
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+// =============================================================================
+// Agent Card Component
+// =============================================================================
+
 interface AgentCardProps {
   agent: NormalizedAgent;
   isDefault: boolean;
+  filePath: string;
+  onEdit: (agent: NormalizedAgent) => void;
 }
 
-function AgentCard({ agent, isDefault }: AgentCardProps) {
+function AgentCard({ agent, isDefault, filePath, onEdit }: AgentCardProps) {
   // Default agent starts expanded
   const [isExpanded, setIsExpanded] = useState(isDefault);
   
   const { tools } = agent;
   
-  // Count enabled tools
+  // Count enabled tools (including canvas integration)
   const enabledToolsCount = [
     tools.file_system.enabled,
     tools.python_interpreter.enabled,
     tools.user_input.enabled,
+    tools.canvas_integration?.chat?.enabled,
+    tools.canvas_integration?.canvas?.enabled,
+    tools.canvas_integration?.parser?.enabled,
   ].filter(Boolean).length;
   
   return (
@@ -330,6 +507,30 @@ function AgentCard({ agent, isDefault }: AgentCardProps) {
           <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${tools.user_input.enabled ? 'bg-green-100' : 'bg-slate-100'}`} title="User Input">
             <MessageSquare size={14} className={tools.user_input.enabled ? 'text-green-600' : 'text-slate-300'} />
           </div>
+          {/* Canvas Integration icons */}
+          {tools.canvas_integration?.chat?.enabled && (
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-cyan-100" title="Chat Tool">
+              <MessagesSquare size={14} className="text-cyan-600" />
+            </div>
+          )}
+          {tools.canvas_integration?.canvas?.enabled && (
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-cyan-100" title="Canvas Tool">
+              <Layout size={14} className="text-cyan-600" />
+            </div>
+          )}
+          {tools.canvas_integration?.parser?.enabled && (
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-cyan-100" title="Parser Tool">
+              <FileCode2 size={14} className="text-cyan-600" />
+            </div>
+          )}
+          {/* Edit button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(agent); }}
+            className="w-7 h-7 rounded-lg flex items-center justify-center bg-purple-100 hover:bg-purple-200 transition-colors ml-1"
+            title="Edit agent"
+          >
+            <Edit size={14} className="text-purple-600" />
+          </button>
         </div>
       </button>
       
@@ -449,6 +650,59 @@ function AgentCard({ agent, isDefault }: AgentCardProps) {
               </div>
             </div>
           </div>
+          
+          {/* Canvas Integration Tools */}
+          {(tools.canvas_integration?.chat?.enabled || tools.canvas_integration?.canvas?.enabled || tools.canvas_integration?.parser?.enabled) && (
+            <div>
+              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Canvas Integration</div>
+              <div className="grid grid-cols-3 gap-2">
+                {/* Chat Tool */}
+                {tools.canvas_integration?.chat?.enabled && (
+                  <div className="p-3 rounded-lg border bg-cyan-50 border-cyan-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessagesSquare size={14} className="text-cyan-600" />
+                      <span className="text-sm font-medium text-cyan-800">Chat</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Check size={10} className="text-green-500" />
+                      <span className="text-[10px] text-green-600">Enabled</span>
+                    </div>
+                    <div className="mt-1 text-[10px] text-cyan-600">Read/write messages</div>
+                  </div>
+                )}
+                
+                {/* Canvas Tool */}
+                {tools.canvas_integration?.canvas?.enabled && (
+                  <div className="p-3 rounded-lg border bg-cyan-50 border-cyan-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Layout size={14} className="text-cyan-600" />
+                      <span className="text-sm font-medium text-cyan-800">Canvas</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Check size={10} className="text-green-500" />
+                      <span className="text-[10px] text-green-600">Enabled</span>
+                    </div>
+                    <div className="mt-1 text-[10px] text-cyan-600">Graph manipulation</div>
+                  </div>
+                )}
+                
+                {/* Parser Tool */}
+                {tools.canvas_integration?.parser?.enabled && (
+                  <div className="p-3 rounded-lg border bg-cyan-50 border-cyan-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileCode2 size={14} className="text-cyan-600" />
+                      <span className="text-sm font-medium text-cyan-800">Parser</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Check size={10} className="text-green-500" />
+                      <span className="text-[10px] text-green-600">Enabled</span>
+                    </div>
+                    <div className="mt-1 text-[10px] text-cyan-600">Parse .ncd files</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -566,6 +820,7 @@ export function AgentConfigPreview({ filePath, onClose }: AgentConfigPreviewProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('formatted');
+  const [editingAgent, setEditingAgent] = useState<NormalizedAgent | null>(null);
 
   // Load data on mount or path change
   useEffect(() => {
@@ -774,6 +1029,8 @@ export function AgentConfigPreview({ filePath, onClose }: AgentConfigPreviewProp
                     key={agent.id} 
                     agent={normalizeAgent(agent)} 
                     isDefault={agent.id === config.default_agent}
+                    filePath={filePath}
+                    onEdit={(normalizedAgent) => setEditingAgent(normalizedAgent)}
                   />
                 ))}
               </div>
@@ -835,6 +1092,16 @@ export function AgentConfigPreview({ filePath, onClose }: AgentConfigPreviewProp
           </div>
         )}
       </div>
+      
+      {/* Agent Editor Modal */}
+      {editingAgent && (
+        <AgentInlineEditor
+          agent={editingAgent}
+          filePath={filePath}
+          onClose={() => setEditingAgent(null)}
+          onSaved={() => loadPreview()}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,33 @@
+{
+  "default_agent": "default",
+  "agents": [
+    {
+      "id": "default",
+      "name": "\u9ec4\u91d1\u6295\u8d44\u5efa\u8bae Agent",
+      "description": "Default agent for \u9ec4\u91d1\u6295\u8d44\u5efa\u8bae",
+      "tools": {
+        "llm": {
+          "model": "qwen-turbo-latest"
+        },
+        "paradigm": {
+          "dir": "C:\\Users\\ProgU\\PycharmProjects\\normCode\\direct_infra_experiment\\nc_ai_planning_ex\\iteration_6\\gold\\provision\\paradigm"
+        },
+        "file_system": {
+          "enabled": true,
+          "base_dir": "C:\\Users\\ProgU\\PycharmProjects\\normCode\\direct_infra_experiment\\nc_ai_planning_ex\\iteration_6\\gold"
+        },
+        "python_interpreter": {
+          "enabled": true,
+          "timeout": 30
+        },
+        "user_input": {
+          "enabled": true,
+          "mode": "blocking"
+        }
+      }
+    }
+  ],
+  "description": "Agent configuration for \u9ec4\u91d1\u6295\u8d44\u5efa\u8bae",
+  "created_at": "2026-01-22T12:12:32.165501",
+  "updated_at": "2026-01-22T12:21:38.158765"
+}

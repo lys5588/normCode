@@ -297,7 +297,7 @@ async def create_or_update_agent(request: AgentConfigRequest):
             # Load existing agent config or create new one
             config_path = project_agent_config_service.get_agent_config_path(
                 project_dir=project_service.current_project_path,
-                project_name=project_service.current_project.name if project_service.current_project else None,
+                project_name=project_service.current_config.name if project_service.current_config else None,
             )
             
             if config_path:
@@ -915,6 +915,84 @@ async def get_agent_capabilities(agent_id: str):
         paradigm_dir=effective_paradigm_dir,
         agent_frame_model=agent_frame_model
     )
+
+
+# ============================================================================
+# File-based Agent Update Endpoints
+# ============================================================================
+
+class UpdateAgentInFileRequest(BaseModel):
+    """Request to update an agent directly in a .agent.json file."""
+    file_path: str
+    agent_id: str
+    updates: dict  # Can include name, description, tools
+
+
+@router.post("/update-in-file")
+async def update_agent_in_file(request: UpdateAgentInFileRequest):
+    """Update an agent configuration directly in a .agent.json file.
+    
+    This endpoint is used by the AgentConfigPreview to edit agents without
+    going through the in-memory registry. It directly modifies the file.
+    """
+    import json
+    from datetime import datetime
+    
+    file_path = Path(request.file_path)
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {request.file_path}")
+    
+    if not file_path.name.endswith('.agent.json'):
+        raise HTTPException(status_code=400, detail="File must be a .agent.json file")
+    
+    try:
+        # Load existing config
+        with open(file_path, 'r', encoding='utf-8') as f:
+            config_data = json.load(f)
+        
+        # Find the agent to update
+        agents = config_data.get('agents', [])
+        agent_found = False
+        
+        for i, agent in enumerate(agents):
+            if agent.get('id') == request.agent_id:
+                # Update the agent with provided updates
+                if 'name' in request.updates:
+                    agent['name'] = request.updates['name']
+                if 'description' in request.updates:
+                    agent['description'] = request.updates['description']
+                if 'tools' in request.updates:
+                    # Merge tools, preserving existing structure
+                    agent['tools'] = request.updates['tools']
+                
+                agents[i] = agent
+                agent_found = True
+                break
+        
+        if not agent_found:
+            raise HTTPException(status_code=404, detail=f"Agent '{request.agent_id}' not found in file")
+        
+        # Update timestamp
+        config_data['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+        
+        # Save back to file
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"Updated agent '{request.agent_id}' in file: {file_path}")
+        
+        return {
+            "success": True,
+            "message": f"Agent '{request.agent_id}' updated in {file_path.name}",
+            "file_path": str(file_path),
+        }
+        
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON in file: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to update agent in file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update: {str(e)}")
 
 
 # ============================================================================

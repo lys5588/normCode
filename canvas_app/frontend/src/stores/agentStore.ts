@@ -37,12 +37,21 @@ export interface CustomToolConfig {
   settings: Record<string, unknown>;
 }
 
+// Canvas integration tools (for compiler meta-project)
+export interface CanvasIntegrationConfig {
+  chat?: { enabled: boolean };
+  canvas?: { enabled: boolean };
+  parser?: { enabled: boolean };
+}
+
 export interface AgentToolsConfig {
   llm: LLMToolConfig;
   paradigm: ParadigmToolConfig;
   file_system: FileSystemToolConfig;
   python_interpreter: PythonInterpreterToolConfig;
   user_input: UserInputToolConfig;
+  // Canvas integration tools (for compiler meta-project)
+  canvas_integration?: CanvasIntegrationConfig;
   // Custom/injectable tools
   custom?: Record<string, CustomToolConfig>;
 }

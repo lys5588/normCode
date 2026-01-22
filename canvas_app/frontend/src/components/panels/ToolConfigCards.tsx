@@ -9,11 +9,13 @@
 import { useState, useEffect } from 'react';
 import { 
   Cpu, FileCode, Code, MessageSquare, Workflow,
-  ChevronRight, ChevronDown, Settings, Plus, Trash2, Wrench
+  ChevronRight, ChevronDown, Settings, Plus, Trash2, Wrench,
+  MessagesSquare, Layout, FileCode2
 } from 'lucide-react';
 import { 
   AgentToolsConfig, 
   CustomToolConfig,
+  CanvasIntegrationConfig,
 } from '../../stores/agentStore';
 import { useLLMStore } from '../../stores/llmStore';
 import { LLMSettingsPanel } from './LLMSettingsPanel';
@@ -259,6 +261,14 @@ export function EmbeddedToolConfig({ tools, onChange, compact = false }: Embedde
         )}
       </div>
       
+      {/* Canvas Integration Tools */}
+      {!compact && (
+        <CanvasIntegrationSection
+          config={tools.canvas_integration}
+          onChange={(canvas_integration) => updateTool('canvas_integration', canvas_integration)}
+        />
+      )}
+      
       {/* Custom Tools */}
       {!compact && (
         <CustomToolsSection 
@@ -275,6 +285,107 @@ export function EmbeddedToolConfig({ tools, onChange, compact = false }: Embedde
           fetchProviders();
         }}
       />
+    </div>
+  );
+}
+
+// ============================================================================
+// Canvas Integration Section
+// ============================================================================
+
+interface CanvasIntegrationSectionProps {
+  config: CanvasIntegrationConfig | undefined;
+  onChange: (config: CanvasIntegrationConfig) => void;
+}
+
+function CanvasIntegrationSection({ config, onChange }: CanvasIntegrationSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const hasAnyEnabled = config?.chat?.enabled || config?.canvas?.enabled || config?.parser?.enabled;
+  
+  const updateTool = (tool: keyof CanvasIntegrationConfig, enabled: boolean) => {
+    onChange({
+      ...config,
+      [tool]: { enabled },
+    });
+  };
+  
+  return (
+    <div className="mt-3 pt-3 border-t">
+      <div 
+        className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 -mx-1 px-1 py-1 rounded"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-1">
+          <Layout size={10} className="text-cyan-500" />
+          Canvas Integration
+        </div>
+        {hasAnyEnabled && (
+          <span className="text-[10px] text-cyan-600 bg-cyan-100 px-1.5 rounded">
+            {[config?.chat?.enabled, config?.canvas?.enabled, config?.parser?.enabled].filter(Boolean).length} active
+          </span>
+        )}
+      </div>
+      
+      {isExpanded && (
+        <div className="mt-2 space-y-2">
+          <p className="text-[10px] text-slate-400 mb-2">
+            These tools are injected at runtime for Canvas Assistant projects
+          </p>
+          
+          {/* Chat Tool */}
+          <div className={`flex items-center gap-2 p-2 rounded border ${config?.chat?.enabled ? 'bg-cyan-50/50 border-cyan-200' : 'bg-slate-50 border-slate-200'}`}>
+            <MessagesSquare size={14} className={config?.chat?.enabled ? 'text-cyan-500' : 'text-slate-400'} />
+            <div className="flex-1">
+              <div className="text-sm font-medium">Chat Tool</div>
+              <div className="text-[10px] text-slate-400">Read/write messages to chat interface</div>
+            </div>
+            <label className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                checked={config?.chat?.enabled ?? false}
+                onChange={(e) => updateTool('chat', e.target.checked)}
+                className="rounded text-cyan-500"
+              />
+            </label>
+          </div>
+          
+          {/* Canvas Tool */}
+          <div className={`flex items-center gap-2 p-2 rounded border ${config?.canvas?.enabled ? 'bg-cyan-50/50 border-cyan-200' : 'bg-slate-50 border-slate-200'}`}>
+            <Layout size={14} className={config?.canvas?.enabled ? 'text-cyan-500' : 'text-slate-400'} />
+            <div className="flex-1">
+              <div className="text-sm font-medium">Canvas Tool</div>
+              <div className="text-[10px] text-slate-400">Execute canvas commands for graph manipulation</div>
+            </div>
+            <label className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                checked={config?.canvas?.enabled ?? false}
+                onChange={(e) => updateTool('canvas', e.target.checked)}
+                className="rounded text-cyan-500"
+              />
+            </label>
+          </div>
+          
+          {/* Parser Tool */}
+          <div className={`flex items-center gap-2 p-2 rounded border ${config?.parser?.enabled ? 'bg-cyan-50/50 border-cyan-200' : 'bg-slate-50 border-slate-200'}`}>
+            <FileCode2 size={14} className={config?.parser?.enabled ? 'text-cyan-500' : 'text-slate-400'} />
+            <div className="flex-1">
+              <div className="text-sm font-medium">Parser Tool</div>
+              <div className="text-[10px] text-slate-400">Parse NormCode files (.ncd)</div>
+            </div>
+            <label className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                checked={config?.parser?.enabled ?? false}
+                onChange={(e) => updateTool('parser', e.target.checked)}
+                className="rounded text-cyan-500"
+              />
+            </label>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
