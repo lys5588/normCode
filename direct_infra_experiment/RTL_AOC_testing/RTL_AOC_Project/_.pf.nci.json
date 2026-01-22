@@ -1100,7 +1100,7 @@
       "flow_index": "1.2.5.1",
       "type": "main",
       "depth": 3,
-      "nc_main": "<= &[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)",
+      "nc_main": "<= &[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}]",
       "inference_marker": "<=",
       "concept_type": "operator",
       "operator_type": "grouping",
@@ -1951,7 +1951,7 @@
       "flow_index": "1.2.8.1.2.3.1",
       "type": "main",
       "depth": 6,
-      "nc_main": "<= &[#] %>[{AOC schema record}] %+(canonical)",
+      "nc_main": "<= &[#] %>[{AOC schema record}]",
       "inference_marker": "<=",
       "concept_type": "operator",
       "operator_type": "grouping",
@@ -2052,7 +2052,7 @@
       "flow_index": "1.2.8.1.3.1",
       "type": "main",
       "depth": 5,
-      "nc_main": "<= $+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)",
+      "nc_main": "<= $+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis)",
       "inference_marker": "<=",
       "concept_type": "operator",
       "operator_type": "continuation",
@@ -2255,9 +2255,45 @@
             "type": "comment",
             "depth": 6,
             "nc_comment": "| %{selector_packed}: true"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.2.8.1.4.1.2",
+        "type": "main",
+        "depth": 5,
+        "nc_main": "<- [AOC schemas extracted so far]<:{2}>",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "AOC schemas extracted so far",
+        "attached_comments": [
+          {
+            "flow_index": "1.2.8.1.4.1.2",
+            "type": "inline_comment",
+            "depth": 5,
+            "nc_comment": "?{flow_index}: 1.2.8.1.4.1.2"
           },
           {
-            "flow_index": "1.2.8.1.4.1.1",
+            "flow_index": "1.2.8.1.4.1.2",
+            "type": "comment",
+            "depth": 6,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.2.8.1.4.1.2",
+            "type": "comment",
+            "depth": 6,
+            "nc_comment": "| %{ref_element}: list"
+          },
+          {
+            "flow_index": "1.2.8.1.4.1.2",
+            "type": "comment",
+            "depth": 6,
+            "nc_comment": "| %{selector_packed}: true"
+          },
+          {
+            "flow_index": "1.2.8.1.4.1.2",
             "type": "comment",
             "depth": 4,
             "nc_comment": "/: Continue unless done: append next counter if NOT terminated"
@@ -2681,53 +2717,160 @@
     },
     "value_concepts": [
       {
-        "flow_index": "1.2.9.1.1",
+        "flow_index": "1.2.9.2",
         "type": "main",
         "depth": 3,
-        "nc_main": "<- [AOC schemas records]<:{1}>",
+        "nc_main": "<- [all AOC schemas list]<:{1}>",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "all AOC schemas list",
+        "attached_comments": [
+          {
+            "flow_index": "1.2.9.2",
+            "type": "inline_comment",
+            "depth": 3,
+            "nc_comment": "?{flow_index}: 1.2.9.2"
+          },
+          {
+            "flow_index": "1.2.9.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.2.9.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.2.9.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_element}: list"
+          },
+          {
+            "flow_index": "1.2.9.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{selector_packed}: true"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.2.9.2",
+      "type": "main",
+      "depth": 3,
+      "nc_main": "<- [all AOC schemas list]<:{1}>",
+      "inference_marker": "<-",
+      "concept_type": "relation",
+      "operator_type": null,
+      "concept_name": "all AOC schemas list",
+      "attached_comments": [
+        {
+          "flow_index": "1.2.9.2",
+          "type": "inline_comment",
+          "depth": 3,
+          "nc_comment": "?{flow_index}: 1.2.9.2"
+        },
+        {
+          "flow_index": "1.2.9.2",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.2.9.2",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.2.9.2",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{ref_element}: list"
+        },
+        {
+          "flow_index": "1.2.9.2",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{selector_packed}: true"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.2.9.2.1",
+      "type": "main",
+      "depth": 4,
+      "nc_main": "<= &[#] %>[{AOC schema record}]",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "grouping",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.2.9.2.1",
+          "type": "inline_comment",
+          "depth": 4,
+          "nc_comment": "?{flow_index}: 1.2.9.2.1 | ?{sequence}: grouping"
+        },
+        {
+          "flow_index": "1.2.9.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "/: GROUP: Collect all AOC schemas records into single list with shape (1,)"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.2.9.2.2",
+        "type": "main",
+        "depth": 4,
+        "nc_main": "<- [AOC schemas records]",
         "inference_marker": "<-",
         "concept_type": "relation",
         "operator_type": null,
         "concept_name": "AOC schemas records",
         "attached_comments": [
           {
-            "flow_index": "1.2.9.1.1",
+            "flow_index": "1.2.9.2.2",
             "type": "inline_comment",
-            "depth": 3,
-            "nc_comment": "?{flow_index}: 1.2.9.1.1"
+            "depth": 4,
+            "nc_comment": "?{flow_index}: 1.2.9.2.2"
           },
           {
-            "flow_index": "1.2.9.1.1",
+            "flow_index": "1.2.9.2.2",
             "type": "comment",
-            "depth": 4,
-            "nc_comment": "| %{ref_axes}: [canonical]"
+            "depth": 5,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
           },
           {
-            "flow_index": "1.2.9.1.1",
+            "flow_index": "1.2.9.2.2",
             "type": "comment",
-            "depth": 4,
+            "depth": 5,
             "nc_comment": "| %{ref_element}: dict"
           },
           {
-            "flow_index": "1.2.9.1.1",
-            "type": "comment",
-            "depth": 4,
-            "nc_comment": "| %{selector_packed}: true"
-          },
-          {
-            "flow_index": "1.2.9.1.1",
+            "flow_index": "1.2.9.2.2",
             "type": "comment",
             "depth": 1,
             "nc_comment": "/: ----------------------------------------"
           },
           {
-            "flow_index": "1.2.9.1.1",
+            "flow_index": "1.2.9.2.2",
             "type": "comment",
             "depth": 1,
             "nc_comment": "/: Validate the generated AOC"
           },
           {
-            "flow_index": "1.2.9.1.1",
+            "flow_index": "1.2.9.2.2",
             "type": "comment",
             "depth": 1,
             "nc_comment": "/: ----------------------------------------"

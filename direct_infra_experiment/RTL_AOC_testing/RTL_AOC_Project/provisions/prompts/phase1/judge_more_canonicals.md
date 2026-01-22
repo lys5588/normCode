@@ -4,15 +4,23 @@ Determine if there are more AOC canonicals to extract from the specification.
 
 ## Input Data
 
+### Original Specifications
 <user_inputs>
 $input_1
 </user_inputs>
+
+### Previously Extracted Canonicals
+<extracted_schemas>
+$input_2
+</extracted_schemas>
+
+**Note:** Ignore any entries with `"__placeholder__": true` - these are system placeholders, not real schemas.
 
 ## Task
 
 Judge whether ALL relevant canonicals have been extracted, or if more remain.
 
-Review the specifications and intent blocks above. Consider what AOC canonicals would be needed to fully specify the normative behavior.
+**Compare** the extracted canonicals against the original specifications. Identify any normative statements ("shall", "must") that have NOT yet been captured.
 
 ## Criteria for Completion
 

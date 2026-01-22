@@ -28,7 +28,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}18c(provisions/prompts/combine_verification_report.md)"
+      "%{prompt_location}5ec(provisions/prompts/combine_verification_report.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -219,7 +219,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}814(provisions/prompts/phase1/decompose_specs.md)"
+      "%{prompt_location}e01(provisions/prompts/phase1/decompose_specs.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -248,13 +248,13 @@
     "natural_name": "all user inputs"
   },
   {
-    "id": "fc-isa-spec-text-ma-spec-text-intent-blocks-inputs",
-    "concept_name": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)",
+    "id": "fc-isa-spec-text-ma-spec-text-intent-blocks",
+    "concept_name": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}]",
     "type": "({})",
     "flow_indices": [
       "1.2.5.1"
     ],
-    "description": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)",
+    "description": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}]",
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
@@ -264,7 +264,7 @@
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)"
+    "natural_name": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}]"
   },
   {
     "id": "c-counters",
@@ -315,7 +315,7 @@
       "1.2.8.1.2.3.2",
       "1.2.8.1.3",
       "1.2.8.1.3.1.1",
-      "1.2.9.1.1"
+      "1.2.9.2.2"
     ],
     "description": null,
     "is_ground_concept": false,
@@ -433,7 +433,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}5ae(provisions/prompts/phase1/extract_aoc_canonical.md)"
+      "%{prompt_location}b6d(provisions/prompts/phase1/extract_aoc_canonical.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -446,7 +446,8 @@
     "concept_name": "[AOC schemas extracted so far]",
     "type": "[]",
     "flow_indices": [
-      "1.2.8.1.2.3"
+      "1.2.8.1.2.3",
+      "1.2.8.1.4.1.2"
     ],
     "description": null,
     "is_ground_concept": false,
@@ -460,13 +461,14 @@
     "natural_name": "AOC schemas extracted so far"
   },
   {
-    "id": "fc-aoc-schema-record-canonical",
-    "concept_name": "&[#] %>[{AOC schema record}] %+(canonical)",
+    "id": "fc-aoc-schema-record",
+    "concept_name": "&[#] %>[{AOC schema record}]",
     "type": "({})",
     "flow_indices": [
-      "1.2.8.1.2.3.1"
+      "1.2.8.1.2.3.1",
+      "1.2.9.2.1"
     ],
-    "description": "&[#] %>[{AOC schema record}] %+(canonical)",
+    "description": "&[#] %>[{AOC schema record}]",
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
@@ -476,16 +478,16 @@
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "&[#] %>[{AOC schema record}] %+(canonical)"
+    "natural_name": "&[#] %>[{AOC schema record}]"
   },
   {
-    "id": "fc-aoc-schemas-records-new-aoc-canonical",
-    "concept_name": "$+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)",
+    "id": "fc-aoc-schemas-records-new-aoc-none-axis",
+    "concept_name": "$+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis)",
     "type": "({})",
     "flow_indices": [
       "1.2.8.1.3.1"
     ],
-    "description": "$+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)",
+    "description": "$+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis)",
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
@@ -495,7 +497,7 @@
       "_none_axis"
     ],
     "reference_element_type": "operator",
-    "natural_name": "$+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)"
+    "natural_name": "$+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis)"
   },
   {
     "id": "c-no-more-canonicals-to-process",
@@ -527,7 +529,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}eb5(provisions/prompts/phase1/judge_more_canonicals.md)"
+      "%{prompt_location}7b8(provisions/prompts/phase1/judge_more_canonicals.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -602,7 +604,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{script_location}627(provisions/scripts/increment_counter.py)"
+      "%{script_location}aab(provisions/scripts/increment_counter.py)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -658,13 +660,31 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}7c8(provisions/prompts/phase1/consolidate_aoc_schemas.md)"
+      "%{prompt_location}41a(provisions/prompts/phase1/consolidate_aoc_schemas.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
     ],
     "reference_element_type": "paradigm",
     "natural_name": "clean up and consolidate all AOC schemas into unified definition"
+  },
+  {
+    "id": "c-all-aoc-schemas-list",
+    "concept_name": "[all AOC schemas list]",
+    "type": "[]",
+    "flow_indices": [
+      "1.2.9.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "list",
+    "natural_name": "all AOC schemas list"
   },
   {
     "id": "c-aoc-is-valid",
@@ -696,7 +716,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}51b(provisions/prompts/phase1/validate_aoc_rules.md)"
+      "%{prompt_location}1ab(provisions/prompts/phase1/validate_aoc_rules.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -790,7 +810,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{script_location}8b8(provisions/scripts/split_trace_to_cycles.py)"
+      "%{script_location}aab(provisions/scripts/split_trace_to_cycles.py)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -903,7 +923,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}00f(provisions/prompts/phase2/update_active_rules.md)"
+      "%{prompt_location}59f(provisions/prompts/phase2/update_active_rules.md)"
     ],
     "reference_axis_names": [
       "_none_axis"
@@ -979,7 +999,7 @@
     "is_ground_concept": true,
     "is_final_concept": false,
     "reference_data": [
-      "%{prompt_location}76f(provisions/prompts/phase2/verify_cycle.md)"
+      "%{prompt_location}173(provisions/prompts/phase2/verify_cycle.md)"
     ],
     "reference_axis_names": [
       "_none_axis"

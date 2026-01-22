@@ -287,7 +287,8 @@ Added parsing for selector annotations in imperative and judgement working_inter
 | Key selection | `%{selector_source}` + `%{selector_key}` | Extract field from dict |
 | Placeholder for empty lists | `{"__placeholder__": true}` | Ensure non-empty shape for packed values |
 | LLM output format | `{"thinking": ..., "result": ...}` | Required by `GenerateThinkJson` paradigm |
-| Continuation syntax | `$+ %>([dest]) %<({src}) %:(axis)` | Append element to list along axis |
+| Continuation syntax | `$+ %>([dest]) %<({src}) %:(_none_axis)` | Append element to list along axis |
+| Grouping no axis | `&[#] %>[{src}]` (no `%+(axis)`) | Packed output with shape (1,) |
 
 ---
 
@@ -401,13 +402,94 @@ Updated `_.activate_nci.py` to properly extract:
   "marker": "+",
   "assign_source": "{new AOC}",
   "assign_destination": "[AOC schemas records]",
-  "by_axes": "canonical"
+  "by_axes": "_none_axis"
 }
+```
+
+### Note on Axis Naming
+When using continuation with grouped values (shape `(1,)` on `_none_axis`), use `%:(_none_axis)` to extend along that axis. This keeps the axis naming consistent with the grouping output.
+
+---
+
+## 13. Grouping Operations - No Axis Creation (Packed Output)
+
+### Problem
+Grouping operations (`&[{}]` for and_in, `&[#]` for or_across) were creating new axes with shape `(N,)` instead of producing a single packed element with shape `(1,)` containing all items.
+
+### Solution
+1. **Remove `%+(axis_name)` from grouping syntax** - This ensures `create_axis` is `None`
+2. **Set `by_axes` to collapse `_none_axis` from each input** - This triggers per-ref mode to extract elements
+3. **Result**: Shape `(1,)` with all elements wrapped in a single list/dict
+
+### Grouping Syntax
+```ncd
+/: and_in grouping (creates dict with labeled keys)
+<= &[{}] %>[{source1}, {source2}, {source3}] | ?{sequence}: grouping
+
+/: or_across grouping (creates flat list)
+<= &[#] %>[{source}] | ?{sequence}: grouping
+```
+
+**Important**: Do NOT include `%+(axis_name)` if you want packed output.
+
+### Generated working_interpretation
+```json
+"syntax": {
+  "marker": "in",           // or "across"
+  "sources": ["{source1}", "{source2}", ...],
+  "create_axis": null,      // null = wrap all in single element
+  "by_axes": [["_none_axis"], ["_none_axis"], ...]  // collapse _none_axis from each input
+}
+```
+
+### Behavior
+| `create_axis` | Result Shape | Result Structure |
+|---------------|--------------|------------------|
+| `null` | `(1,)` | Single element containing list/dict of all items |
+| `"axis_name"` | `(N,)` | N separate elements along that axis |
+
+### Changes in `_.activate_nci.py`
+```python
+# Extract create_axis from %+(...), default to None if not specified
+# When None, Grouper wraps all elements into a single element with shape (1,)
+create_axis_match = re.search(r"%\+\(([^)]+)\)", nc_main)
+create_axis = create_axis_match.group(1) if create_axis_match else None
+
+# Build by_axes to collapse _none_axis from each value concept
+# This triggers per-ref mode in Grouper and properly extracts elements
+by_axes = [["_none_axis"] for _ in value_concepts]
+```
+
+### Key Points
+- All value concepts have `_none_axis` (even after continuation operations - only shape changes)
+- `by_axes: [["_none_axis"], ...]` tells Grouper to collapse that axis from each input
+- `create_axis: null` wraps all extracted elements into a single element
+- This produces shape `(1,)` which works well with `packed: true` selectors
+
+---
+
+## 14. Continuation with _none_axis for Grouped Data
+
+### Problem
+When using continuation (`$+`) with data from grouping operations (shape `(1,)` on `_none_axis`), the axis specified in `%:(axis)` must match the actual axis of the data.
+
+### Solution
+Use `%:(_none_axis)` for continuation when appending to lists that were created/accumulated via grouping with `create_axis: null`.
+
+### Example
+```ncd
+/: Grouping produces shape (1,) on _none_axis
+<- [AOC schemas extracted so far] | ?{flow_index}: 1.2.8.1.2.3
+    <= &[#] %>[{AOC schema record}] | ?{sequence}: grouping
+
+/: Continuation must use _none_axis to match
+<- [AOC schemas records] | ?{flow_index}: 1.2.8.1.3
+    <= $+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis) | ?{sequence}: assigning
 ```
 
 ---
 
-## 13. Perception Literal Evaluation Fix
+## 15. Perception Literal Evaluation Fix
 
 ### Problem
 The `perceive` method in `PerceptionRouter` was returning literal signifiers as strings instead of evaluating them. For example, `%(1)` was being perceived as the string `'1'` instead of the integer `1`. This caused script executions to fail with:
@@ -447,5 +529,5 @@ except (ValueError, SyntaxError):
 
 ---
 
-*Last updated: 2026-01-22*
+*Last updated: 2026-01-22 (grouping axis configuration)*
 

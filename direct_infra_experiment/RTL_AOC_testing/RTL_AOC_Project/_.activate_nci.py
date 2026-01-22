@@ -710,7 +710,8 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
         else:
             marker = "in"
         
-        # Extract create_axis from %+(...)
+        # Extract create_axis from %+(...), default to None if not specified
+        # When None, Grouper wraps all elements into a single element with shape (1,)
         create_axis_match = re.search(r"%\+\(([^)]+)\)", nc_main)
         create_axis = create_axis_match.group(1) if create_axis_match else None
         
@@ -739,10 +740,16 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
             if current.strip():
                 sources.append(current.strip())
         
+        # Build by_axes to collapse _none_axis from each value concept
+        # This triggers per-ref mode in Grouper and properly extracts elements
+        # All value concepts have _none_axis (even after continuation, only shape changes)
+        by_axes = [["_none_axis"] for _ in value_concepts]
+        
         wi["syntax"] = {
             "marker": marker,
             "sources": sources,
             "create_axis": create_axis,
+            "by_axes": by_axes,
         }
     
     elif sequence_type == "timing":

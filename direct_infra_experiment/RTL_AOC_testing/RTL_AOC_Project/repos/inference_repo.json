@@ -145,7 +145,7 @@
     },
     "inference_sequence": "grouping",
     "concept_to_infer": "{all user inputs}",
-    "function_concept": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] %+(inputs)",
+    "function_concept": "&[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}]",
     "value_concepts": [
       "{ISA spec text}",
       "{MA spec text}",
@@ -164,7 +164,18 @@
           "{MA spec text}",
           "{intent blocks}"
         ],
-        "create_axis": "inputs"
+        "create_axis": null,
+        "by_axes": [
+          [
+            "_none_axis"
+          ],
+          [
+            "_none_axis"
+          ],
+          [
+            "_none_axis"
+          ]
+        ]
       }
     }
   },
@@ -315,7 +326,7 @@
     },
     "inference_sequence": "grouping",
     "concept_to_infer": "[AOC schemas extracted so far]",
-    "function_concept": "&[#] %>[{AOC schema record}] %+(canonical)",
+    "function_concept": "&[#] %>[{AOC schema record}]",
     "value_concepts": [
       "[AOC schemas records]"
     ],
@@ -330,7 +341,12 @@
         "sources": [
           "{AOC schema record}"
         ],
-        "create_axis": "canonical"
+        "create_axis": null,
+        "by_axes": [
+          [
+            "_none_axis"
+          ]
+        ]
       }
     }
   },
@@ -340,7 +356,7 @@
     },
     "inference_sequence": "assigning",
     "concept_to_infer": "[AOC schemas records]",
-    "function_concept": "$+ %>([AOC schemas records]) %<({new AOC}) %:(canonical)",
+    "function_concept": "$+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis)",
     "value_concepts": [
       "[AOC schemas records]",
       "{new AOC}"
@@ -355,7 +371,7 @@
         "marker": "+",
         "assign_source": "{new AOC}",
         "assign_destination": "[AOC schemas records]",
-        "by_axes": "canonical"
+        "by_axes": "_none_axis"
       }
     }
   },
@@ -367,7 +383,8 @@
     "concept_to_infer": "<no more canonicals to process>",
     "function_concept": "::(judge if there are more canonicals to process)<ALL True>",
     "value_concepts": [
-      "{all user inputs}"
+      "{all user inputs}",
+      "[AOC schemas extracted so far]"
     ],
     "context_concepts": [],
     "working_interpretation": {
@@ -378,10 +395,14 @@
       "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean",
       "body_faculty": "llm",
       "value_order": {
-        "{all user inputs}": 1
+        "{all user inputs}": 1,
+        "[AOC schemas extracted so far]": 2
       },
       "value_selectors": {
         "{all user inputs}": {
+          "packed": true
+        },
+        "[AOC schemas extracted so far]": {
           "packed": true
         }
       },
@@ -474,7 +495,7 @@
     "concept_to_infer": "{all AOC schema}",
     "function_concept": "::(clean up and consolidate all AOC schemas into unified definition)",
     "value_concepts": [
-      "[AOC schemas records]"
+      "[all AOC schemas list]"
     ],
     "context_concepts": [],
     "working_interpretation": {
@@ -485,12 +506,42 @@
       "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal",
       "body_faculty": "llm",
       "value_order": {
-        "[AOC schemas records]": 1
+        "[all AOC schemas list]": 1
       },
       "value_selectors": {
-        "[AOC schemas records]": {
+        "[all AOC schemas list]": {
           "packed": true
         }
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.2.9.2"
+    },
+    "inference_sequence": "grouping",
+    "concept_to_infer": "[all AOC schemas list]",
+    "function_concept": "&[#] %>[{AOC schema record}]",
+    "value_concepts": [
+      "[AOC schemas records]"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "workspace": {},
+      "flow_info": {
+        "flow_index": "1.2.9.2"
+      },
+      "syntax": {
+        "marker": "across",
+        "sources": [
+          "{AOC schema record}"
+        ],
+        "create_axis": null,
+        "by_axes": [
+          [
+            "_none_axis"
+          ]
+        ]
       }
     }
   },

@@ -3,7 +3,7 @@
   "name": "RTL_AOC_driven_testing",
   "description": "A Normcode-orchestrated (NC), large-language-model-driven (LLM) plan to translate specifications, including the Instruction Set Architecture (ISA), into a new intermediate representation (IR) called Action\u2013Obligation Canonicals (AOC), in order to test Register-Transfer-Level (RTL) designs in simulation.",
   "created_at": "2026-01-20T23:29:29.792150",
-  "updated_at": "2026-01-22T17:49:33.221137",
+  "updated_at": "2026-01-22T20:49:51.254799",
   "repositories": {
     "concepts": "repos\\concept_repo.json",
     "inferences": "repos\\inference_repo.json",
@@ -15,8 +15,8 @@
     "agent_config": "rtlaocdriventesting.agent.json"
   },
   "breakpoints": [
-    "1.2.8.1",
-    "1.2.8.1.5.3"
+    "1.3",
+    "1.2.8.1.4"
   ],
   "ui_preferences": {}
 }

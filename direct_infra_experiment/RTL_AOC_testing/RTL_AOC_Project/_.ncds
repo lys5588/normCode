@@ -60,6 +60,7 @@
                 <- no more canonicals to process?
                     <= judge if there are more canonicals to process
                     <- all user inputs
+                    <- AOC schemas records
                 
                 /: Continue unless done: append next counter if not terminated
                 <- counters

@@ -520,7 +520,7 @@ class ExecutionController:
         self._agent_registry = AgentRegistry(default_base_dir=base_dir)
         self._agent_mapping = AgentMappingService()
         
-        self._add_log("info", "", f"Created project-scoped agent registry for: {project_name or project_id or 'unknown'}")
+        self._add_log("info", "", f"Created project-scoped agent registry for: {project_name or 'unknown'}")
         
         # Try to load project-specific agent configuration
         if agent_config or project_name:
@@ -1670,7 +1670,10 @@ class ExecutionController:
         llm_model: str = "demo",
         base_dir: Optional[str] = None,
         max_cycles: int = 50,
-        paradigm_dir: Optional[str] = None
+        paradigm_dir: Optional[str] = None,
+        agent_config: Optional[str] = None,
+        project_dir: Optional[str] = None,
+        project_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Resume execution from an existing checkpoint."""
         try:
@@ -1682,7 +1685,10 @@ class ExecutionController:
         
         concepts_data, inferences_data, base_dir = await self._load_repos_and_body(
             concepts_path, inferences_path, inputs_path,
-            llm_model, base_dir, paradigm_dir
+            llm_model, base_dir, paradigm_dir,
+            agent_config=agent_config,
+            project_dir=project_dir,
+            project_name=project_name,
         )
         
         self._add_log("info", "", f"Resuming run {run_id} from checkpoint...")
@@ -1720,9 +1726,9 @@ class ExecutionController:
             "max_cycles": max_cycles,
             "db_path": db_path,
             "paradigm_dir": paradigm_dir,
-            "agent_config": agent_config if 'agent_config' in locals() else None,
-            "project_dir": project_dir if 'project_dir' in locals() else base_dir,
-            "project_name": project_name if 'project_name' in locals() else None,
+            "agent_config": agent_config,
+            "project_dir": project_dir or base_dir,
+            "project_name": project_name,
         }
         
         await self._emit("execution:loaded", {
@@ -1739,6 +1745,11 @@ class ExecutionController:
             self._add_log("debug", "", f"Checkpoint manager initialized for run: {run_id}")
         else:
             self._add_log("warning", "", "Checkpoint manager NOT initialized after resume")
+        
+        if agent_config:
+            self._add_log("info", "", f"Agent config loaded: {agent_config}")
+        else:
+            self._add_log("warning", "", "No agent config provided - using default agent")
 
         return {
             "success": True,
@@ -1762,7 +1773,10 @@ class ExecutionController:
         llm_model: str = "demo",
         base_dir: Optional[str] = None,
         max_cycles: int = 50,
-        paradigm_dir: Optional[str] = None
+        paradigm_dir: Optional[str] = None,
+        agent_config: Optional[str] = None,
+        project_dir: Optional[str] = None,
+        project_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Fork from an existing checkpoint with a new run_id."""
         import uuid as uuid_module
@@ -1779,7 +1793,10 @@ class ExecutionController:
         
         concepts_data, inferences_data, base_dir = await self._load_repos_and_body(
             concepts_path, inferences_path, inputs_path,
-            llm_model, base_dir, paradigm_dir
+            llm_model, base_dir, paradigm_dir,
+            agent_config=agent_config,
+            project_dir=project_dir,
+            project_name=project_name,
         )
         
         self._add_log("info", "", f"Forking from {source_run_id} to new run {new_run_id}...")
@@ -1818,9 +1835,9 @@ class ExecutionController:
             "max_cycles": max_cycles,
             "db_path": db_path,
             "paradigm_dir": paradigm_dir,
-            "agent_config": agent_config if 'agent_config' in locals() else None,
-            "project_dir": project_dir if 'project_dir' in locals() else base_dir,
-            "project_name": project_name if 'project_name' in locals() else None,
+            "agent_config": agent_config,
+            "project_dir": project_dir or base_dir,
+            "project_name": project_name,
         }
         
         await self._emit("execution:loaded", {
@@ -1838,6 +1855,11 @@ class ExecutionController:
             self._add_log("debug", "", f"Checkpoint manager initialized for run: {new_run_id}")
         else:
             self._add_log("warning", "", "Checkpoint manager NOT initialized after fork")
+        
+        if agent_config:
+            self._add_log("info", "", f"Agent config loaded: {agent_config}")
+        else:
+            self._add_log("warning", "", "No agent config provided - using default agent")
         
         return {
             "success": True,
