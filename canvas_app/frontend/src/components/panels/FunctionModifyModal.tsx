@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Save, Play, AlertCircle, CheckCircle, FileText, Workflow } from 'lucide-react';
 import { executionApi, FunctionModifyRequest } from '../../services/api';
 
@@ -90,7 +91,8 @@ export function FunctionModifyModal({
     }
   };
 
-  return (
+  // Use portal to escape any CSS transform containers
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
       <div 
         className="bg-white rounded-lg shadow-xl w-[550px] max-h-[80vh] flex flex-col"
@@ -245,6 +247,7 @@ export function FunctionModifyModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
