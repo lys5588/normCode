@@ -26,6 +26,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.claude
 
 # Poetry (legacy - now using uv)
 poetry.lock

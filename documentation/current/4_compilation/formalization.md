@@ -43,6 +43,33 @@
 3. **Nest for children**: Children append `.1`, `.2`, `.3`, etc.
 4. **All concept lines get indices**: Including `<=`, `<-`, `<*`, and `:<:`
 
+### ⚠️ CRITICAL: The Sibling Pattern
+
+**This is the most common source of bugs.** Value concepts that are inputs to a functional concept are **siblings** of that functional, NOT children of it.
+
+```
+CORRECT PATTERN:
+1.2      - {parent value}           (depth 2)
+  1.2.1  - <= (functional)          (depth 3) - ALWAYS .1
+  1.2.2  - {input1}                 (depth 3) - sibling of functional
+  1.2.3  - {input2}                 (depth 3) - sibling of functional
+    1.2.3.1 - <= (child functional) (depth 4) - child's .1
+    1.2.3.2 - <source>              (depth 4) - sibling of child functional
+  1.2.4  - {input3}                 (depth 3) - sibling of functional
+
+WRONG PATTERN (causes bugs):
+1.2      - {parent value}
+  1.2.1  - <= (functional)
+    1.2.1.1  - {input1}  ← WRONG! Should be 1.2.2
+    1.2.1.2  - {input2}  ← WRONG! Should be 1.2.3
+```
+
+**Rules:**
+1. **Functional concept is always `.1`** - The operator/imperative/judgement is the first child
+2. **Same depth = same index length** - All siblings have indices with the same number of parts
+3. **Value concepts are siblings, not children** - Inputs to a functional are at the same depth as the functional
+4. **Each functional can have its own child tree** - Nested inferences follow the same pattern recursively
+
 ### Example
 
 **Input (`.ncds`)**:
@@ -63,11 +90,13 @@
     <= ::(calculate) | ?{flow_index}: 1.1
     <- {input A} | ?{flow_index}: 1.2
         <= ::(process A) | ?{flow_index}: 1.2.1
-        <- {raw A} | ?{flow_index}: 1.2.1.1
+        <- {raw A} | ?{flow_index}: 1.2.2
     <- {input B} | ?{flow_index}: 1.3
         <= ::(process B) | ?{flow_index}: 1.3.1
-        <- {raw B} | ?{flow_index}: 1.3.1.1
+        <- {raw B} | ?{flow_index}: 1.3.2
 ```
+
+**Note:** `{raw A}` is `1.2.2` (sibling of `1.2.1`), NOT `1.2.1.1` (child of `1.2.1`).
 
 ### Reading Flow Indices
 
@@ -90,6 +119,28 @@
 | **Cross-referencing** | Reference other steps explicitly |
 | **Dependency tracking** | Orchestrator knows execution order |
 | **Logging** | Detailed execution traces |
+
+### ⚠️ CRITICAL: Explicit Input References for Operators
+
+**Problem:** When an operator (like `$.` specification) references a concept, that concept MUST be declared as a sibling value concept. Otherwise, the scheduler doesn't know about the dependency.
+
+**Symptom:** Value concept shows "empty" status even though the source is "complete".
+
+**WRONG - Missing input reference:**
+```ncd
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    /: BUG: <AOC is valid> is referenced but not declared!
+```
+
+**CORRECT - Explicit input reference:**
+```ncd
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+```
+
+**Rule:** Every operator must explicitly declare its inputs as sibling value concepts. This creates the dependency edge in the execution graph.
 
 ### Deprecated Pattern
 
@@ -375,10 +426,10 @@ The **root concept** (final output) uses special marker `:<:`:
         <- {price data}<:{1}> | ?{flow_index}: 1.2.2
         <- <signals validated><:{2}> | ?{flow_index}: 1.2.3
             <= ::(validate signals)<ALL True> | ?{flow_index}: 1.2.3.1 | ?{sequence}: judgement
-            <- {market signals} | ?{flow_index}: 1.2.3.1.1
+            <- {market signals} | ?{flow_index}: 1.2.3.2
     <- {sentiment score}<:{2}> | ?{flow_index}: 1.3
         <= ::(analyze sentiment) | ?{flow_index}: 1.3.1 | ?{sequence}: imperative
-        <- {news articles} | ?{flow_index}: 1.3.1.1
+        <- {news articles} | ?{flow_index}: 1.3.2
 ```
 
 ### What Changed
@@ -389,6 +440,8 @@ The **root concept** (final output) uses special marker `:<:`:
 4. ✅ Value bindings added (`<:{1}>`, `<:{2}>`)
 5. ✅ Root marked with `:<:`
 6. ✅ Truth assertion added to judgement (`<ALL True>`)
+7. ✅ **Sibling pattern**: `{market signals}` is `1.2.3.2` (sibling of `1.2.3.1`), NOT `1.2.3.1.1`
+8. ✅ **Sibling pattern**: `{news articles}` is `1.3.2` (sibling of `1.3.1`), NOT `1.3.1.1`
 
 ---
 
@@ -398,9 +451,20 @@ The **root concept** (final output) uses special marker `:<:`:
 
 ```
 1. Start at 1 for root
-2. First child: append .1
-3. Sibling: increment last digit
-4. Grandchild: append another level
+2. Functional concept is ALWAYS .1 (first child)
+3. Value concept inputs are siblings (.2, .3, .4, ...)
+4. NEVER nest value concepts under functional concepts
+5. Grandchild functional is X.Y.Z.1, its inputs are X.Y.Z.2, X.Y.Z.3, etc.
+```
+
+**Visual Pattern:**
+```
+X.Y      - {parent}
+  X.Y.1  - <= (functional)    ← Always .1
+  X.Y.2  - {input1}           ← Sibling, NOT X.Y.1.1
+  X.Y.3  - {input2}           ← Sibling, NOT X.Y.1.2
+    X.Y.3.1 - <= (nested)     ← Child's functional is .1
+    X.Y.3.2 - {nested input}  ← Sibling of nested functional
 ```
 
 ### Sequence Type Assignment
@@ -430,19 +494,40 @@ The **root concept** (final output) uses special marker `:<:`:
 4. Ensure consistency
 ```
 
+### Explicit Input References
+
+```
+1. Every operator ($., &[], *., etc.) must declare its inputs
+2. Inputs are sibling value concepts under the same parent
+3. This creates dependency edges in the execution graph
+4. Missing references cause "empty" status bugs at runtime
+```
+
 ---
 
 ## Validation After Formalization
 
 ### Checklist
 
-Before moving to post-formalization:
+Before moving to post-formalization (or activation if combined):
 
 **Structure**:
 - [ ] All lines have flow indices
 - [ ] Flow indices are unique
 - [ ] Flow indices follow hierarchical pattern
 - [ ] Root has `:<:` marker
+
+**⚠️ Sibling Pattern (CRITICAL)**:
+- [ ] Functional concept is always `.1` under its parent
+- [ ] Value concept inputs are siblings (`.2`, `.3`, `.4`), NOT children (`.1.1`, `.1.2`)
+- [ ] Same depth = same index length
+- [ ] Nested inferences follow the same pattern recursively
+
+**Explicit Input References (CRITICAL)**:
+- [ ] Every operator (`$.`, `&[]`, `*.`) declares its input concepts as siblings
+- [ ] Specification operators have their source as a sibling value concept
+- [ ] Grouping operators list all sources as sibling value concepts
+- [ ] Loop operators have base and context as sibling concepts
 
 **Sequences**:
 - [ ] All functional concepts have sequence types
@@ -470,6 +555,9 @@ Before moving to post-formalization:
 | **Wrong type** | Collection marked as `{}` instead of `[]` | Fix type inference |
 | **Missing bindings** | Multi-input operation without `<:{N}>` | Add value placements |
 | **Inconsistent indentation** | Flow indices don't match depth | Fix indentation or indices |
+| **⚠️ Nested inputs under functional** | Inputs at `.1.1` instead of `.2` | Move inputs to sibling level |
+| **⚠️ Missing input reference** | Runtime "empty" status for derived concepts | Add explicit sibling value concept |
+| **⚠️ Wrong depth for nested** | Child functional at `.2.1.1` instead of `.2.1` | Fix nesting structure |
 
 ---
 
@@ -495,16 +583,6 @@ python compiler.py formalize draft.ncds
 6. Mark root with `:<:`
 7. Validate with checklist
 
-### Editor Support
-
-The NormCode editor can assist:
-- Auto-assign flow indices
-- Suggest sequence types
-- Validate syntax
-- Preview formalized output
-
-See [Editor](editor.md) for details.
-
 ---
 
 ## Formalization vs. Post-Formalization
@@ -528,6 +606,64 @@ See [Editor](editor.md) for details.
 
 ---
 
+## Combined Formalization + Post-Formalization
+
+### When to Combine
+
+In practice, formalization and post-formalization are often done **simultaneously**, especially when:
+
+1. **Building `.pf.ncd` directly** - Skip intermediate `.ncd` file
+2. **Iterating on a workflow** - Easier to see complete picture
+3. **Complex operators** - Annotations needed to understand structure
+4. **LLM-assisted generation** - AI can produce fully annotated plans
+
+### Combined Workflow
+
+```
+_.ncds (Draft)
+    ↓ Combined Formalization + Post-Formalization
+_.pf.ncd (Post-Formalized, ready for activation)
+    ↓ _.activate_nci.py
+repos/concept_repo.json + repos/inference_repo.json
+```
+
+### Example: Combined Output
+
+Instead of two separate steps, produce `.pf.ncd` directly:
+
+```ncd
+:<:{result} | ?{flow_index}: 1
+    <= ::(calculate sum) | ?{flow_index}: 1.1 | ?{sequence}: imperative
+        | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+        | %{v_input_provision}: provisions/prompts/calculate.md
+    <- {input A}<:{1}> | ?{flow_index}: 1.2
+        | %{ref_axes}: [_none_axis]
+        | %{ref_element}: int
+    <- {input B}<:{2}> | ?{flow_index}: 1.3
+        | %{ref_axes}: [_none_axis]
+        | %{ref_element}: int
+```
+
+### Benefits of Combined Approach
+
+| Benefit | Explanation |
+|---------|-------------|
+| **Fewer files** | No intermediate `.ncd` to maintain |
+| **Complete context** | See structure and configuration together |
+| **Faster iteration** | One edit, not two |
+| **Better AI generation** | LLMs can produce fully-specified plans |
+
+### When to Keep Separate
+
+Keep formalization and post-formalization separate when:
+
+1. **Learning NormCode** - Understand each phase clearly
+2. **Debugging complex plans** - Isolate structural vs. configuration issues
+3. **Reusing structures** - Same `.ncd` with different configurations
+4. **Team workflows** - Different people handle structure vs. resources
+
+---
+
 ## Next Steps
 
 After formalization, your `.ncd` file moves to:
@@ -543,23 +679,42 @@ After formalization, your `.ncd` file moves to:
 | Concept | Insight |
 |---------|---------|
 | **Flow indices** | Unique hierarchical addresses for every step |
+| **⚠️ Sibling pattern** | Functional is `.1`, inputs are `.2`, `.3`, `.4` (NEVER `.1.1`, `.1.2`) |
+| **⚠️ Explicit references** | Operators MUST declare inputs as sibling value concepts |
 | **Sequence types** | Classify operations as semantic (LLM) or syntactic (free) |
 | **Semantic types** | Classify concepts by nature (object, relation, proposition) |
 | **Value bindings** | Remove ambiguity in multi-input operations |
-| **Automated** | Tools handle formalization automatically |
+| **Combined workflow** | Formalization + post-formalization can be done simultaneously |
+
+### The Two Most Common Bugs
+
+**1. Wrong Flow Index Nesting**
+```
+WRONG: 1.2.1 (functional) → 1.2.1.1 (input)
+RIGHT: 1.2.1 (functional) → 1.2.2 (input)
+```
+
+**2. Missing Input References**
+```
+WRONG: <= $. %>(<source>) with no sibling <source> declared
+RIGHT: <= $. %>(<source>) + <- <source> as sibling
+```
 
 ### The Formalization Promise
 
 **Formalization removes ambiguity**:
 
-1. Vague `.ncds` becomes precise `.ncd`
+1. Vague `.ncds` becomes precise `.ncd` (or `.pf.ncd` if combined)
 2. Every step has unique identity
 3. Execution strategy is clear
 4. Data flow is explicit
-5. Ready for configuration
+5. Dependencies are correctly captured
+6. Ready for configuration (or execution if combined)
 
 **Result**: A plan with rigorous structure, ready for execution configuration.
 
 ---
 
 **Ready to configure execution?** Continue to [Post-Formalization](post_formalization.md) to enrich your plan with norms and resources.
+
+**Or combine both phases** and produce `.pf.ncd` directly for faster iteration.
