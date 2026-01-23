@@ -55,16 +55,7 @@
       },
       "syntax": {
         "marker": ".",
-        "assign_source": [
-          "{ISA spec text}",
-          "{MA spec text}",
-          "{intent blocks}",
-          "{all user inputs}",
-          "[counters]",
-          "[AOC schemas records]",
-          "[all AOC schemas]",
-          "{all AOC schema}"
-        ]
+        "assign_source": "{all AOC schema}"
       }
     }
   },
@@ -279,11 +270,7 @@
       },
       "syntax": {
         "marker": ".",
-        "assign_source": [
-          "{new AOC}",
-          "[AOC schemas records]",
-          "[counters]"
-        ]
+        "assign_source": "{new AOC}"
       }
     }
   },
@@ -673,10 +660,7 @@
       },
       "syntax": {
         "marker": ".",
-        "assign_source": [
-          "{active rules}",
-          "{verification}"
-        ]
+        "assign_source": "{verification}"
       }
     }
   },

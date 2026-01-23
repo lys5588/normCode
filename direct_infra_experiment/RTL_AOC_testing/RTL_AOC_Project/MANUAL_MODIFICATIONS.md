@@ -529,5 +529,184 @@ except (ValueError, SyntaxError):
 
 ---
 
-*Last updated: 2026-01-22 (grouping axis configuration)*
+## 16. AOC Prompt Structure Alignment
+
+### Problem
+The extraction and consolidation prompts were producing AOC schemas with generic descriptions instead of executable, correlated structures that match the AOC DSL design.
+
+### Solution
+Updated both prompts to enforce:
+1. **Variable bindings on triggers** (e.g., `binds: ["iid"]`)
+2. **Match bindings on obligations** (e.g., `match_binds: ["iid"]`)
+3. **Categorical classification** (liveness, safety, atomicity, ordering, interrupt, flush)
+4. **Explicit failure conditions**
+5. **Observable signal names** (not prose descriptions)
+
+### Key Binding Variables
+| Variable | Purpose | Example Usage |
+|----------|---------|---------------|
+| `iid` | Instruction ID correlation | `issued → commit` tracking |
+| `addr` | Memory address correlation | Store-load ordering |
+| `granule` | Cache line granule | LR-SC atomicity |
+| `hart_id` | Core/hart identification | Multi-core operations |
+| `exception_code` | Exception type | Exception handling |
+
+### Obligation Types
+| Type | Description | Example |
+|------|-------------|---------|
+| `any_of` | At least one must match | commit OR trap |
+| `all_of` | All must be satisfied | precise + CSR saved |
+| `must` | Single required condition | visible within bound |
+| `conditional` | If X then Y | conflict → SC_FAIL |
+| `forbidden` | Must NOT occur | no stale read |
+
+### Category Distribution
+| Category | Expected Count |
+|----------|----------------|
+| Instruction lifecycle | 1 |
+| Memory ordering | 1 |
+| Atomic operations | 1-2 |
+| Exception handling | 1 |
+| Interrupt delivery | 1 |
+| Flush behavior | 1 |
+| **Total** | **5-8** |
+
+### DSL Alignment
+The output structure now matches the Python DSL pattern:
+```python
+Rule("C001_InstrResolution")
+    .when(Signal("instr_issued", binds=["iid"]))
+    .require(AnyOf(
+        Signal("commit", match_binds=["iid"]),
+        Signal("trap_taken", match_binds=["iid"])
+    ))
+    .within(cycles=10000)
+    .unless(Signal("flush_event", match_binds=["iid"]))
+```
+
+### Files Modified
+- `provisions/prompts/phase1/extract_aoc_canonical.md` - Extraction with bindings
+- `provisions/prompts/phase1/consolidate_aoc_schemas.md` - Consolidation with DSL structure
+
+---
+
+## 17. Axis Creation from List Outputs (TVA)
+
+### Problem
+When an imperative returns a list (e.g., splitting trace into cycles), the TVA step needs to create a proper axis for each element. But the activator was only setting `reference_axis_names` (list), not `axis_name` (singular), which TVA uses.
+
+### Solution
+Added `axis_name` field to value concept entries, using the first element of `ref_axes`:
+
+```python
+# In _.activate_nci.py
+axis_names = parse_axes(axes_str)
+primary_axis_name = axis_names[0] if axis_names else "_none_axis"
+
+concept_entry = {
+    ...
+    "axis_name": primary_axis_name,  # Primary axis for TVA list-to-axis creation
+    "reference_axis_names": axis_names,
+    ...
+}
+```
+
+### How It Works
+
+1. Script returns a list: `[{cycle: 1, events: [...]}, {cycle: 2, events: [...]}, ...]`
+2. Paradigm wraps each element individually via `formatter_tool.wrap_list`
+3. TVA reads `concept.axis_name` (e.g., `"cycle"`)
+4. TVA creates a Reference with shape `(N,)` along that axis
+
+### Example
+
+```ncd
+<- [trace per cycle] | ?{flow_index}: 1.5
+    | %{ref_axes}: [cycle]              # This sets axis_name to "cycle"
+    | %{ref_shape}: (n_cycle,)
+    | %{ref_element}: dict(cycle_num: int, events: list)
+    <= ::(split RTL trace into discrete cycles) | ?{sequence}: imperative
+        | %{norm_input}: v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral
+```
+
+### Generated concept_repo.json
+
+```json
+{
+  "concept_name": "[trace per cycle]",
+  "axis_name": "cycle",
+  "reference_axis_names": ["cycle"],
+  ...
+}
+```
+
+### Key Points
+- `axis_name` is used by TVA to name the axis created from list elements
+- `reference_axis_names` is the full list of expected axes (for multi-dimensional references)
+- For list outputs, use the `o_ListLiteral` paradigm variant
+- The paradigm's `wrap_list` step wraps each element individually, enabling axis creation
+
+---
+
+## 18. Specification Operator Source Selection
+
+### Problem
+The specification operator `$.` needed a way to specify multiple candidate sources (e.g., "select first available from A, B, or C").
+
+### Solution
+Added three priority levels for source specification:
+
+1. **Annotation** (highest priority): `%{assign_sources}: [{src1}, {src2}]`
+2. **Inline list**: `$. %>({output}) %<[{src1}, {src2}]`
+3. **Inline single** (fallback): `$. %>({X})` - X is both output and source
+
+### Syntax Examples
+
+**Single source (simplest):**
+```ncd
+<= $. %>({all AOC schema}) | ?{sequence}: assigning
+    /: Select {all AOC schema} as output
+```
+Result: `assign_source: "{all AOC schema}"`
+
+**Multiple sources via annotation:**
+```ncd
+<= $. %>({output}) | ?{sequence}: assigning
+    | %{assign_sources}: [{src1}, {src2}, {src3}]
+    /: Select first available from src1, src2, or src3
+```
+Result: `assign_source: ["{src1}", "{src2}", "{src3}"]`
+
+**Multiple sources via inline syntax:**
+```ncd
+<= $. %>({output}) %<[{src1}, {src2}] | ?{sequence}: assigning
+    /: Select first available from src1 or src2
+```
+Result: `assign_source: ["{src1}", "{src2}"]`
+
+### Priority Order
+
+| Priority | Method | Pattern | Use Case |
+|----------|--------|---------|----------|
+| 1 (highest) | Annotation | `%{assign_sources}: [...]` | Explicit control, cleaner syntax |
+| 2 | Inline list | `%<[{src1}, {src2}]` | Compact inline specification |
+| 3 (fallback) | Single inline | `%>({X})` | Simple pass-through cases |
+
+### Generated working_interpretation
+
+```json
+"syntax": {
+  "marker": ".",
+  "assign_source": ["{src1}", "{src2}"]  // or single string if one source
+}
+```
+
+### Notes
+- Annotation takes priority over inline syntax
+- Mixed bracket types supported: `[{obj}, [rel], <prop>]`
+- Single source returns string, multiple sources return array
+
+---
+
+*Last updated: 2026-01-23 (specification operator source selection)*
 

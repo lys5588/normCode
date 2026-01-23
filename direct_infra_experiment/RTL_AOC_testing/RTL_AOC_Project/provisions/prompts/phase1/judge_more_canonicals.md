@@ -24,42 +24,55 @@ Judge whether ALL relevant canonicals have been extracted, or if more remain.
 
 ## Criteria for Completion
 
-The extraction is COMPLETE (return `true` for "complete") when:
-- All normative statements ("shall", "must") have been captured
-- All trigger-obligation pairs have been identified
-- All timing constraints have been documented
-- No significant behaviors remain unspecified
+**Return `complete: true` when ANY of these conditions are met:**
 
-The extraction is NOT COMPLETE (return `false` for "complete") when:
-- There are normative statements not yet captured as canonicals
-- There are implicit behaviors that need explicit rules
-- There are edge cases or exception handling not yet covered
+1. **All normative statements covered**: Each "shall"/"must" in the spec has a corresponding canonical
+2. **Sufficient coverage**: 5-10 unique canonicals typically cover a complete ISA/uArch spec
+3. **Duplicates detected**: If the extracted list contains duplicates/variations of the same behavior, STOP (extraction is spinning)
+4. **No new unique behavior**: If you cannot identify any normative statement NOT already covered
+
+**Return `complete: false` ONLY when:**
+- There is a SPECIFIC, UNIQUE normative statement not yet captured
+- You can name the exact section and requirement that needs a canonical
+
+## CRITICAL: Detect Duplicates
+
+**Review the extracted schemas for duplicates:**
+- Multiple canonicals with same trigger signal (e.g., multiple "memory_operation_issued") = DUPLICATES
+- Canonicals describing the same behavior with different IDs = DUPLICATES
+- If you see duplicates, return `complete: true` - the extraction is spinning and should stop
+
+**Expected canonical count:**
+- Small spec (5 sections): 5-8 canonicals
+- Medium spec (10 sections): 8-12 canonicals
+- If you see 15+ canonicals, there are likely duplicates - return `complete: true`
 
 ## Output Format
 
-Return JSON with `thinking` and `result` fields:
+Return JSON with `thinking` and `result` fields.
+
+**IMPORTANT**: The `result` field must be a BOOLEAN (`true` or `false`), not an object!
+
+If extraction is COMPLETE (no more unique canonicals needed):
 ```json
 {
-  "thinking": "Your analysis of what's been covered and what might remain...",
-  "result": {
-    "complete": true,
-    "reasoning": "All normative statements have been captured as canonicals. The ISA specifies 5 key behaviors, and 5 canonicals have been extracted covering instruction resolution, memory ordering, exception handling, interrupt delivery, and atomic operations."
-  }
+  "thinking": "All 5 spec sections are covered: instruction resolution (C001), memory ordering (C002), atomic ops (C003), exceptions (C004), interrupts (C005). 6 canonicals extracted, no duplicates. COMPLETE.",
+  "result": true
 }
 ```
 
-Or if more canonicals remain:
+If more canonicals remain (and you can name a SPECIFIC uncovered requirement):
 ```json
 {
-  "thinking": "Analyzing spec coverage...",
-  "result": {
-    "complete": false,
-    "remaining": "The ISA mentions 'precise exceptions' but no canonical covers the ordering requirements for exception delivery."
-  }
+  "thinking": "Only 3 canonicals extracted. Missing coverage for: exception handling (Section 4) and interrupt delivery (Section 5).",
+  "result": false
 }
 ```
 
-**Important:** Your response MUST be valid JSON with exactly these two top-level keys: `thinking` and `result`.
+**CRITICAL**: 
+- `result` must be `true` or `false` (boolean), NOT an object
+- Return `true` if you see duplicates or 8+ canonicals
+- Return `true` if all spec sections have corresponding canonicals
 
 ## Note
 

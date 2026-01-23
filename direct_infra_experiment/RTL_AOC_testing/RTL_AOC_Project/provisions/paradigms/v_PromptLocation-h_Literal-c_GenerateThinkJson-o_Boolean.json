@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "description": "Generate boolean judgement using LLM with vertical prompt template and horizontal literal data. Parses JSON response and extracts 'is_vague' field.",
+    "description": "Generate boolean judgement using LLM with vertical prompt template and horizontal literal data. Parses JSON response and extracts 'result' field (boolean).",
     "inputs": {
       "vertical": {
         "prompt_template": "Path to prompt file (perception-wrapped, stripped at runtime)"
@@ -161,15 +161,15 @@
               "params": {"__positional__": "cleaned_response"}
             },
             {
-              "output_key": "is_vague_value",
+              "output_key": "result_value",
               "function": {"__type__": "MetaValue", "key": "get_fn"},
               "params": {"dictionary": "parsed_json"},
-              "literal_params": {"key": "is_vague"}
+              "literal_params": {"key": "result"}
             },
             {
               "output_key": "final_result",
               "function": {"__type__": "MetaValue", "key": "wrap_fn"},
-              "params": {"__positional__": "is_vague_value"},
+              "params": {"__positional__": "result_value"},
               "literal_params": {"type": "truth_value"}
             }
           ],

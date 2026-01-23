@@ -313,6 +313,10 @@ def build_concept_repo(nci_data: list) -> list:
                 if literal_value:
                     reference_data = [literal_value]
         
+        # Parse axis names and extract primary axis name for TVA
+        axis_names = parse_axes(axes_str)
+        primary_axis_name = axis_names[0] if axis_names else "_none_axis"
+        
         concept_entry = {
             "id": concept_name_to_id(name),
             "concept_name": format_concept_name(name, concept_type),
@@ -323,7 +327,8 @@ def build_concept_repo(nci_data: list) -> list:
             "is_final_concept": data.get("is_final", False),
             "is_invariant": is_invariant,
             "reference_data": reference_data,
-            "reference_axis_names": parse_axes(axes_str),
+            "axis_name": primary_axis_name,  # Primary axis for TVA list-to-axis creation
+            "reference_axis_names": axis_names,
             "reference_element_type": element_type,
             "natural_name": name,
         }
@@ -613,37 +618,100 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
             }
         
         elif marker == ".":
-            # SPECIFICATION ($.) - "select first available"
-            # The assign_source should be a LIST of candidate sources from value_concepts,
-            # EXCLUDING condition concepts (propositions like <...>)
+            # SPECIFICATION ($.) - "select/specify this value"
             # 
-            # Example: $. %>({freshly refined instruction})
-            #   value_concepts: [<instruction is vague>, {original version}, {refined version}]
-            #   assign_source should be: ["{original version}", "{refined version}"]
+            # Source specification (in priority order):
+            # 1. Annotation: %{assign_sources}: [{src1}, {src2}] - explicit list of candidate sources
+            # 2. Inline list: $. %>({output}) %<[{src1}, {src2}] - inline source list
+            # 3. Inline single: $. %>({X}) - the %>({...}) is both output and source
             #
-            # The %>({...}) gives the OUTPUT concept (what we're assigning TO), NOT the sources!
+            # Examples:
+            #   $. %>({all AOC schema})
+            #     -> assign_source: "{all AOC schema}"
+            #
+            #   $. %>({output}) %<[{src1}, {src2}]
+            #     -> assign_source: ["{src1}", "{src2}"]
+            #
+            #   <= $. %>({output}) | %{assign_sources}: [{src1}, {src2}]
+            #     -> assign_source: ["{src1}", "{src2}"]
             
-            candidate_sources = []
-            for vc in value_concepts:
-                vc_name = vc.get("concept_name")
-                vc_type = vc.get("concept_type", "object")
-                if vc_name and vc_type != "proposition":
-                    # Not a condition - it's a candidate source
-                    candidate_sources.append(format_concept_name(vc_name, vc_type))
+            assign_source = None
             
-            if len(candidate_sources) >= 2:
-                # Multiple candidates - use list for "select first available"
-                assign_source = candidate_sources
-            elif len(candidate_sources) == 1:
-                # Single source - use string
-                assign_source = candidate_sources[0]
-            else:
-                # No sources found - this is an error condition
-                import logging
-                logging.warning(
-                    f"Assigning inference with marker '.' has no valid source candidates. "
-                    f"value_concepts: {[vc.get('concept_name') for vc in value_concepts]}"
-                )
+            # Priority 1: Check for %{assign_sources} annotation
+            assign_sources_str = get_annotation_value(func_comments, "assign_sources")
+            if assign_sources_str:
+                # Parse the list: [{src1}, {src2}] or [[src1], [src2]] or mixed
+                import ast
+                try:
+                    sources_list = ast.literal_eval(assign_sources_str)
+                    if isinstance(sources_list, list):
+                        # Format each source with proper brackets
+                        formatted_sources = []
+                        for src in sources_list:
+                            src_str = str(src).strip()
+                            # Detect concept type from brackets
+                            if src_str.startswith("{") or src_str.startswith("[") or src_str.startswith("<"):
+                                formatted_sources.append(src_str)
+                            else:
+                                # Default to object notation
+                                formatted_sources.append(f"{{{src_str}}}")
+                        assign_source = formatted_sources if len(formatted_sources) > 1 else formatted_sources[0]
+                except (ValueError, SyntaxError):
+                    # Try manual parsing for [{name1}, {name2}] format
+                    sources = re.findall(r'[\[{<]([^\]}>]+)[\]}>]', assign_sources_str)
+                    if sources:
+                        # Re-add brackets based on original format
+                        formatted_sources = []
+                        for match in re.finditer(r'([\[{<])([^\]}>]+)([\]}>])', assign_sources_str):
+                            open_b, name, close_b = match.groups()
+                            formatted_sources.append(f"{open_b}{name}{close_b}")
+                        assign_source = formatted_sources if len(formatted_sources) > 1 else formatted_sources[0]
+            
+            # Priority 2: Check for inline %<[...] pattern (source list)
+            if assign_source is None:
+                inline_sources_match = re.search(r"%<\[([^\]]+)\]", nc_main)
+                if inline_sources_match:
+                    sources_text = inline_sources_match.group(1)
+                    # Parse by tracking bracket depth
+                    sources = []
+                    current = ""
+                    depth = 0
+                    for char in sources_text:
+                        if char in "{[<":
+                            depth += 1
+                            current += char
+                        elif char in "}]>":
+                            depth -= 1
+                            current += char
+                        elif char == "," and depth == 0:
+                            if current.strip():
+                                sources.append(current.strip())
+                            current = ""
+                        else:
+                            current += char
+                    if current.strip():
+                        sources.append(current.strip())
+                    
+                    assign_source = sources if len(sources) > 1 else (sources[0] if sources else None)
+            
+            # Priority 3: Extract single source from %>({...}) or %>([...])
+            if assign_source is None:
+                source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
+                if source_match:
+                    source_name = source_match.group(1)
+                    assign_source = f"{{{source_name}}}"
+                else:
+                    # Fallback: try list pattern %>([...])
+                    source_match_list = re.search(r"%>\(\[([^\]]+)\]\)", nc_main)
+                    if source_match_list:
+                        source_name = source_match_list.group(1)
+                        assign_source = f"[{source_name}]"
+                    else:
+                        # No source found - this is an error
+                        import logging
+                        logging.warning(
+                            f"Specification operator '.' at {cti_flow_index} has no source in %>(...)."
+                        )
             
             wi["syntax"] = {
                 "marker": marker,
@@ -693,11 +761,12 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
             elif source_match_list:
                 # Multiple sources from explicit list
                 assign_source = source_match_list.group(1)
-        
-        wi["syntax"] = {
-            "marker": marker,
-            "assign_source": assign_source,
-        }
+            
+            # Only set syntax for the 'else' case - other markers set their own syntax
+            wi["syntax"] = {
+                "marker": marker,
+                "assign_source": assign_source,
+            }
     
     elif sequence_type == "grouping":
         nc_main = func_concept.get("nc_main", "")
@@ -942,16 +1011,16 @@ def build_nested_operator_inference(oc: dict) -> dict | None:
             }
         else:
             # Other assigning operators - extract assign_source from %>(...)
-        assign_source = None
-        source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
-        if source_match:
-            assign_source = f"{{{source_match.group(1)}}}"
+            assign_source = None
+            source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
+            if source_match:
+                assign_source = f"{{{source_match.group(1)}}}"
+            
+            wi["syntax"] = {
+                "marker": marker,
+                "assign_source": assign_source,
+            }
         
-        wi["syntax"] = {
-            "marker": marker,
-            "assign_source": assign_source,
-        }
-    
     # Map sequence to inference_sequence
     sequence_mapping = {
         "imperative": "imperative_in_composition",
