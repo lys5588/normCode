@@ -32,73 +32,73 @@
           "flow_index": "1",
           "type": "comment",
           "depth": 1,
-          "nc_comment": "| %{ref_element}: dict(aoc_definitions: dict, aoc_valid: bool, trace: list, verification_per_cycle: list)"
-        }
-      ]
-    },
-    "function_concept": {
-      "flow_index": "1.1",
-      "type": "main",
-      "depth": 1,
-      "nc_main": "<= ::(combine AOC definitions, validity, trace, and per-cycle verification into report)",
-      "inference_marker": "<=",
-      "concept_type": "imperative",
-      "operator_type": null,
-      "concept_name": "combine AOC definitions, validity, trace, and per-cycle verification into report",
-      "attached_comments": [
-        {
-          "flow_index": "1.1",
-          "type": "inline_comment",
-          "depth": 1,
-          "nc_comment": "?{flow_index}: 1.1 | ?{sequence}: imperative"
+          "nc_comment": "| %{ref_element}: dict(aoc_definitions: dict, aoc_valid: bool, trace: list, verification_per_cycle: list, user_inputs: dict)"
         },
         {
-          "flow_index": "1.1",
-          "type": "comment",
-          "depth": 2,
-          "nc_comment": "| %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal"
-        },
-        {
-          "flow_index": "1.1",
-          "type": "comment",
-          "depth": 2,
-          "nc_comment": "| %{v_input_norm}: prompt_location"
-        },
-        {
-          "flow_index": "1.1",
-          "type": "comment",
-          "depth": 2,
-          "nc_comment": "| %{v_input_provision}: provisions/prompts/combine_verification_report.md"
-        },
-        {
-          "flow_index": "1.1",
-          "type": "comment",
-          "depth": 2,
-          "nc_comment": "| %{h_input_norm}: Literal"
-        },
-        {
-          "flow_index": "1.1",
-          "type": "comment",
-          "depth": 2,
-          "nc_comment": "| %{body_faculty}: llm"
-        },
-        {
-          "flow_index": "1.1",
+          "flow_index": "1",
           "type": "comment",
           "depth": 1,
           "nc_comment": "/: ============================================================"
         },
         {
-          "flow_index": "1.1",
+          "flow_index": "1",
           "type": "comment",
           "depth": 1,
           "nc_comment": "/: PHASE 1: AOC Schema Generation"
         },
         {
-          "flow_index": "1.1",
+          "flow_index": "1",
           "type": "comment",
           "depth": 1,
           "nc_comment": "/: ============================================================"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.8",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<= ::(combine all testing information into verification report)",
+      "inference_marker": "<=",
+      "concept_type": "imperative",
+      "operator_type": null,
+      "concept_name": "combine all testing information into verification report",
+      "attached_comments": [
+        {
+          "flow_index": "1.8",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.8 | ?{sequence}: imperative"
+        },
+        {
+          "flow_index": "1.8",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal"
+        },
+        {
+          "flow_index": "1.8",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{v_input_norm}: prompt_location"
+        },
+        {
+          "flow_index": "1.8",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{v_input_provision}: provisions/prompts/combine_verification_report.md"
+        },
+        {
+          "flow_index": "1.8",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{h_input_norm}: Literal"
+        },
+        {
+          "flow_index": "1.8",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{body_faculty}: llm"
         }
       ]
     },
@@ -280,6 +280,486 @@
             "type": "comment",
             "depth": 2,
             "nc_comment": "| %{ref_element}: dict(cycle_num: int, status: str, violations: list, active_rules: list)"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.7",
+        "type": "main",
+        "depth": 1,
+        "nc_main": "<- {all testing information}",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "all testing information",
+        "attached_comments": [
+          {
+            "flow_index": "1.7",
+            "type": "inline_comment",
+            "depth": 1,
+            "nc_comment": "?{flow_index}: 1.7"
+          },
+          {
+            "flow_index": "1.7",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.7",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.7",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_element}: dict"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.8.1",
+        "type": "main",
+        "depth": 1,
+        "nc_main": "<- {all testing information}<:{1}>",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "all testing information",
+        "attached_comments": [
+          {
+            "flow_index": "1.8.1",
+            "type": "inline_comment",
+            "depth": 1,
+            "nc_comment": "?{flow_index}: 1.8.1"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_element}: dict"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{selector_packed}: true"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: ========================================"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: SUMMARY: RTL AOC Verification Workflow"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: ========================================"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: PHASE 1 - AOC SCHEMA GENERATION:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.2  Load ISA spec file"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.3  Load MA spec file"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.4  User clarifies intent blocks"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.5  Group all inputs together"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.6  Initialize counters"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.7  Initialize AOC schemas records (empty list)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.8  Loop: extract AOC canonicals until done"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:          - Extract new AOC"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:          - Append to AOC schemas records"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:          - Judge if more canonicals to process"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:          - Conditionally continue"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.2.9  Consolidate into unified AOC definition"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.3    Validate AOC rules"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: PHASE 2 - RTL TRACE VERIFICATION:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.4    Load RTL simulation trace"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.5    Split trace into cycles"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   1.6    Loop over cycles:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:          - Update active rules (carry state)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:          - Verify cycle against active rules"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:          - Produce per-cycle verification result"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: OUTPUT:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   {verification report} containing:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - AOC definitions"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - AOC validity"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - Trace data"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - Per-cycle verification results"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: KEY PATTERNS USED:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - Self-terminating loop (continuation via $+ with @:! timing gate)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - State carry between iterations (%^ modifier)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - Conditional execution (timing gates)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - Judgement for validation"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - Grouping for data collection"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: PARADIGMS:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - h_LiteralPath-c_ReadFile-o_Literal (file loading)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal (LLM generation)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean (LLM judgement)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - v_ScriptLocation-h_Literal-c_Execute-o_Literal (Python scripts)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   - v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral (Python list output)"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/: PROVISIONS REQUIRED:"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   prompts/phase1/"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - decompose_specs.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - extract_aoc_canonical.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - judge_more_canonicals.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - consolidate_aoc_schemas.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - validate_aoc_rules.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   prompts/phase2/"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - update_active_rules.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - verify_cycle.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   prompts/"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - combine_verification_report.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   scripts/"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - increment_counter.py"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - split_trace_to_cycles.py"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   inputs/specs/"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - isa_v1.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - uarch_v2.md"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:   inputs/trace/"
+          },
+          {
+            "flow_index": "1.8.1",
+            "type": "comment",
+            "depth": 0,
+            "nc_comment": "/:     - rtl_trace.json"
           }
         ]
       }
@@ -3470,410 +3950,26 @@
           {
             "flow_index": "1.6.4",
             "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: ========================================"
+            "depth": 1,
+            "nc_comment": "/: ============================================================"
           },
           {
             "flow_index": "1.6.4",
             "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: SUMMARY: RTL AOC Verification Workflow"
+            "depth": 1,
+            "nc_comment": "/: PHASE 3: Report Generation"
           },
           {
             "flow_index": "1.6.4",
             "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: ========================================"
+            "depth": 1,
+            "nc_comment": "/: ============================================================"
           },
           {
             "flow_index": "1.6.4",
             "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: PHASE 1 - AOC SCHEMA GENERATION:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.2  Load ISA spec file"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.3  Load MA spec file"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.4  User clarifies intent blocks"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.5  Group all inputs together"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.6  Initialize counters"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.7  Initialize AOC schemas records (empty list)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.8  Loop: extract AOC canonicals until done"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:          - Extract new AOC"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:          - Append to AOC schemas records"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:          - Judge if more canonicals to process"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:          - Conditionally continue"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.2.9  Consolidate into unified AOC definition"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.3    Validate AOC rules"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: PHASE 2 - RTL TRACE VERIFICATION:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.4    Load RTL simulation trace"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.5    Split trace into cycles"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   1.6    Loop over cycles:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:          - Update active rules (carry state)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:          - Verify cycle against active rules"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:          - Produce per-cycle verification result"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: OUTPUT:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   {verification report} containing:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - AOC definitions"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - AOC validity"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - Trace data"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - Per-cycle verification results"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: KEY PATTERNS USED:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - Self-terminating loop (continuation via $+ with @:! timing gate)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - State carry between iterations (%^ modifier)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - Conditional execution (timing gates)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - Judgement for validation"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - Grouping for data collection"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: PARADIGMS:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - h_LiteralPath-c_ReadFile-o_Literal (file loading)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal (LLM generation)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean (LLM judgement)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - v_ScriptLocation-h_Literal-c_Execute-o_Literal (Python scripts)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   - v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral (Python list output)"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/: PROVISIONS REQUIRED:"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   prompts/phase1/"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - decompose_specs.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - extract_aoc_canonical.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - judge_more_canonicals.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - consolidate_aoc_schemas.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - validate_aoc_rules.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   prompts/phase2/"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - update_active_rules.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - verify_cycle.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   prompts/"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - combine_verification_report.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   scripts/"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - increment_counter.py"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - split_trace_to_cycles.py"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   inputs/specs/"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - isa_v1.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - uarch_v2.md"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:   inputs/trace/"
-          },
-          {
-            "flow_index": "1.6.4",
-            "type": "comment",
-            "depth": 0,
-            "nc_comment": "/:     - rtl_trace.json"
+            "depth": 1,
+            "nc_comment": "/: Collect all testing information and generate final report"
           }
         ]
       }
@@ -4409,6 +4505,481 @@
             "type": "comment",
             "depth": 2,
             "nc_comment": "/: Loop base and context"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.7",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<- {all testing information}",
+      "inference_marker": "<-",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "all testing information",
+      "attached_comments": [
+        {
+          "flow_index": "1.7",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.7"
+        },
+        {
+          "flow_index": "1.7",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.7",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.7",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_element}: dict"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.7.1",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<= &[{}] %>[{AOC definitions}, {AOC validity}, [verification results], [trace data], {all user inputs}]",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "grouping",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.7.1",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.7.1 | ?{sequence}: grouping"
+        },
+        {
+          "flow_index": "1.7.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "/: GROUPING: Collect all testing information into single dict"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.7.1.1",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- {AOC definitions}",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "AOC definitions",
+        "attached_comments": [
+          {
+            "flow_index": "1.7.1.1",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.7.1.1"
+          },
+          {
+            "flow_index": "1.7.1.1",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.7.1.1",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_element}: dict"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.7.1.2",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- {AOC validity}",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "AOC validity",
+        "attached_comments": [
+          {
+            "flow_index": "1.7.1.2",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.7.1.2"
+          },
+          {
+            "flow_index": "1.7.1.2",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.7.1.2",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_element}: bool"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.7.1.3",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- [verification results]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "verification results",
+        "attached_comments": [
+          {
+            "flow_index": "1.7.1.3",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.7.1.3"
+          },
+          {
+            "flow_index": "1.7.1.3",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.7.1.3",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.7.1.3",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_element}: list"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.7.1.4",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- [trace data]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "trace data",
+        "attached_comments": [
+          {
+            "flow_index": "1.7.1.4",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.7.1.4"
+          },
+          {
+            "flow_index": "1.7.1.4",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.7.1.4",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.7.1.4",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_element}: list"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.7.1.5",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- {all user inputs}",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "all user inputs",
+        "attached_comments": [
+          {
+            "flow_index": "1.7.1.5",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.7.1.5"
+          },
+          {
+            "flow_index": "1.7.1.5",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.7.1.5",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_element}: dict"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.7.1.2",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<- {AOC validity}",
+      "inference_marker": "<-",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "AOC validity",
+      "attached_comments": [
+        {
+          "flow_index": "1.7.1.2",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.7.1.2"
+        },
+        {
+          "flow_index": "1.7.1.2",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.7.1.2",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_element}: bool"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.7.1.2.1",
+      "type": "main",
+      "depth": 3,
+      "nc_main": "<= $. %>(<AOC is valid>)",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "specification",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.7.1.2.1",
+          "type": "inline_comment",
+          "depth": 3,
+          "nc_comment": "?{flow_index}: 1.7.1.2.1 | ?{sequence}: assigning"
+        },
+        {
+          "flow_index": "1.7.1.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: SPECIFICATION: Select AOC validity as object"
+        }
+      ]
+    },
+    "value_concepts": [],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.7.1.3",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<- [verification results]",
+      "inference_marker": "<-",
+      "concept_type": "relation",
+      "operator_type": null,
+      "concept_name": "verification results",
+      "attached_comments": [
+        {
+          "flow_index": "1.7.1.3",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.7.1.3"
+        },
+        {
+          "flow_index": "1.7.1.3",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.7.1.3",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.7.1.3",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_element}: list"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.7.1.3.1",
+      "type": "main",
+      "depth": 3,
+      "nc_main": "<= &[#] %>[{verification record}]",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "grouping",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.7.1.3.1",
+          "type": "inline_comment",
+          "depth": 3,
+          "nc_comment": "?{flow_index}: 1.7.1.3.1 | ?{sequence}: grouping"
+        },
+        {
+          "flow_index": "1.7.1.3.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: GROUPING: Collapse verification per cycle into single list"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.7.1.3.2",
+        "type": "main",
+        "depth": 3,
+        "nc_main": "<- [verification per cycle]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "verification per cycle",
+        "attached_comments": [
+          {
+            "flow_index": "1.7.1.3.2",
+            "type": "inline_comment",
+            "depth": 3,
+            "nc_comment": "?{flow_index}: 1.7.1.3.2"
+          },
+          {
+            "flow_index": "1.7.1.3.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_axes}: [cycle]"
+          },
+          {
+            "flow_index": "1.7.1.3.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_element}: dict"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.7.1.4",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<- [trace data]",
+      "inference_marker": "<-",
+      "concept_type": "relation",
+      "operator_type": null,
+      "concept_name": "trace data",
+      "attached_comments": [
+        {
+          "flow_index": "1.7.1.4",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.7.1.4"
+        },
+        {
+          "flow_index": "1.7.1.4",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.7.1.4",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.7.1.4",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_element}: list"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.7.1.4.1",
+      "type": "main",
+      "depth": 3,
+      "nc_main": "<= &[#] %>[{trace record}]",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "grouping",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.7.1.4.1",
+          "type": "inline_comment",
+          "depth": 3,
+          "nc_comment": "?{flow_index}: 1.7.1.4.1 | ?{sequence}: grouping"
+        },
+        {
+          "flow_index": "1.7.1.4.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: GROUPING: Collapse trace per cycle into single list"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.7.1.4.2",
+        "type": "main",
+        "depth": 3,
+        "nc_main": "<- [trace per cycle]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "trace per cycle",
+        "attached_comments": [
+          {
+            "flow_index": "1.7.1.4.2",
+            "type": "inline_comment",
+            "depth": 3,
+            "nc_comment": "?{flow_index}: 1.7.1.4.2"
+          },
+          {
+            "flow_index": "1.7.1.4.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_axes}: [cycle]"
+          },
+          {
+            "flow_index": "1.7.1.4.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_element}: dict"
           }
         ]
       }

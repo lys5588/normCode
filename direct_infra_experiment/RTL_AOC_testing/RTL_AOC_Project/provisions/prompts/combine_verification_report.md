@@ -4,21 +4,17 @@ Combine all components into the final verification report.
 
 ## Input Data
 
-<aoc_definitions>
+<all_testing_information>
 $input_1
-</aoc_definitions>
+</all_testing_information>
 
-<aoc_validation_result>
-$input_2
-</aoc_validation_result>
-
-<rtl_trace_data>
-$input_3
-</rtl_trace_data>
-
-<verification_results_per_cycle>
-$input_4
-</verification_results_per_cycle>
+**Input Structure:**
+The input is a dictionary containing:
+- `{AOC definitions}`: The AOC rules extracted from specifications
+- `{AOC validity}`: Boolean indicating if AOC rules are valid
+- `[verification results]`: List of per-cycle verification results
+- `[trace data]`: List of per-cycle trace data
+- `{all user inputs}`: Original specification inputs (ISA, MA, intent blocks)
 
 ## Task
 
@@ -85,3 +81,10 @@ Include violation details in the `result.verification_results.violations` array:
   ]
 }
 ```
+
+## Handling Missing Data
+
+If some components are not available (e.g., verification didn't run due to invalid AOC):
+- Report what's available
+- Note missing components in `conclusions.recommendations`
+- Set appropriate status based on available data

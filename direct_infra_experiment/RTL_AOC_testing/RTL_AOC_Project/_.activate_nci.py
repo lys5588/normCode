@@ -694,24 +694,31 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
                     
                     assign_source = sources if len(sources) > 1 else (sources[0] if sources else None)
             
-            # Priority 3: Extract single source from %>({...}) or %>([...])
+            # Priority 3: Extract single source from %>({...}), %>([...]), or %>(<...>)
             if assign_source is None:
+                # Try object pattern %>({...})
                 source_match = re.search(r"%>\(\{([^}]+)\}\)", nc_main)
                 if source_match:
                     source_name = source_match.group(1)
                     assign_source = f"{{{source_name}}}"
                 else:
-                    # Fallback: try list pattern %>([...])
+                    # Try relation/list pattern %>([...])
                     source_match_list = re.search(r"%>\(\[([^\]]+)\]\)", nc_main)
                     if source_match_list:
                         source_name = source_match_list.group(1)
                         assign_source = f"[{source_name}]"
                     else:
-                        # No source found - this is an error
-                        import logging
-                        logging.warning(
-                            f"Specification operator '.' at {cti_flow_index} has no source in %>(...)."
-                        )
+                        # Try proposition pattern %>(<...>)
+                        source_match_prop = re.search(r"%>\(<([^>]+)>\)", nc_main)
+                        if source_match_prop:
+                            source_name = source_match_prop.group(1)
+                            assign_source = f"<{source_name}>"
+                        else:
+                            # No source found - this is an error
+                            import logging
+                            logging.warning(
+                                f"Specification operator '.' at {cti_flow_index} has no source in %>(...)."
+                            )
             
             wi["syntax"] = {
                 "marker": marker,

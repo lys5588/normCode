@@ -24,6 +24,8 @@ A comprehensive guide based on debugging experience with the RTL AOC Verificatio
 ### Pipeline Flow
 
 ```
+_.ncds (NormCode Plan in natural language)
+    ↓ Formalizer
 _.pf.ncd (NormCode Plan)
     ↓ _.parse_to_nci.py
 _.pf.nci.json (Intermediate)

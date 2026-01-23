@@ -120,3 +120,9 @@
         <* current cycle trace from trace per cycle
         <* previous active rules carried from active rules
 
+    <- all information about the testing
+        <= collect (into a single annotation dict) all information about AOC definitions, verification per cycle, RTL simulation trace, all user inputs, 
+        <- AOC definitions
+        <- verification per cycle
+        <- trace per cycle
+        <- all user inputs

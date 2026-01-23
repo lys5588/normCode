@@ -5,13 +5,15 @@
     },
     "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{verification report}",
-    "function_concept": "::(combine AOC definitions, validity, trace, and per-cycle verification into report)",
+    "function_concept": "::(combine all testing information into verification report)",
     "value_concepts": [
       "{AOC definitions}",
       "<AOC is valid>",
       "{RTL simulation trace}",
       "[trace per cycle]",
-      "[verification per cycle]"
+      "[verification per cycle]",
+      "{all testing information}",
+      "{all testing information}"
     ],
     "context_concepts": [],
     "working_interpretation": {
@@ -22,11 +24,12 @@
       "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal",
       "body_faculty": "llm",
       "value_order": {
-        "{AOC definitions}": 1,
-        "<AOC is valid>": 2,
-        "{RTL simulation trace}": 3,
-        "[trace per cycle]": 4,
-        "[verification per cycle]": 5
+        "{all testing information}": 1
+      },
+      "value_selectors": {
+        "{all testing information}": {
+          "packed": true
+        }
       }
     }
   },
@@ -738,6 +741,136 @@
       "value_order": {
         "{current cycle trace}": 1,
         "{active rules}": 2
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.7"
+    },
+    "inference_sequence": "grouping",
+    "concept_to_infer": "{all testing information}",
+    "function_concept": "&[{}] %>[{AOC definitions}, {AOC validity}, [verification results], [trace data], {all user inputs}]",
+    "value_concepts": [
+      "{AOC definitions}",
+      "{AOC validity}",
+      "[verification results]",
+      "[trace data]",
+      "{all user inputs}"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "workspace": {},
+      "flow_info": {
+        "flow_index": "1.7"
+      },
+      "syntax": {
+        "marker": "in",
+        "sources": [
+          "{AOC definitions}",
+          "{AOC validity}",
+          "[verification results]",
+          "[trace data]",
+          "{all user inputs}"
+        ],
+        "create_axis": null,
+        "by_axes": [
+          [
+            "_none_axis"
+          ],
+          [
+            "_none_axis"
+          ],
+          [
+            "_none_axis"
+          ],
+          [
+            "_none_axis"
+          ],
+          [
+            "_none_axis"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.7.1.2"
+    },
+    "inference_sequence": "assigning",
+    "concept_to_infer": "{AOC validity}",
+    "function_concept": "$. %>(<AOC is valid>)",
+    "value_concepts": [],
+    "context_concepts": [],
+    "working_interpretation": {
+      "workspace": {},
+      "flow_info": {
+        "flow_index": "1.7.1.2"
+      },
+      "syntax": {
+        "marker": ".",
+        "assign_source": "<AOC is valid>"
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.7.1.3"
+    },
+    "inference_sequence": "grouping",
+    "concept_to_infer": "[verification results]",
+    "function_concept": "&[#] %>[{verification record}]",
+    "value_concepts": [
+      "[verification per cycle]"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "workspace": {},
+      "flow_info": {
+        "flow_index": "1.7.1.3"
+      },
+      "syntax": {
+        "marker": "across",
+        "sources": [
+          "{verification record}"
+        ],
+        "create_axis": null,
+        "by_axes": [
+          [
+            "_none_axis"
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.7.1.4"
+    },
+    "inference_sequence": "grouping",
+    "concept_to_infer": "[trace data]",
+    "function_concept": "&[#] %>[{trace record}]",
+    "value_concepts": [
+      "[trace per cycle]"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "workspace": {},
+      "flow_info": {
+        "flow_index": "1.7.1.4"
+      },
+      "syntax": {
+        "marker": "across",
+        "sources": [
+          "{trace record}"
+        ],
+        "create_axis": null,
+        "by_axes": [
+          [
+            "_none_axis"
+          ]
+        ]
       }
     }
   }
