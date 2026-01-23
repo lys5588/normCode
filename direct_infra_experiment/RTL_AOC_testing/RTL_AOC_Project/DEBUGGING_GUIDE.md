@@ -9,13 +9,14 @@ A comprehensive guide based on debugging experience with the RTL AOC Verificatio
 1. [Architecture Overview](#1-architecture-overview)
 2. [Common Error Categories](#2-common-error-categories)
 3. [Debugging Workflow](#3-debugging-workflow)
-4. [Activator Issues](#4-activator-issues)
-5. [Working Interpretation Issues](#5-working-interpretation-issues)
-6. [Paradigm Issues](#6-paradigm-issues)
-7. [Prompt Engineering Issues](#7-prompt-engineering-issues)
-8. [Loop and State Management Issues](#8-loop-and-state-management-issues)
-9. [Shape and Axis Issues](#9-shape-and-axis-issues)
-10. [Key Diagnostic Files](#10-key-diagnostic-files)
+4. [Flow Index Structure](#4-flow-index-structure)
+5. [Activator Issues](#5-activator-issues)
+6. [Working Interpretation Issues](#6-working-interpretation-issues)
+7. [Paradigm Issues](#7-paradigm-issues)
+8. [Prompt Engineering Issues](#8-prompt-engineering-issues)
+9. [Loop and State Management Issues](#9-loop-and-state-management-issues)
+10. [Shape and Axis Issues](#10-shape-and-axis-issues)
+11. [Key Diagnostic Files](#11-key-diagnostic-files)
 
 ---
 
@@ -144,9 +145,67 @@ Check the original `.pf.ncd` file for:
 
 ---
 
-## 4. Activator Issues
+## 4. Flow Index Structure
 
-### 4.1 Indentation Bug (Critical)
+### 4.1 Flow Index Hierarchy Pattern
+
+**Correct Pattern:**
+```
+1.7      - {parent value}           (depth 2, index length 2)
+  1.7.1  - &[{}] (functional)       (depth 3, index length 3) - ALWAYS .1
+  1.7.2  - {input1}                 (depth 3, index length 3) - sibling
+  1.7.3  - {input2}                 (depth 3, index length 3) - sibling
+    1.7.3.1 - $. (functional)       (depth 4, index length 4) - child's .1
+    1.7.3.2 - <source>              (depth 4, index length 4) - sibling input
+  1.7.4  - {input3}                 (depth 3, index length 3) - sibling
+```
+
+**Rules:**
+1. **Same depth = same index length** - Siblings have indices with same number of parts
+2. **Functional concept is always `.1`** - The operator/imperative is the first child
+3. **Value concepts are siblings, not children** - Inputs to a functional are at same depth
+4. **Each functional can have its own child tree** - Nested inferences follow same pattern
+
+**Common Mistake:**
+```
+# WRONG - nesting inputs under functional
+1.7.1    - &[{}] (functional)
+  1.7.1.1  - {input1}  ← Wrong! Should be 1.7.2
+  1.7.1.2  - {input2}  ← Wrong! Should be 1.7.3
+```
+
+### 4.2 Missing Input References for Operators
+
+**Problem:** Specification operator references a concept in `%>()` but doesn't declare it as a child value concept, causing scheduler to not know about the dependency.
+
+**Symptom:** Value concept shows "empty" status even though source is "complete"
+
+**Example:**
+```ncd
+# WRONG - missing input reference
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    # Missing: <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+
+# CORRECT - explicit input reference
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+        | %{ref_axes}: [_none_axis]
+        | %{ref_element}: %{truth_value}
+```
+
+**Diagnosis:** Check execution logs for:
+```
+Value concepts (5): [..., "'{concept}'=empty", ...]
+RESULT: NOT READY. Value concepts not ready: ["'{concept}' (Status: empty)"]
+```
+
+---
+
+## 5. Activator Issues
+
+### 5.1 Indentation Bug (Critical)
 
 **Problem:** Code running outside intended conditional blocks.
 
@@ -168,7 +227,7 @@ else:
     wi["syntax"] = {"marker": marker, "assign_source": None}
 ```
 
-### 4.2 Missing Field Extraction
+### 5.2 Missing Field Extraction
 
 **Symptoms:** `'field' must be specified` errors
 
@@ -178,7 +237,7 @@ else:
 - [ ] Field is added to `wi["syntax"]`
 - [ ] Annotation parsing function handles edge cases
 
-### 4.3 Annotation Pattern Reference
+### 5.3 Annotation Pattern Reference
 
 | Annotation | Pattern | Purpose |
 |------------|---------|---------|
@@ -193,9 +252,9 @@ else:
 
 ---
 
-## 5. Working Interpretation Issues
+## 6. Working Interpretation Issues
 
-### 5.1 Required Fields by Sequence Type
+### 6.1 Required Fields by Sequence Type
 
 | Sequence | Required in `syntax` |
 |----------|---------------------|
@@ -206,7 +265,7 @@ else:
 | `looping` | `marker`, `LoopBaseConcept`, `CurrentLoopBaseConcept`, `ConceptToInfer` |
 | `imperative`/`judgement` | `paradigm`, `body_faculty`, `value_order` |
 
-### 5.2 Value Selectors
+### 6.2 Value Selectors
 
 When bundled data (dicts, lists) needs to stay bundled:
 
@@ -226,9 +285,9 @@ In `.pf.ncd`:
 
 ---
 
-## 6. Paradigm Issues
+## 7. Paradigm Issues
 
-### 6.1 Key Extraction Mismatch
+### 7.1 Key Extraction Mismatch
 
 **Problem:** Paradigm extracts different key than prompt outputs.
 
@@ -241,7 +300,7 @@ In `.pf.ncd`:
 - Paradigm: `{"key": "result"}`
 - Prompt: `{"thinking": "...", "result": true}`
 
-### 6.2 Tool Name Mismatch
+### 7.2 Tool Name Mismatch
 
 **Problem:** Paradigm uses wrong tool name.
 
@@ -252,7 +311,7 @@ In `.pf.ncd`:
 
 **Solution:** Use registered name: `"tool_name": "user_input"`
 
-### 6.3 Common Paradigm Patterns
+### 7.3 Common Paradigm Patterns
 
 | Paradigm | Output | Key Extracted |
 |----------|--------|---------------|
@@ -262,9 +321,9 @@ In `.pf.ncd`:
 
 ---
 
-## 7. Prompt Engineering Issues
+## 8. Prompt Engineering Issues
 
-### 7.1 Required JSON Format
+### 8.1 Required JSON Format
 
 All LLM prompts using `GenerateThinkJson` paradigm MUST specify:
 
@@ -282,7 +341,7 @@ Return JSON with `thinking` and `result` fields:
 **Important:** Your response MUST be valid JSON with exactly these two top-level keys.
 ```
 
-### 7.2 Input Templating
+### 8.2 Input Templating
 
 Use `$input_N` variables with XML wrappers:
 
@@ -298,7 +357,7 @@ $input_2
 </previous_data>
 ```
 
-### 7.3 Duplicate Prevention (Extraction Loops)
+### 8.3 Duplicate Prevention (Extraction Loops)
 
 For iterative extraction, include:
 
@@ -317,7 +376,7 @@ For iterative extraction, include:
 **Expected count: 5-10 unique items, NOT 20+**
 ```
 
-### 7.4 Judgement Termination
+### 8.4 Judgement Termination
 
 For judgements that control loop termination:
 
@@ -335,9 +394,9 @@ Return `false` (continue) ONLY when:
 
 ---
 
-## 8. Loop and State Management Issues
+## 9. Loop and State Management Issues
 
-### 8.1 Invariant Concepts
+### 9.1 Invariant Concepts
 
 Concepts that persist across loop iterations need:
 
@@ -348,7 +407,7 @@ Concepts that persist across loop iterations need:
 
 Without this, references may be reset between iterations.
 
-### 8.2 Empty List Initialization
+### 9.2 Empty List Initialization
 
 **Problem:** Empty list `[]` has shape `(0,)`, causing `cross_product` to produce nothing.
 
@@ -361,7 +420,7 @@ Without this, references may be reset between iterations.
 
 Then update prompts to ignore placeholders.
 
-### 8.3 Loop Structure Pattern
+### 9.3 Loop Structure Pattern
 
 ```ncd
 /: Initialize BEFORE loop (sibling, not child)
@@ -400,9 +459,9 @@ Then update prompts to ignore placeholders.
 
 ---
 
-## 9. Shape and Axis Issues
+## 10. Shape and Axis Issues
 
-### 9.1 TVA Axis Creation
+### 10.1 TVA Axis Creation
 
 For imperative outputs to create axes from lists:
 
@@ -419,7 +478,7 @@ concept_entry = {
 }
 ```
 
-### 9.2 Grouping Without Axis Creation
+### 10.2 Grouping Without Axis Creation
 
 For packed output (shape `(1,)` with all items in single element):
 
@@ -436,7 +495,7 @@ Results in:
 }
 ```
 
-### 9.3 Shape Mismatch Debugging
+### 10.3 Shape Mismatch Debugging
 
 **Error:** `Shape mismatch for axis 'X': N vs M`
 
@@ -451,7 +510,7 @@ Results in:
 
 ---
 
-## 10. Key Diagnostic Files
+## 11. Key Diagnostic Files
 
 ### Execution Logs
 
@@ -498,7 +557,7 @@ grep -r "\[ERROR\]" logs_run_*/
 
 ---
 
-## Summary: Top 10 Debugging Tips
+## Summary: Top 12 Debugging Tips
 
 1. **Check indentation in activator** - Python indentation bugs cause silent overwrites
 2. **Verify working_interpretation fields** - Each sequence type has required fields
@@ -510,9 +569,28 @@ grep -r "\[ERROR\]" logs_run_*/
 8. **Specify JSON format in prompts** - `{"thinking": ..., "result": ...}`
 9. **Add duplicate detection** in extraction prompts
 10. **Check flow index hierarchy** - Context concepts should be siblings, not children
+11. **Add explicit input references** - Operators need child value concepts for dependencies
+12. **Use `%{value_order}`** - Explicitly control which concepts become paradigm inputs
+
+---
+
+## Quick Reference: Flow Index Pattern
+
+```
+Parent Value (X.Y)
+├── Functional (X.Y.1)          ← Always .1
+├── Input Value (X.Y.2)         ← Siblings
+│   ├── Child Functional (X.Y.2.1)
+│   └── Child Input (X.Y.2.2)
+├── Input Value (X.Y.3)
+└── Input Value (X.Y.4)
+```
+
+**Key Rule:** Same depth = same index length. Functional is always first child (`.1`).
 
 ---
 
 *Document created: 2026-01-23*
+*Last updated: 2026-01-23 (flow index structure, missing input references)*
 *Based on RTL AOC Verification workflow debugging experience*
 

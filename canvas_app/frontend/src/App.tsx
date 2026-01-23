@@ -317,7 +317,14 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-50">
+    <div 
+      className="flex flex-col bg-slate-50" 
+      style={{ 
+        zoom: zoom,
+        width: `${100 / zoom}vw`,
+        height: `${100 / zoom}vh`,
+      }}
+    >
       {/* Single Unified Header */}
       <header className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between">
         {/* Left side: Logo + Project Info */}
@@ -664,15 +671,8 @@ function App() {
             {showLogPanel && <LogPanel />}
           </>
         ) : (
-          // Canvas View with zoom transform
-          <div 
-            className="flex-1 flex flex-col overflow-hidden origin-top-left"
-            style={{ 
-              transform: `scale(${zoom})`,
-              width: `${100 / zoom}%`,
-              height: `${100 / zoom}%`,
-            }}
-          >
+          // Canvas View
+          <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 flex overflow-hidden">
               {/* Left side panels with resize handles */}
               {showWorkersPanel && (
@@ -721,7 +721,7 @@ function App() {
             {graphData && showLogPanel && (
               <>
                 <ResizeDivider direction="vertical" onResize={handleLogPanelResize} />
-                <div style={{ height: panelSizes.logPanel }} className="overflow-hidden">
+                <div style={{ height: panelSizes.logPanel }} className="flex-shrink-0 flex flex-col overflow-hidden border-t border-slate-200">
                   <LogPanel />
                 </div>
               </>

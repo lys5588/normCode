@@ -708,5 +708,123 @@ Result: `assign_source: ["{src1}", "{src2}"]`
 
 ---
 
-*Last updated: 2026-01-23 (specification operator source selection)*
+## 18. Explicit Value Order Annotation
+
+### Problem
+When an imperative has many value concepts in its tree (from nested inferences), but only needs a specific subset as actual inputs, the automatic value_order inference picks up all value concepts. This can cause:
+- Incorrect prompt templating (too many inputs)
+- Shape mismatches in MVP cross_product
+- Unwanted data passed to paradigms
+
+### Solution
+Added `%{value_order}` annotation to explicitly specify which concepts should be inputs and in what order.
+
+### NormCode Syntax
+```ncd
+<= ::(some imperative) | ?{flow_index}: 1.1 | ?{sequence}: imperative
+    | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+    | %{value_order}: [{concept1}, {concept2}, <proposition>]
+```
+
+### Activator Behavior
+- When `%{value_order}` is present, the activator parses the list and uses only those concepts
+- Concepts are ordered by their position in the list (1, 2, 3, etc.)
+- Supports all bracket types: `{objects}`, `[relations]`, `<propositions>`
+- When absent, falls back to automatic inference from value_concepts
+
+### Example
+```ncd
+<= ::(combine all testing information into verification report) | ?{flow_index}: 1.1
+    | %{value_order}: [{all testing information}]
+```
+
+Generates:
+```json
+"working_interpretation": {
+  "value_order": {
+    "{all testing information}": 1
+  }
+}
+```
+
+This ensures only `{all testing information}` is passed to the prompt as `$input_1`, even though the inference has 6 value_concepts in its tree.
+
+---
+
+## 19. Flow Index Pattern (Sibling Structure)
+
+### Problem
+Flow indices were incorrectly nesting value concepts under functional concepts (e.g., `1.7.1.1`, `1.7.1.2`) instead of making them siblings (e.g., `1.7.2`, `1.7.3`).
+
+### Correct Pattern
+```
+1.7      - {parent value}           (depth 2)
+  1.7.1  - &[{}] (functional)       (depth 3) - ALWAYS .1
+  1.7.2  - {input1}                 (depth 3) - sibling
+  1.7.3  - {input2}                 (depth 3) - sibling
+    1.7.3.1 - $. (functional)       (depth 4) - child's .1
+    1.7.3.2 - <source>              (depth 4) - sibling input
+  1.7.4  - {input3}                 (depth 3) - sibling
+```
+
+### Rules
+1. **Same depth = same index length** - All siblings have same number of index parts
+2. **Functional concept is always `.1`** - The operator/imperative/judgement is first child
+3. **Value concepts are siblings** - Inputs to a functional are at same depth, not nested under it
+4. **Each functional can have child tree** - Nested inferences follow same pattern
+
+### Example in `.pf.ncd`
+```ncd
+<- {all testing information} | ?{flow_index}: 1.7
+    <= &[{}] %>[...] | ?{flow_index}: 1.7.1 | ?{sequence}: grouping
+    <- {AOC definitions} | ?{flow_index}: 1.7.2
+    <- {AOC validity} | ?{flow_index}: 1.7.3
+        <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+        <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+    <- [verification results] | ?{flow_index}: 1.7.4
+        <= &[#] %>[...] | ?{flow_index}: 1.7.4.1 | ?{sequence}: grouping
+        <- [verification per cycle] | ?{flow_index}: 1.7.4.2
+```
+
+---
+
+## 20. Explicit Input References for Operators
+
+### Problem
+Specification operators (`$.`) that reference external concepts in `%>()` were not declaring them as child value concepts. This caused the scheduler to not know about the dependency, resulting in "empty" status for derived values.
+
+### Symptom
+```
+Value concepts (5): [..., "'{AOC validity}'=empty", ...]
+RESULT: NOT READY. Value concepts not ready: ["'{AOC validity}' (Status: empty)"]
+```
+
+### Solution
+Add explicit child value concept to declare the dependency:
+
+**Before (Wrong):**
+```ncd
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    /: Missing input reference!
+```
+
+**After (Correct):**
+```ncd
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+        | %{ref_axes}: [_none_axis]
+        | %{ref_element}: %{truth_value}
+```
+
+### Key Point
+- The specification operator `$.` selects FROM the source concept
+- The source must be declared as a sibling value concept under the parent
+- This creates the dependency edge in the execution graph
+- Without it, scheduler doesn't wait for source to complete
+
+---
+
+*Last updated: 2026-01-23 (flow index pattern, explicit input references)*
 

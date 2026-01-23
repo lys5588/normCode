@@ -484,49 +484,70 @@ def build_working_interpretation(inference: dict, sequence_type: str) -> dict:
         paradigm = get_annotation_value(func_comments, "norm_input")
         body_faculty = get_annotation_value(func_comments, "body_faculty")
         
+        # Check for explicit value_order annotation first
+        explicit_value_order = get_annotation_value(func_comments, "value_order")
+        
         # Build value_order and value_selectors from value concepts
         value_order = {}
         value_selectors = {}
-        has_any_binding = any(re.search(r"<:\{(\d+)\}>", vc.get("nc_main", "")) for vc in value_concepts)
         
-        for i, vc in enumerate(value_concepts):
-            vc_name = vc.get("concept_name")
-            if vc_name:
-                nc_main = vc.get("nc_main", "")
-                vc_comments = vc.get("attached_comments", [])
-                binding_match = re.search(r"<:\{(\d+)\}>", nc_main)
-                formatted_name = format_concept_name(vc_name, vc.get("concept_type", "object"))
-                
-                if binding_match:
-                    # Explicit binding - use the specified order
-                    value_order[formatted_name] = int(binding_match.group(1))
+        if explicit_value_order:
+            # Parse explicit value_order like [{all testing information}, {other concept}]
+            # Remove outer brackets if present
+            inner = explicit_value_order.strip()
+            if inner.startswith('[') and inner.endswith(']'):
+                inner = inner[1:-1].strip()
+            
+            # Split by comma to get individual concept references
+            # But be careful - concept names can contain commas, so split carefully
+            # Use regex to find concept patterns: {name}, [name], or <name>
+            concept_patterns = re.findall(r'(\{[^}]+\}|\[[^\]]+\]|<[^>]+>)', inner)
+            
+            for i, pattern in enumerate(concept_patterns):
+                # Pattern already includes the brackets, use as-is
+                value_order[pattern] = i + 1
+        else:
+            # Fall back to inferring from value concepts
+            has_any_binding = any(re.search(r"<:\{(\d+)\}>", vc.get("nc_main", "")) for vc in value_concepts)
+        
+            for i, vc in enumerate(value_concepts):
+                vc_name = vc.get("concept_name")
+                if vc_name:
+                    nc_main = vc.get("nc_main", "")
+                    vc_comments = vc.get("attached_comments", [])
+                    binding_match = re.search(r"<:\{(\d+)\}>", nc_main)
+                    formatted_name = format_concept_name(vc_name, vc.get("concept_type", "object"))
                     
-                    # Check for value_selector annotations
-                    selector = {}
-                    source_concept = get_annotation_value(vc_comments, "selector_source")
-                    select_key = get_annotation_value(vc_comments, "selector_key")
-                    select_index = get_annotation_value(vc_comments, "selector_index")
-                    is_packed = get_annotation_value(vc_comments, "selector_packed")
-                    should_unpack = get_annotation_value(vc_comments, "selector_unpack")
-                    
-                    if source_concept:
-                        selector["source_concept"] = source_concept
-                    if select_key:
-                        selector["key"] = select_key
-                    if select_index:
-                        selector["index"] = int(select_index)
-                    if is_packed and is_packed.lower() == "true":
-                        selector["packed"] = True
-                    if should_unpack and should_unpack.lower() == "true":
-                        selector["unpack"] = True
-                    
-                    if selector:
-                        value_selectors[formatted_name] = selector
+                    if binding_match:
+                        # Explicit binding - use the specified order
+                        value_order[formatted_name] = int(binding_match.group(1))
                         
-                elif not has_any_binding:
-                    # No bindings in any value_concept - fall back to position-based ordering
-                    value_order[formatted_name] = i + 1
-                # If has_any_binding but this concept doesn't have one, skip it (it's a tree descendant, not an input)
+                        # Check for value_selector annotations
+                        selector = {}
+                        source_concept = get_annotation_value(vc_comments, "selector_source")
+                        select_key = get_annotation_value(vc_comments, "selector_key")
+                        select_index = get_annotation_value(vc_comments, "selector_index")
+                        is_packed = get_annotation_value(vc_comments, "selector_packed")
+                        should_unpack = get_annotation_value(vc_comments, "selector_unpack")
+                        
+                        if source_concept:
+                            selector["source_concept"] = source_concept
+                        if select_key:
+                            selector["key"] = select_key
+                        if select_index:
+                            selector["index"] = int(select_index)
+                        if is_packed and is_packed.lower() == "true":
+                            selector["packed"] = True
+                        if should_unpack and should_unpack.lower() == "true":
+                            selector["unpack"] = True
+                        
+                        if selector:
+                            value_selectors[formatted_name] = selector
+                            
+                    elif not has_any_binding:
+                        # No bindings in any value_concept - fall back to position-based ordering
+                        value_order[formatted_name] = i + 1
+                    # If has_any_binding but this concept doesn't have one, skip it (it's a tree descendant, not an input)
         
         wi["paradigm"] = paradigm
         wi["body_faculty"] = body_faculty

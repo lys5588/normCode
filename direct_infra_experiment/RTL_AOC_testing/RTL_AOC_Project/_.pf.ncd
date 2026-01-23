@@ -32,12 +32,13 @@
     | %{ref_axes}: [_none_axis]
     | %{ref_shape}: (1,)
     | %{ref_element}: dict(aoc_definitions: dict, aoc_valid: bool, trace: list, verification_per_cycle: list)
-    <= ::(combine AOC definitions, validity, trace, and per-cycle verification into report) | ?{flow_index}: 1.1 | ?{sequence}: imperative
+    <= ::(combine all testing information into verification report) | ?{flow_index}: 1.1 | ?{sequence}: imperative
         | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
         | %{v_input_norm}: prompt_location
         | %{v_input_provision}: provisions/prompts/combine_verification_report.md
         | %{h_input_norm}: Literal
         | %{body_faculty}: llm
+        | %{value_order}: [{all testing information}]
 
     /: ============================================================
     /: PHASE 1: AOC Schema Generation
@@ -61,7 +62,7 @@
                 | %{norm_input}: h_LiteralPath-c_ReadFile-o_Literal
                 | %{h_input_norm}: LiteralPath
                 | %{body_faculty}: file_system
-            <- {ISA file path}<:{1}> | ?{flow_index}: 1.2.2.1.1
+            <- {ISA file path}<:{1}> | ?{flow_index}: 1.2.2.2
                 | %{ref_axes}: [_none_axis]
                 | %{ref_element}: str
                 | %{literal<$% file_path>}: provisions/inputs/specs/isa_v1.md
@@ -74,7 +75,7 @@
                 | %{norm_input}: h_LiteralPath-c_ReadFile-o_Literal
                 | %{h_input_norm}: LiteralPath
                 | %{body_faculty}: file_system
-            <- {MA file path}<:{1}> | ?{flow_index}: 1.2.3.1.1
+            <- {MA file path}<:{1}> | ?{flow_index}: 1.2.3.2
                 | %{ref_axes}: [_none_axis]
                 | %{ref_element}: str
                 | %{literal<$% file_path>}: provisions/inputs/specs/uarch_v2.md
@@ -93,10 +94,10 @@
                 | %{h_input_norm}: Literal
                 | %{body_faculty}: user_input
                 | %{interaction_type}: text_editor
-            <- {ISA spec text}<:{1}> | ?{flow_index}: 1.2.4.1.1
+            <- {ISA spec text}<:{1}> | ?{flow_index}: 1.2.4.2
                 | %{ref_axes}: [_none_axis]
                 | %{ref_element}: str
-            <- {MA spec text}<:{2}> | ?{flow_index}: 1.2.4.1.2
+            <- {MA spec text}<:{2}> | ?{flow_index}: 1.2.4.3
                 | %{ref_axes}: [_none_axis]
                 | %{ref_element}: str
         
@@ -106,13 +107,13 @@
             | %{ref_element}: dict(isa: str, ma: str, intent_blocks: list)
             <= &[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] | ?{flow_index}: 1.2.5.1 | ?{sequence}: grouping
                 /: GROUPING: Collect ISA, MA, and intent blocks together
-            <- {ISA spec text} | ?{flow_index}: 1.2.5.1.1
+            <- {ISA spec text} | ?{flow_index}: 1.2.5.2
                 | %{ref_axes}: [_none_axis]
                 | %{ref_element}: str
-            <- {MA spec text} | ?{flow_index}: 1.2.5.1.2
+            <- {MA spec text} | ?{flow_index}: 1.2.5.3
                 | %{ref_axes}: [_none_axis]
                 | %{ref_element}: str
-            <- {intent blocks} | ?{flow_index}: 1.2.5.1.3
+            <- {intent blocks} | ?{flow_index}: 1.2.5.4
                 | %{ref_axes}: [intent_block]
                 | %{ref_element}: dict
         
@@ -182,10 +183,10 @@
                     | %{is_invariant}: true
                     <= $+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis) | ?{flow_index}: 1.2.8.1.3.1 | ?{sequence}: assigning
                         /: CONTINUATION: Append new AOC to AOC schemas records
-                    <- [AOC schemas records]<:{1}> | ?{flow_index}: 1.2.8.1.3.1.1
+                    <- [AOC schemas records]<:{1}> | ?{flow_index}: 1.2.8.1.3.2
                         | %{ref_axes}: [canonical]
                         | %{ref_element}: dict
-                    <- {new AOC}<:{2}> | ?{flow_index}: 1.2.8.1.3.1.2
+                    <- {new AOC}<:{2}> | ?{flow_index}: 1.2.8.1.3.3
                         | %{ref_axes}: [_none_axis]
                         | %{ref_element}: dict
                 
@@ -199,11 +200,11 @@
                         | %{v_input_provision}: provisions/prompts/phase1/judge_more_canonicals.md
                         | %{h_input_norm}: Literal
                         | %{body_faculty}: llm
-                    <- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.4.1.1
+                    <- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.4.2
                         | %{ref_axes}: [_none_axis]
                         | %{ref_element}: dict
                         | %{selector_packed}: true
-                    <- [AOC schemas extracted so far]<:{2}> | ?{flow_index}: 1.2.8.1.4.1.2
+                    <- [AOC schemas extracted so far]<:{2}> | ?{flow_index}: 1.2.8.1.4.3
                         | %{ref_axes}: [_none_axis]
                         | %{ref_element}: list
                         | %{selector_packed}: true
@@ -279,7 +280,7 @@
             | %{v_input_provision}: provisions/prompts/phase1/validate_aoc_rules.md
             | %{h_input_norm}: Literal
             | %{body_faculty}: llm
-        <- {AOC definitions}<:{1}> | ?{flow_index}: 1.3.1.1
+        <- {AOC definitions}<:{1}> | ?{flow_index}: 1.3.2
             | %{ref_axes}: [_none_axis]
             | %{ref_element}: dict
 
@@ -298,7 +299,7 @@
             | %{norm_input}: h_LiteralPath-c_ReadFile-o_Literal
             | %{h_input_norm}: LiteralPath
             | %{body_faculty}: file_system
-        <- {trace file path}<:{1}> | ?{flow_index}: 1.4.1.1
+        <- {trace file path}<:{1}> | ?{flow_index}: 1.4.2
             | %{ref_axes}: [_none_axis]
             | %{ref_element}: str
             | %{literal<$% file_path>}: provisions/inputs/trace/rtl_trace.json
@@ -314,7 +315,7 @@
             | %{v_function_name}: split_to_cycles
             | %{h_input_norm}: Literal
             | %{body_faculty}: python_interpreter
-        <- {RTL simulation trace}<:{1}> | ?{flow_index}: 1.5.1.1
+        <- {RTL simulation trace}<:{1}> | ?{flow_index}: 1.5.2
             | %{ref_axes}: [_none_axis]
             | %{ref_element}: dict
     
@@ -345,13 +346,13 @@
                     | %{v_input_provision}: provisions/prompts/phase2/update_active_rules.md
                     | %{h_input_norm}: Literal
                     | %{body_faculty}: llm
-                <- {current cycle trace}<:{1}> | ?{flow_index}: 1.6.1.2.1.1
+                <- {current cycle trace}<:{1}> | ?{flow_index}: 1.6.1.2.2
                     | %{ref_axes}: [_none_axis]
                     | %{ref_element}: dict
-                <- {previous active rules}<:{2}> | ?{flow_index}: 1.6.1.2.1.2
+                <- {previous active rules}<:{2}> | ?{flow_index}: 1.6.1.2.3
                     | %{ref_axes}: [_none_axis]
                     | %{ref_element}: dict
-                <- {AOC definitions}<:{3}> | ?{flow_index}: 1.6.1.2.1.3
+                <- {AOC definitions}<:{3}> | ?{flow_index}: 1.6.1.2.4
                     | %{ref_axes}: [_none_axis]
                     | %{ref_element}: dict
             
@@ -365,10 +366,10 @@
                     | %{v_input_provision}: provisions/prompts/phase2/verify_cycle.md
                     | %{h_input_norm}: Literal
                     | %{body_faculty}: llm
-                <- {current cycle trace}<:{1}> | ?{flow_index}: 1.6.1.3.1.1
+                <- {current cycle trace}<:{1}> | ?{flow_index}: 1.6.1.3.2
                     | %{ref_axes}: [_none_axis]
                     | %{ref_element}: dict
-                <- {active rules}<:{2}> | ?{flow_index}: 1.6.1.3.1.2
+                <- {active rules}<:{2}> | ?{flow_index}: 1.6.1.3.3
                     | %{ref_axes}: [_none_axis]
                     | %{ref_element}: dict
         
@@ -397,46 +398,39 @@
         | %{ref_element}: dict
         <= &[{}] %>[{AOC definitions}, {AOC validity}, [verification results], [trace data], {all user inputs}] | ?{flow_index}: 1.7.1 | ?{sequence}: grouping
             /: GROUPING: Collect all testing information into single dict
-        <- {AOC definitions} | ?{flow_index}: 1.7.1.1
+        <- {AOC definitions} | ?{flow_index}: 1.7.2
             | %{ref_axes}: [_none_axis]
             | %{ref_element}: dict
-        <- {AOC validity} | ?{flow_index}: 1.7.1.2
+        <- {AOC validity} | ?{flow_index}: 1.7.3
             | %{ref_axes}: [_none_axis]
             | %{ref_element}: bool
-            <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.1.2.1 | ?{sequence}: assigning
+            <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
                 /: SPECIFICATION: Select AOC validity as object
-        <- [verification results] | ?{flow_index}: 1.7.1.3
+            <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: %{truth_value}
+        <- [verification results] | ?{flow_index}: 1.7.4
             | %{ref_axes}: [_none_axis]
             | %{ref_shape}: (1,)
             | %{ref_element}: list
-            <= &[#] %>[{verification record}] | ?{flow_index}: 1.7.1.3.1 | ?{sequence}: grouping
+            <= &[#] %>[{verification record}] | ?{flow_index}: 1.7.4.1 | ?{sequence}: grouping
                 /: GROUPING: Collapse verification per cycle into single list
-            <- [verification per cycle] | ?{flow_index}: 1.7.1.3.2
+            <- [verification per cycle] | ?{flow_index}: 1.7.4.2
                 | %{ref_axes}: [cycle]
                 | %{ref_element}: dict
-        <- [trace data] | ?{flow_index}: 1.7.1.4
+        <- [trace data] | ?{flow_index}: 1.7.5
             | %{ref_axes}: [_none_axis]
             | %{ref_shape}: (1,)
             | %{ref_element}: list
-            <= &[#] %>[{trace record}] | ?{flow_index}: 1.7.1.4.1 | ?{sequence}: grouping
+            <= &[#] %>[{trace record}] | ?{flow_index}: 1.7.5.1 | ?{sequence}: grouping
                 /: GROUPING: Collapse trace per cycle into single list
-            <- [trace per cycle] | ?{flow_index}: 1.7.1.4.2
+            <- [trace per cycle] | ?{flow_index}: 1.7.5.2
                 | %{ref_axes}: [cycle]
                 | %{ref_element}: dict
-        <- {all user inputs} | ?{flow_index}: 1.7.1.5
+        <- {all user inputs} | ?{flow_index}: 1.7.6
             | %{ref_axes}: [_none_axis]
             | %{ref_element}: dict
     
-    <= ::(combine all testing information into verification report) | ?{flow_index}: 1.8 | ?{sequence}: imperative
-        | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
-        | %{v_input_norm}: prompt_location
-        | %{v_input_provision}: provisions/prompts/combine_verification_report.md
-        | %{h_input_norm}: Literal
-        | %{body_faculty}: llm
-    <- {all testing information}<:{1}> | ?{flow_index}: 1.8.1
-        | %{ref_axes}: [_none_axis]
-        | %{ref_element}: dict
-        | %{selector_packed}: true
 
 /: ========================================
 /: SUMMARY: RTL AOC Verification Workflow
