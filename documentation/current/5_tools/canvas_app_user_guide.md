@@ -12,34 +12,71 @@
 - Node.js 18 or higher
 - npm 9 or higher
 
-### Installation
+### Installation & Running
 
-1. **Install Backend Dependencies**
-
-```powershell
-cd canvas_app/backend
-pip install -r requirements.txt
-```
-
-2. **Install Frontend Dependencies**
-
-```powershell
-cd canvas_app/frontend
-npm install
-```
-
-### Running the App
-
-**Option 1: Combined Launcher (Recommended)**
+The launcher automatically checks and installs dependencies on first run:
 
 ```powershell
 cd canvas_app
 python launch.py
 ```
 
-This starts both the backend (port 8000) and frontend (port 5173) servers.
+The launcher will:
+1. Check for Python dependencies (FastAPI, uvicorn, etc.)
+2. Check for Node.js dependencies (React, Vite, etc.)
+3. Install any missing dependencies automatically
+4. Start both backend (port 8000) and frontend (port 5173) servers
 
-**Option 2: Separate Terminals**
+### Launcher Options
+
+```powershell
+python launch.py              # Start in dev mode (default)
+python launch.py --prod       # Production mode (no auto-reload)
+python launch.py --install    # Force reinstall all dependencies
+python launch.py --skip-deps  # Skip dependency checks (faster startup)
+python launch.py --backend-only   # Only start backend server
+python launch.py --frontend-only  # Only start frontend server
+python launch.py --kill       # Kill existing servers before starting (Windows)
+```
+
+### LLM Configuration
+
+Create `settings.yaml` in the project root to configure LLM API keys:
+
+```yaml
+# settings.yaml - LLM Model Configuration
+qwen-plus:
+    DASHSCOPE_API_KEY: sk-your-api-key-here
+
+qwen-turbo-latest:
+    DASHSCOPE_API_KEY: sk-your-api-key-here
+
+gpt-4o:
+    OPENAI_API_KEY: sk-your-openai-key-here
+
+claude-3-sonnet:
+    ANTHROPIC_API_KEY: sk-your-anthropic-key-here
+```
+
+**Note**: The `demo` mode is always available without an API key for testing.
+
+### Manual Setup (Optional)
+
+If you prefer to install dependencies manually:
+
+1. **Install Backend Dependencies**
+```powershell
+cd canvas_app/backend
+pip install -r requirements.txt
+```
+
+2. **Install Frontend Dependencies**
+```powershell
+cd canvas_app/frontend
+npm install
+```
+
+3. **Run Separately**
 
 Terminal 1 (Backend):
 ```powershell
@@ -424,6 +461,67 @@ Click any entry to view full details:
 - Complete outputs
 - Duration
 - Status
+
+---
+
+## Modification Features (Phase 4)
+
+### Value Override
+
+Override tensor values at any node during debugging:
+
+1. Select a node in the graph
+2. In the Detail Panel, click **"Override Value"**
+3. Edit the tensor data in the dialog
+4. Click **"Apply"** to set the new value
+
+**Use Cases**:
+- Test with different inputs without re-running entire plan
+- Debug by injecting known values
+- Experiment with edge cases
+
+### Function Modification
+
+Change how a function node executes:
+
+1. Select a function node
+2. In the Detail Panel, click **"Modify Function"**
+3. Edit:
+   - **Paradigm**: Change execution strategy
+   - **Prompt**: Edit the prompt template
+   - **Output Type**: Change expected output format
+4. Click **"Apply"**
+
+### Selective Re-run
+
+Re-run execution from any node:
+
+1. Select a node in the graph
+2. Right-click or use the Detail Panel menu
+3. Choose **"Re-run from here"**
+4. The node and all its dependents will re-execute
+
+**Note**: This uses the current values of upstream nodes.
+
+### Checkpoint Resume & Fork
+
+Resume or branch from saved execution states:
+
+**Resume**:
+1. Open Project Settings
+2. Select a checkpoint from the dropdown
+3. Click **"Resume"** to continue from that point
+
+**Fork**:
+1. Select a checkpoint
+2. Click **"Fork"** to create a new branch
+3. The forked execution starts from the checkpoint state
+4. Original execution history is preserved
+
+**Checkpoint Management**:
+- Checkpoints are saved automatically at breakpoints
+- Manual checkpoint: Click **"Save Checkpoint"** in Control Panel
+- View checkpoint history in Project Settings
 
 ---
 

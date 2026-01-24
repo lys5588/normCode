@@ -2,12 +2,11 @@
 
 Simple, self-contained example plans showing common patterns.
 
-> **Note on Format**: These examples show NormCode's core syntax (usable in `.ncds`, `.ncd`, or `.ncdn` formats). You can also:
+> **Note on Format**: These examples show NormCode's core syntax (usable in `.ncds` or `.pf.ncd` formats). You can:
 > - Start with `.ncds` format (draft/authoring) when creating new plans
-> - Use `.ncdn` format in the editor to see both formal and natural language
-> - Convert between formats using `update_format.py` tool
+> - Use the Canvas App's integrated editor for editing and visualization
 > 
-> See [Editor Guide](../../Editor_README.md) for format details.
+> See [Tools Section](../5_tools/README.md) for the Canvas App.
 
 ---
 
@@ -540,8 +539,7 @@ Group free syntactic operations, isolate costly semantic ones.
 
 - **[Quickstart](quickstart.md)** - Learn the basics
 - **[Grammar](../2_grammar/README.md)** - Complete syntax reference  
-- **[Editor Guide](../../Editor_README.md)** - Using the visual editor
-- **[Editor Examples](../../Editor_EXAMPLES.md)** - Advanced patterns with format conversion
+- **[Tools](../5_tools/README.md)** - Canvas App for visualization, execution, and editing
 
 ---
 
@@ -549,23 +547,24 @@ Group free syntactic operations, isolate costly semantic ones.
 
 All examples above show NormCode's core syntax, which works across formats:
 
-**Four Major Formats:**
+**Key Formats:**
 - **`.ncds`** - Start here when authoring new plans (draft format)
-- **`.ncd`** - Formal syntax after compilation (with `.ncn` companion for natural language view)
-- **`.nci.json`** - Inference structure (intermediate format, shows clear flow)
-- **`.concept.json` + `.inference.json`** - Executable repositories for orchestrator runtime
+- **`.pf.ncd`** - Post-formalized with annotations (ready for activation)
+- **`.pf.nci.json`** - Parsed inference structure (intermediate)
+- **`concept_repo.json` + `inference_repo.json`** - Executable repositories for orchestrator
 
-**Supporting Formats:**
-- **`.ncdn`** - Hybrid editor format showing both `.ncd` and `.ncn` together
-- **`.nc.json`** - JSON structure for tooling
+**The Compilation Pipeline:**
+```
+_.ncds → _.pf.ncd → _.pf.nci.json → repos/concept_repo.json + repos/inference_repo.json
+```
 
-The **visual editor** supports all formats, and **format tools** (`update_format.py`) convert between them automatically.
+See the [Compilation Section](../4_compilation/README.md) for details on each phase.
 
-See the [Editor README](../../Editor_README.md) for:
-- Detailed format specifications
-- Conversion examples
-- Batch processing workflows
-- Validation procedures
+See the [Tools Section](../5_tools/README.md) for the Canvas App which provides:
+- Graph visualization
+- Execution control
+- Debugging with breakpoints
+- Integrated NormCode editor
 
 ---
 

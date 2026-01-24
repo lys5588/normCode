@@ -617,6 +617,8 @@ while not orchestrator.is_complete():
 
 ## Tools for Running Plans
 
+> **Primary Tool**: The **[Canvas App](../5_tools/README.md)** provides a unified visual interface for execution, debugging, and inspection. The tools below are legacy alternatives.
+
 ### 1. Command Line Interface
 
 **Basic Execution**:
@@ -890,7 +892,7 @@ for cycle in history:
 - **[Overview](overview.md)** - High-level execution model
 - **[Reference System](reference_system.md)** - How data is stored
 - **[Agent Sequences](agent_sequences.md)** - What happens in each inference
-- **[Tools Section](../5_tools/README.md)** - Using CLI and Streamlit app
+- **[Tools Section](../5_tools/README.md)** - Canvas App for visualization, execution, debugging
 
 ---
 

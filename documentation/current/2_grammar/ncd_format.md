@@ -113,17 +113,22 @@ Flow indices (e.g., `1.1.2`) serve as unique addresses for each step in the plan
 
 > **Deprecated Pattern (Old Versions)**: In some older NormCode versions, the flow index was marked on the functional concept (`<=`) instead of the value concept (`<-`). This made the functional concept's flow index serve as the inference identifier. This pattern is deprecated—current practice marks flow indices on the concept to infer (the value concept at the top of each inference).
 
-**Example (Current)**:
+**Example (Current - Sibling Pattern)**:
 ```ncd
 :<:{result} | ?{flow_index}: 1
     <= ::(compute) | ?{flow_index}: 1.1
     <- {input A} | ?{flow_index}: 1.2
         <= ::(process A) | ?{flow_index}: 1.2.1
-        <- {raw A} | ?{flow_index}: 1.2.1.1
+        <- {raw A} | ?{flow_index}: 1.2.2
     <- {input B} | ?{flow_index}: 1.3
         <= ::(process B) | ?{flow_index}: 1.3.1
-        <- {raw B} | ?{flow_index}: 1.3.1.1
+        <- {raw B} | ?{flow_index}: 1.3.2
 ```
+
+**⚠️ CRITICAL: The Sibling Pattern**
+- Functional concept is ALWAYS `.1` under its parent
+- Value concept inputs are SIBLINGS (`.2`, `.3`, `.4`), NOT children (`.1.1`, `.1.2`)
+- `{raw A}` is `1.2.2` (sibling of `1.2.1`), NOT `1.2.1.1` (child of `1.2.1`)
 
 **Example (Deprecated - Old Versions)**:
 ```ncd
@@ -335,19 +340,21 @@ The `.ncd` syntax is dense by design, but this comes with real costs:
 |/: This computes X          # Derivation (description)
 ```
 
-### Flow Index Example
+### Flow Index Example (Sibling Pattern)
 Flow indices provide unique addresses for each step:
 
 ```ncd
 <- _concept_to_infer_ | ?{flow_index}: (NN).1           /:Root concept (depth 0)
-    <= _functional_concept_1_ | ?{flow_index}: (NN).1.1         /:First child (depth 1)
-    <- _input_value_1_ | ?{flow_index}: (NN).1.2                /:Second child (depth 1)
-        <= _functional_concept_2_ | ?{flow_index}: (NN).1.2.1       /:First grandchild (depth 2)
-        <- _nested_input_1_ | ?{flow_index}: (NN).1.2.1.1           /:First great-grandchild (depth 3)
-        <- _nested_input_2_ | ?{flow_index}: (NN).1.2.1.2           /:Second great-grandchild (depth 3)
-    <- _input_value_2_ | ?{flow_index}: (NN).1.3                /:Third child (depth 1)
-    <* _context_value_ | ?{flow_index}: (NN).1.4                /:Fourth child (depth 1)
+    <= _functional_concept_1_ | ?{flow_index}: (NN).1.1         /:Functional ALWAYS .1
+    <- _input_value_1_ | ?{flow_index}: (NN).1.2                /:Sibling of functional
+        <= _functional_concept_2_ | ?{flow_index}: (NN).1.2.1       /:Nested functional is .1
+        <- _nested_input_1_ | ?{flow_index}: (NN).1.2.2             /:Sibling of nested functional
+        <- _nested_input_2_ | ?{flow_index}: (NN).1.2.3             /:Another sibling
+    <- _input_value_2_ | ?{flow_index}: (NN).1.3                /:Sibling of 1.2
+    <* _context_value_ | ?{flow_index}: (NN).1.4                /:Sibling of 1.3
 ```
+
+**⚠️ Key Rule**: Inputs are SIBLINGS of functional (`.2`, `.3`), NOT children (`.1.1`, `.1.2`).
 
 ---
 

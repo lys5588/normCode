@@ -14,15 +14,15 @@ This section documents the tools that enable users to create, execute, debug, an
 
 The Graph Canvas App is a standalone React/FastAPI application designed around a core principle: **the inference graph IS the interface**.
 
-### Current Status: ✅ Production Ready (v0.7+)
+### Current Status: ✅ Production Ready (v0.8.0)
 
 | Phase | Status | Description |
 |-------|--------|-------------|
 | **Phase 1**: Foundation | ✅ Complete | Graph display, node visualization |
 | **Phase 2**: Execution | ✅ Complete | Real-time execution, WebSocket events |
 | **Phase 3**: Debugging | ✅ Complete | Breakpoints, stepping, tensor inspection |
-| **Phase 4**: Modification | 🔄 Partial | Agent panel complete, editor complete |
-| **Phase 5**: Polish | ❌ Pending | Advanced features |
+| **Phase 4**: Modification | ✅ Complete | Value override, function modification, selective re-run |
+| **Phase 5**: Polish | 🔄 In Progress | Keyboard shortcuts, search, export |
 
 ### Key Capabilities
 
@@ -35,8 +35,8 @@ The Graph Canvas App is a standalone React/FastAPI application designed around a
 | **Project Management** | ✅ | IDE-like project system with persistence |
 | **Multi-Agent** | ✅ | Configure multiple agents with different LLMs |
 | **Editor** | ✅ | Integrated NormCode file editor |
-| **Modify** | ❌ | Override values, change paradigms, retry steps |
-| **Checkpoint/Resume** | 🔄 | Resume execution from saved checkpoints |
+| **Modify** | ✅ | Override values, change paradigms, selective re-run |
+| **Checkpoint/Resume** | ✅ | Resume or fork from saved checkpoints |
 
 ---
 
@@ -66,6 +66,23 @@ The Graph Canvas App is a standalone React/FastAPI application designed around a
 - Node.js 18+
 - npm 9+
 
+### LLM Configuration (settings.yaml)
+
+Create `settings.yaml` in the project root to configure LLM API keys:
+
+```yaml
+qwen-plus:
+    DASHSCOPE_API_KEY: sk-your-api-key-here
+
+gpt-4o:
+    OPENAI_API_KEY: sk-your-openai-key-here
+
+claude-3-sonnet:
+    ANTHROPIC_API_KEY: sk-your-anthropic-key-here
+```
+
+**Note**: The `demo` mode is always available without an API key for testing.
+
 ### Running the App
 
 ```powershell
@@ -74,7 +91,18 @@ cd canvas_app
 python launch.py
 ```
 
-This starts both backend (port 8000) and frontend (port 5173).
+The launcher automatically checks and installs dependencies on first run.
+
+**Launcher Options:**
+```powershell
+python launch.py              # Start in dev mode (default)
+python launch.py --prod       # Production mode (no auto-reload)
+python launch.py --install    # Force reinstall all dependencies
+python launch.py --skip-deps  # Skip dependency checks (faster startup)
+python launch.py --backend-only   # Only start backend
+python launch.py --frontend-only  # Only start frontend
+python launch.py --kill       # Kill existing servers before starting
+```
 
 **Access Points:**
 - **App**: http://localhost:5173
@@ -192,5 +220,5 @@ See the [Implementation Plan](implementation_plan.md) for remaining work and roa
 
 ---
 
-**Version**: 0.7.1  
-**Last Updated**: December 2024
+**Version**: 0.8.0  
+**Last Updated**: January 2026

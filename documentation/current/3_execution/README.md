@@ -84,7 +84,7 @@ Learn about:
 - Skip propagation
 - Checkpointing and persistence
 - Resume modes (PATCH, OVERWRITE, FILL_GAPS)
-- CLI and Streamlit tools
+- Canvas App integration
 
 **Start here if**: You want to understand how the engine coordinates everything.
 
@@ -254,7 +254,7 @@ A: Yes! Check the Reference for any concept in the ConceptRepo. Everything is ex
 - [Overview](overview.md) - Execution model
 - [Orchestrator](orchestrator.md) - How to run plans
 
-**You can**: Execute plans, use CLI/Streamlit, inspect results.
+**You can**: Execute plans, use Canvas App, inspect results.
 
 ---
 
@@ -390,8 +390,8 @@ for cycle in history:
 - **[Grammar](../2_grammar/README.md)** - The `.ncd` syntax
 
 ### Next Sections
-- **[Compilation](../4_compilation/README.md)** *(Coming Soon)* - The 5-phase compilation pipeline
-- **[Tools](../5_tools/README.md)** *(Coming Soon)* - CLI, editor, Streamlit app
+- **[Compilation](../4_compilation/README.md)** - The 4-phase compilation pipeline
+- **[Tools](../5_tools/README.md)** - Canvas App (visualization, execution, debugging, editor)
 
 ### Source Code
 - `infra/_orchestrator/` - Orchestrator implementation
@@ -415,8 +415,8 @@ for cycle in history:
 
 After mastering execution:
 
-- **[4. Compilation](../4_compilation/README.md)** *(Coming Soon)* - How `.ncd` becomes executable
-- **[5. Tools](../5_tools/README.md)** *(Coming Soon)* - User-facing tools and APIs
+- **[4. Compilation](../4_compilation/README.md)** - How `.ncd` becomes executable (4-phase pipeline)
+- **[5. Tools](../5_tools/README.md)** - Canvas App for visualization, execution, debugging
 
 ---
 

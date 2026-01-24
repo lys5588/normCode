@@ -266,10 +266,10 @@ To actually execute a plan, you need:
 
 Most of this is automated by the tooling.
 
-See the [Tools section](../5_tools/README.md) for:
-- CLI commands
-- Editor usage
-- Streamlit executor
+See the [Tools section](../5_tools/README.md) for the Canvas App:
+- Graph visualization
+- Execution control with breakpoints
+- Integrated NormCode editor
 
 ### Learn More
 
