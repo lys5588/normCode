@@ -1,0 +1,19 @@
+{
+  "id": "1fd2679c",
+  "name": "RTL_AOC_Project_v2",
+  "description": "A Normcode-orchestrated (NC), large-language-model-driven (LLM) plan to translate specifications, including the Instruction Set Architecture (ISA), into a new intermediate representation (IR) called Action\u2013Obligation Canonicals (AOC), in order to test Register-Transfer-Level (RTL) designs in simulation.",
+  "created_at": "2026-01-24T22:06:39.422618",
+  "updated_at": "2026-01-24T22:06:39.422618",
+  "repositories": {
+    "concepts": "repos\\concept_repo.json",
+    "inferences": "repos\\inference_repo.json",
+    "inputs": "inputs.json"
+  },
+  "execution": {
+    "max_cycles": 200,
+    "db_path": "orchestration.db",
+    "agent_config": "rtlaocprojectv2.agent.json"
+  },
+  "breakpoints": [],
+  "ui_preferences": {}
+}

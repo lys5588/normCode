@@ -1,0 +1,34 @@
+Generate a Verification Report for RTL design testing using Action-Obligation Canonicals (AOC).
+
+## Phase 1: AOC Schema Generation
+
+1. Load the ISA specification from "specs/isa_v1.md"
+2. Load the microarchitecture specification from "specs/uarch_v2.md" (optional)
+3. Ask user to clarify and decompose the specs into atomic intent blocks
+4. Collect all user inputs (ISA, MA, intent blocks) together
+
+5. For each canonical to extract:
+   - Extract a new action-obligation canonical from the user inputs and previously extracted schemas
+   - Judge if there are more canonicals to process
+   - If more canonicals remain, continue to next iteration
+   - Stop when all canonicals have been extracted
+
+6. Clean up and collect all AOC schemas into a unified definition
+7. Validate the AOC rules (judge if they are all valid)
+
+## Phase 2: Verification Against RTL Trace
+
+8. Load the RTL simulation trace from the trace file
+9. Split the trace into discrete cycles
+
+10. For each cycle in the trace:
+    - Only proceed if AOC definitions are valid
+    - Update active rules based on:
+      - Current cycle trace
+      - Previous active rules (carried from last iteration)
+      - Static AOC definitions
+    - Verify the current cycle trace against active rules
+    - Carry the active rules forward to the next iteration
+
+11. Combine AOC definitions, AOC validity, trace, and per-cycle verification into the final Verification Report
+
