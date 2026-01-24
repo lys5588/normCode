@@ -39,6 +39,12 @@ DIST_DIR = BUILD_DIR / "dist"
 WORK_DIR = BUILD_DIR / "build"
 RELEASE_DIR = BUILD_DIR / "release"
 
+# Import centralized version config
+from version_config import (
+    VERSION, VERSION_TUPLE, APP_NAME, APP_INTERNAL_NAME,
+    generate_version_info_txt, generate_installer_iss, generate_launcher_version_header
+)
+
 # Required Python packages for building
 BUILD_REQUIREMENTS = [
     "pyinstaller",
@@ -51,6 +57,39 @@ BUILD_REQUIREMENTS = [
 
 # Required icon sizes for Windows (all contexts: taskbar, explorer, etc.)
 ICON_SIZES = [16, 24, 32, 48, 64, 128, 256]
+
+
+def generate_version_files():
+    """Generate version files from centralized version_config.py."""
+    print_step(f"Generating version files (v{VERSION})...")
+    
+    # Generate version_info.txt
+    version_info_path = BUILD_DIR / "version_info.txt"
+    version_info_path.write_text(generate_version_info_txt(), encoding="utf-8")
+    print(f"  [OK] Generated: version_info.txt")
+    
+    # Generate installer.iss
+    installer_path = BUILD_DIR / "installer.iss"
+    installer_path.write_text(generate_installer_iss(), encoding="utf-8")
+    print(f"  [OK] Generated: installer.iss")
+    
+    # Update desktop_launcher.py version
+    launcher_path = BUILD_DIR / "launcher" / "desktop_launcher.py"
+    if launcher_path.exists():
+        content = launcher_path.read_text(encoding="utf-8")
+        new_content = re.sub(
+            r'^__version__\s*=\s*["\'].*["\']',
+            generate_launcher_version_header(),
+            content,
+            flags=re.MULTILINE
+        )
+        if new_content != content:
+            launcher_path.write_text(new_content, encoding="utf-8")
+            print(f"  [OK] Updated: launcher/desktop_launcher.py")
+        else:
+            print(f"  [--] No change: launcher/desktop_launcher.py")
+    
+    return True
 
 
 def print_header(text: str):
@@ -635,7 +674,11 @@ Examples:
     print_header("NormCode Canvas - Desktop App Build")
     print(f"  Project Root: {PROJECT_ROOT}")
     print(f"  Build Dir: {BUILD_DIR}")
+    print(f"  Version: {VERSION}")
     print(f"  Mode: {'Debug (with console)' if args.debug else 'Release (windowed)'}")
+    
+    # Generate version files from centralized config
+    generate_version_files()
     
     # Clean if requested
     if args.clean:

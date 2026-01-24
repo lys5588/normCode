@@ -49,10 +49,14 @@ BACKEND_DIR = CANVAS_APP / "backend"
 DIST_DIR = BUILD_DIR / "dist"
 WORK_DIR = BUILD_DIR / "build"
 
-# App info
-APP_NAME = "NormCodeCanvas"
-APP_BUNDLE_ID = "com.normcode.canvas"
-APP_VERSION = "1.0.0"
+# Import centralized version config
+from version_config import (
+    VERSION, APP_NAME, APP_INTERNAL_NAME, APP_BUNDLE_ID,
+    generate_launcher_version_header
+)
+
+# App info (from centralized config)
+APP_VERSION = VERSION
 
 # Required Python packages for building
 BUILD_REQUIREMENTS = [
@@ -62,6 +66,24 @@ BUILD_REQUIREMENTS = [
 
 # Required icon sizes for macOS (standard + retina)
 ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024]
+
+
+def update_launcher_version():
+    """Update launcher version from centralized config."""
+    import re
+    
+    launcher_path = BUILD_DIR / "launcher" / "desktop_launcher.py"
+    if launcher_path.exists():
+        content = launcher_path.read_text(encoding="utf-8")
+        new_content = re.sub(
+            r'^__version__\s*=\s*["\'].*["\']',
+            generate_launcher_version_header(),
+            content,
+            flags=re.MULTILINE
+        )
+        if new_content != content:
+            launcher_path.write_text(new_content, encoding="utf-8")
+            print(f"  [OK] Updated launcher version to {VERSION}")
 
 
 def print_header(text: str):
@@ -826,8 +848,12 @@ Examples:
     print_header("NormCode Canvas - macOS Build")
     print(f"  Project Root: {PROJECT_ROOT}")
     print(f"  Build Dir: {BUILD_DIR}")
+    print(f"  Version: {VERSION}")
     print(f"  macOS: {platform.mac_ver()[0]}")
     print(f"  Architecture: {platform.machine()}")
+    
+    # Update launcher version from centralized config
+    update_launcher_version()
     
     # Clean if requested
     if args.clean:
