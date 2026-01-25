@@ -2,9 +2,8 @@
   "id": "canvas-assistant",
   "name": "Canvas Assistant v2.0",
   "description": "Chat-driven command loop with Canvas Integration Tool - emits status, classifies commands, executes on canvas",
-  "version": "2.0.0",
   "created_at": "2024-12-25T00:00:00Z",
-  "updated_at": "2026-01-26T00:00:00.000000",
+  "updated_at": "2026-01-26T01:45:46.792186",
   "repositories": {
     "concepts": "repos/concept_repo.json",
     "inferences": "repos/inference_repo.json",
@@ -15,6 +14,8 @@
     "db_path": "./assistant_v2.db",
     "agent_config": "compiler.agent.json"
   },
-  "breakpoints": [],
+  "breakpoints": [
+    "1.4.1.2"
+  ],
   "ui_preferences": {}
 }

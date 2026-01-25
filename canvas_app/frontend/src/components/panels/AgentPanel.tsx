@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Bot, Plus, Settings, Trash2, Activity, Check, X, Loader2,
-  ChevronRight, ChevronDown, Save, RotateCcw, Layers, Wrench, Workflow, FileCode
+  ChevronRight, ChevronDown, Save, RotateCcw, Layers, Wrench, Workflow, FileCode, Download
 } from 'lucide-react';
 import { useAgentStore, AgentConfig, ToolCallEvent } from '../../stores/agentStore';
 import { useProjectStore } from '../../stores/projectStore';
@@ -715,6 +715,11 @@ export function AgentPanel() {
   const [agentsCollapsed, setAgentsCollapsed] = useState(false);
   const [toolCallsCollapsed, setToolCallsCollapsed] = useState(false);
   
+  // Auto-export state
+  const [autoExport, setAutoExport] = useState(false);
+  const [sessionFile, setSessionFile] = useState<string | null>(null);
+  const [lastExportedCount, setLastExportedCount] = useState(0);
+  
   // Get current project ID to reload agents when project changes
   const currentProjectId = useProjectStore((s) => s.currentProject?.id);
   
@@ -747,6 +752,62 @@ export function AgentPanel() {
     };
     loadAgents();
   }, [currentProjectId]);
+  
+  // Auto-export: append new tool calls to session file
+  useEffect(() => {
+    if (!autoExport || !sessionFile) return;
+    
+    // Find new tool calls that haven't been exported yet
+    const newCalls = toolCalls.slice(lastExportedCount);
+    if (newCalls.length === 0) return;
+    
+    // Append each new call
+    const appendCalls = async () => {
+      for (const call of newCalls) {
+        try {
+          await fetch('/api/agents/traces/session/append', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_file: sessionFile, trace: call })
+          });
+        } catch (e) {
+          console.error('Failed to append trace:', e);
+        }
+      }
+      setLastExportedCount(toolCalls.length);
+    };
+    appendCalls();
+  }, [autoExport, sessionFile, toolCalls, lastExportedCount]);
+  
+  // Start/stop auto-export session
+  const toggleAutoExport = async () => {
+    if (autoExport) {
+      // Stop: just disable
+      setAutoExport(false);
+      setSessionFile(null);
+      setLastExportedCount(0);
+    } else {
+      // Start: create new session
+      try {
+        const res = await fetch('/api/agents/traces/session/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setSessionFile(data.session_file);
+          setLastExportedCount(toolCalls.length); // Don't export existing calls
+          setAutoExport(true);
+        } else {
+          const err = await res.json();
+          alert(`Failed to start auto-export: ${err.detail || 'Unknown error'}`);
+        }
+      } catch (e) {
+        alert(`Failed to start auto-export: ${e}`);
+      }
+    }
+  };
   
   const handleNewAgent = () => {
     setEditingAgentId(null);
@@ -840,13 +901,56 @@ export function AgentPanel() {
               <span className="text-xs text-slate-400">({toolCalls.length})</span>
             )}
           </h3>
-          <button 
-            onClick={(e) => { e.stopPropagation(); clearToolCalls(); }}
-            className="p-1 hover:bg-slate-200 rounded"
-            title="Clear history"
-          >
-            <RotateCcw size={12} className="text-slate-400" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Auto-export toggle */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); toggleAutoExport(); }}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                autoExport 
+                  ? 'bg-green-500 text-white hover:bg-green-600' 
+                  : 'bg-slate-200 text-slate-500 hover:bg-slate-300'
+              }`}
+              title={autoExport ? `Auto-exporting to: ${sessionFile}` : 'Enable auto-export (live trace logging)'}
+            >
+              {autoExport ? '● REC' : 'AUTO'}
+            </button>
+            {/* Manual export */}
+            <button 
+              onClick={async (e) => { 
+                e.stopPropagation(); 
+                if (toolCalls.length === 0) return;
+                try {
+                  const res = await fetch('/api/agents/traces/export', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ traces: toolCalls })
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    alert(`Traces exported to:\n${data.file_path}`);
+                  } else {
+                    const err = await res.json();
+                    alert(`Export failed: ${err.detail || 'Unknown error'}`);
+                  }
+                } catch (err) {
+                  alert(`Export failed: ${err}`);
+                }
+              }}
+              className={`p-1 hover:bg-slate-200 rounded ${toolCalls.length === 0 ? 'opacity-30' : ''}`}
+              title="Export traces to logs folder"
+              disabled={toolCalls.length === 0}
+            >
+              <Download size={12} className="text-slate-400" />
+            </button>
+            {/* Clear */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); clearToolCalls(); }}
+              className="p-1 hover:bg-slate-200 rounded"
+              title="Clear history"
+            >
+              <RotateCcw size={12} className="text-slate-400" />
+            </button>
+          </div>
         </div>
         
         {!toolCallsCollapsed && (

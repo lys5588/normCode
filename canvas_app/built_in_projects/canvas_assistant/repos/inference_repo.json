@@ -39,22 +39,22 @@
     "flow_info": {
       "flow_index": "1.2"
     },
-    "inference_sequence": "assigning",
+    "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{canvas command schema}",
-    "function_concept": "$% %>({%{file_location}(provisions/schemas/canvas_commands.json)})",
-    "value_concepts": [],
+    "function_concept": "::(load the command schema from file using {1})",
+    "value_concepts": [
+      "{command schema file path}"
+    ],
     "context_concepts": [],
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
         "flow_index": "1.2"
       },
-      "syntax": {
-        "marker": "%",
-        "face_value": null,
-        "axis_names": [
-          "_none_axis"
-        ]
+      "paradigm": "h_LiteralPath-c_ReadFile-o_Literal",
+      "body_faculty": "file_system",
+      "value_order": {
+        "{command schema file path}": 1
       }
     }
   },
@@ -122,6 +122,8 @@
     "value_concepts": [
       "{current message}",
       "{thinking status emitted}",
+      "{context summary}",
+      "{context notified}",
       "{parsed command}",
       "{executing status emitted}",
       "{command status}",
@@ -158,7 +160,7 @@
       "flow_info": {
         "flow_index": "1.4.1.2"
       },
-      "paradigm": "c_CanvasIntegration-Vision-GetChat-o_Literal",
+      "paradigm": "c_CanvasIntegrationGetChat-o_Literal",
       "body_faculty": "canvas_integration",
       "value_order": {}
     }
@@ -179,7 +181,7 @@
       "flow_info": {
         "flow_index": "1.4.1.3"
       },
-      "paradigm": "c_CanvasIntegration-Hands-Say-o_Status",
+      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{current message}": 1
@@ -191,11 +193,10 @@
       "flow_index": "1.4.1.4"
     },
     "inference_sequence": "imperative_in_composition",
-    "concept_to_infer": "{parsed command}",
-    "function_concept": "::(classify user message as canvas command using {1} and {2})",
+    "concept_to_infer": "{context summary}",
+    "function_concept": "::(summarize on-going messages for context using {1})",
     "value_concepts": [
-      "{current message}",
-      "{canvas command schema}"
+      "[on-going messages]"
     ],
     "context_concepts": [],
     "working_interpretation": {
@@ -206,14 +207,68 @@
       "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal",
       "body_faculty": "llm",
       "value_order": {
-        "{current message}": 1,
-        "{canvas command schema}": 2
+        "[on-going messages]": 1
+      },
+      "value_selectors": {
+        "[on-going messages]": {
+          "packed": true
+        }
       }
     }
   },
   {
     "flow_info": {
       "flow_index": "1.4.1.5"
+    },
+    "inference_sequence": "imperative_in_composition",
+    "concept_to_infer": "{context notified}",
+    "function_concept": "::(notify chat with context summary using {1})",
+    "value_concepts": [
+      "{context summary}"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "workspace": {},
+      "flow_info": {
+        "flow_index": "1.4.1.5"
+      },
+      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
+      "body_faculty": "canvas_integration",
+      "value_order": {
+        "{context summary}": 1
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.4.1.6"
+    },
+    "inference_sequence": "imperative_in_composition",
+    "concept_to_infer": "{parsed command}",
+    "function_concept": "::(classify user message as canvas command using {1}, {2}, and {3})",
+    "value_concepts": [
+      "{current message}",
+      "{canvas command schema}",
+      "{context summary}"
+    ],
+    "context_concepts": [],
+    "working_interpretation": {
+      "workspace": {},
+      "flow_info": {
+        "flow_index": "1.4.1.6"
+      },
+      "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal",
+      "body_faculty": "llm",
+      "value_order": {
+        "{current message}": 1,
+        "{canvas command schema}": 2,
+        "{context summary}": 3
+      }
+    }
+  },
+  {
+    "flow_info": {
+      "flow_index": "1.4.1.7"
     },
     "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{executing status emitted}",
@@ -225,9 +280,9 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.5"
+        "flow_index": "1.4.1.7"
       },
-      "paradigm": "c_CanvasIntegration-Hands-Say-o_Status",
+      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{parsed command}": 1
@@ -236,7 +291,7 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.6"
+      "flow_index": "1.4.1.8"
     },
     "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{command status}",
@@ -248,9 +303,9 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.6"
+        "flow_index": "1.4.1.8"
       },
-      "paradigm": "c_CanvasIntegration-Hands-ExecuteCommand-o_Status",
+      "paradigm": "h_Literal-c_CanvasIntegrationExecute-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{parsed command}": 1
@@ -259,7 +314,7 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.7"
+      "flow_index": "1.4.1.9"
     },
     "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{generating status emitted}",
@@ -271,9 +326,9 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.7"
+        "flow_index": "1.4.1.9"
       },
-      "paradigm": "c_CanvasIntegration-Hands-Say-o_Status",
+      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{command status}": 1
@@ -282,32 +337,34 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.8"
+      "flow_index": "1.4.1.10"
     },
     "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{response}",
-    "function_concept": "::(generate response based on {1} and {2})",
+    "function_concept": "::(generate response based on {1}, {2}, and {3})",
     "value_concepts": [
       "{current message}",
-      "{command status}"
+      "{command status}",
+      "{context summary}"
     ],
     "context_concepts": [],
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.8"
+        "flow_index": "1.4.1.10"
       },
       "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal",
       "body_faculty": "llm",
       "value_order": {
         "{current message}": 1,
-        "{command status}": 2
+        "{command status}": 2,
+        "{context summary}": 3
       }
     }
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.9"
+      "flow_index": "1.4.1.11"
     },
     "inference_sequence": "imperative_in_composition",
     "concept_to_infer": "{response sent}",
@@ -319,9 +376,9 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.9"
+        "flow_index": "1.4.1.11"
       },
-      "paradigm": "c_CanvasIntegration-Hands-Say-o_Status",
+      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{response}": 1
@@ -330,13 +387,14 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.10"
+      "flow_index": "1.4.1.12"
     },
     "inference_sequence": "grouping",
     "concept_to_infer": "{canvas status}",
-    "function_concept": "&[{}] %>([{current message}, {command status}, {response sent}])",
+    "function_concept": "&[{}] %>([{current message}, {context summary}, {command status}, {response sent}])",
     "value_concepts": [
       "{current message}",
+      "{context summary}",
       "{command status}",
       "{response sent}"
     ],
@@ -344,13 +402,16 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.10"
+        "flow_index": "1.4.1.12"
       },
       "syntax": {
         "marker": "in",
         "sources": [],
         "create_axis": null,
         "by_axes": [
+          [
+            "_none_axis"
+          ],
           [
             "_none_axis"
           ],
@@ -366,7 +427,7 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.11"
+      "flow_index": "1.4.1.13"
     },
     "inference_sequence": "judgement_in_composition",
     "concept_to_infer": "<session should end>",
@@ -379,7 +440,7 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.11"
+        "flow_index": "1.4.1.13"
       },
       "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean",
       "body_faculty": "llm",
@@ -402,7 +463,7 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.12"
+      "flow_index": "1.4.1.14"
     },
     "inference_sequence": "assigning",
     "concept_to_infer": "[on-going messages]",
@@ -414,7 +475,7 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.12"
+        "flow_index": "1.4.1.14"
       },
       "syntax": {
         "marker": "+",
@@ -426,7 +487,7 @@
   },
   {
     "flow_info": {
-      "flow_index": "1.4.1.12.1"
+      "flow_index": "1.4.1.14.1"
     },
     "inference_sequence": "timing",
     "concept_to_infer": "$+ %>([on-going messages]) %<({current message}) %:(message)",
@@ -440,7 +501,7 @@
     "working_interpretation": {
       "workspace": {},
       "flow_info": {
-        "flow_index": "1.4.1.12.1"
+        "flow_index": "1.4.1.14.1"
       },
       "syntax": {
         "marker": "if!",

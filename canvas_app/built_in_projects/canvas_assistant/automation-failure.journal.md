@@ -180,6 +180,71 @@ $input_2
 
 ---
 
+## 2026-01-26: Hardcoded Ground Values
+
+**Task**: Post-formalize hardcoded file paths
+
+### Failure 5: Unnecessary Assigning Sequence for Hardcoded Ground
+
+**What I did wrong**:
+```ncd
+<- {command schema file path}<:{1}> | ?{flow_index}: 1.2.2
+    | %{literal_value}: "provisions/schemas/canvas_commands.json"
+    <= $% %>({%(provisions/schemas/canvas_commands.json)}) | ?{flow_index}: 1.2.2.1 | ?{sequence}: assigning
+        /: Literal file path
+```
+
+**Why it's wrong**: For hardcoded ground values (like file paths that never change), adding an assigning sequence (`$%`) is unnecessary abstraction. The value is already known at compile time and specified in `%{literal_value}`.
+
+**Correct pattern**:
+```ncd
+<- {command schema file path}<:{1}> | ?{flow_index}: 1.2.2
+    | %{ref_axes}: [_none_axis]
+    | %{ref_shape}: (1,)
+    | %{ref_element}: str
+    | %{literal_value}: "provisions/schemas/canvas_commands.json"
+    | %{is_ground}: true
+    /: Hardcoded ground - no functional concept needed
+```
+
+**Lesson**: Hardcoded ground values need:
+1. `%{literal_value}` annotation with the actual value
+2. `%{is_ground}: true` to mark it as ground
+3. NO functional concept (`<=`) - the annotations are sufficient
+
+---
+
+## 2026-01-26: Paradigm Output Naming Convention
+
+**Task**: Name paradigm output types correctly
+
+### Failure 6: Using `o_Status` Instead of `o_LiteralStatus`
+
+**What I did wrong**:
+```
+h_Literal-c_CanvasIntegrationSay-o_Status.json
+h_Literal-c_CanvasIntegrationExecute-o_Status.json
+```
+
+**Why it's wrong**: The output naming convention uses `o_[Collection]Type` format. When the output is a literal (no perception sign), it should be prefixed with `Literal`. Using just `o_Status` implies there's a special "Status" perception norm, but status results are just plain dictionaries - literals.
+
+**Correct pattern**:
+```
+h_Literal-c_CanvasIntegrationSay-o_LiteralStatus.json
+h_Literal-c_CanvasIntegrationExecute-o_LiteralStatus.json
+```
+
+**Lesson**: Output types follow the pattern:
+- `o_Literal` - generic literal output
+- `o_LiteralStatus` - literal dict representing status/result
+- `o_Boolean` - truth value output
+- `o_ListLiteral` - list of literals (enables axis creation)
+- `o_FileLocation` - perception sign pointing to file
+
+If the output is just data without a perception sign, prefix with `Literal`.
+
+---
+
 ## Takeaways for Future Automation
 
 1. **Initialize loop bases in GROUND** - Don't declare them after the loop
@@ -187,4 +252,6 @@ $input_2
 3. **Explicit input collection reference** - Loops need `<- [collection]` as a sibling alongside `<* {context}`
 4. **First-executed, first-written applies to loop internals too** - The loop body structure matters
 5. **Prompt variable format** - Use `$input_x` wrapped in `<descriptive_name>$input_x</descriptive_name>` XML tags
+6. **Hardcoded grounds need no functional concept** - Use `%{literal_value}` + `%{is_ground}: true`, skip the `<= $%` sequence
+7. **Output naming convention** - Use `o_Literal[Type]` for literal outputs (no perception sign), e.g., `o_LiteralStatus` not `o_Status`
 

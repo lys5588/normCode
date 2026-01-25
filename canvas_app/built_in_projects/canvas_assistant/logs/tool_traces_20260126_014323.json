@@ -1,0 +1,376 @@
+{
+  "exported_at": "2026-01-26T01:43:23.858968",
+  "project_id": "canvas-assistant",
+  "trace_count": 5,
+  "traces": [
+    {
+      "id": "70cb412d",
+      "timestamp": "2026-01-26T01:42:17",
+      "flow_index": "1.2",
+      "agent_id": "default",
+      "tool_name": "paradigm",
+      "method": "load",
+      "inputs": {
+        "arg0": "h_LiteralPath-c_ReadFile-o_Literal"
+      },
+      "outputs": {
+        "_type": "Paradigm",
+        "env_spec": {
+          "_type": "ModelEnvSpecLite",
+          "model": null,
+          "prompt": null,
+          "tools": [
+            {
+              "_type": "ToolSpecLite",
+              "tool_name": "file_system",
+              "affordances": [
+                {
+                  "_type": "AffordanceSpecLite",
+                  "affordance_name": "read",
+                  "call_code": "result = tool.read",
+                  "params": {},
+                  "output": "result"
+                }
+              ]
+            },
+            {
+              "_type": "ToolSpecLite",
+              "tool_name": "formatter_tool",
+              "affordances": [
+                {
+                  "_type": "AffordanceSpecLite",
+                  "affordance_name": "get",
+                  "call_code": "result = tool.get",
+                  "params": {},
+                  "output": "result"
+                },
+                {
+                  "_type": "AffordanceSpecLite",
+                  "affordance_name": "wrap",
+                  "call_code": "result = tool.wrap",
+                  "params": {},
+                  "output": "result"
+                }
+              ]
+            },
+            {
+              "_type": "ToolSpecLite",
+              "tool_name": "composition_tool",
+              "affordances": [
+                {
+                  "_type": "AffordanceSpecLite",
+                  "affordance_name": "compose",
+                  "call_code": "result = tool.compose(plan=params['plan'], return_key=params.get('return_key'))",
+                  "params": {},
+                  "output": "result"
+                }
+              ]
+            }
+          ]
+        },
+        "sequence_spec": {
+          "_type": "ModelSequenceSpecLite",
+          "env": {
+            "_type": "ModelEnvSpecLite",
+            "model": null,
+            "prompt": null,
+            "tools": [
+              {
+                "_type": "ToolSpecLite",
+                "tool_name": "file_system",
+                "affordances": [
+                  {
+                    "_type": "AffordanceSpecLite",
+                    "_value": "<max depth exceeded>"
+                  }
+                ]
+              },
+              {
+                "_type": "ToolSpecLite",
+                "tool_name": "formatter_tool",
+                "affordances": [
+                  {
+                    "_type": "AffordanceSpecLite",
+                    "_value": "<max depth exceeded>"
+                  },
+                  {
+                    "_type": "AffordanceSpecLite",
+                    "_value": "<max depth exceeded>"
+                  }
+                ]
+              },
+              {
+                "_type": "ToolSpecLite",
+                "tool_name": "composition_tool",
+                "affordances": [
+                  {
+                    "_type": "AffordanceSpecLite",
+                    "_value": "<max depth exceeded>"
+                  }
+                ]
+              }
+            ]
+          },
+          "steps": [
+            {
+              "_type": "ModelStepSpecLite",
+              "step_index": 1,
+              "affordance": "formatter_tool.get",
+              "params": {},
+              "result_key": "get_fn"
+            },
+            {
+              "_type": "ModelStepSpecLite",
+              "step_index": 2,
+              "affordance": "file_system.read",
+              "params": {},
+              "result_key": "read_fn"
+            },
+            {
+              "_type": "ModelStepSpecLite",
+              "step_index": 3,
+              "affordance": "formatter_tool.wrap",
+              "params": {},
+              "result_key": "wrap_fn"
+            },
+            {
+              "_type": "ModelStepSpecLite",
+              "step_index": 4,
+              "affordance": "composition_tool.compose",
+              "params": {
+                "plan": [
+                  {
+                    "output_key": "file_path",
+                    "function": {
+                      "_type": "MetaValue",
+                      "_value": "<max depth exceeded>"
+                    },
+                    "params": {
+                      "dictionary": "<max depth exceeded>"
+                    },
+                    "literal_params": {
+                      "key": "<max depth exceeded>"
+                    }
+                  },
+                  {
+                    "output_key": "read_result",
+                    "function": {
+                      "_type": "MetaValue",
+                      "_value": "<max depth exceeded>"
+                    },
+                    "params": {
+                      "__positional__": "<max depth exceeded>"
+                    }
+                  },
+                  {
+                    "output_key": "file_content",
+                    "function": {
+                      "_type": "MetaValue",
+                      "_value": "<max depth exceeded>"
+                    },
+                    "params": {
+                      "dictionary": "<max depth exceeded>"
+                    },
+                    "literal_params": {
+                      "key": "<max depth exceeded>"
+                    }
+                  },
+                  {
+                    "output_key": "final_result",
+                    "function": {
+                      "_type": "MetaValue",
+                      "_value": "<max depth exceeded>"
+                    },
+                    "params": {
+                      "__positional__": "<max depth exceeded>"
+                    },
+                    "literal_params": {
+                      "type": "<max depth exceeded>"
+                    }
+                  }
+                ],
+                "return_key": "final_result"
+              },
+              "result_key": "instruction_fn"
+            }
+          ]
+        },
+        "metadata": {
+          "description": "Read file content from the specified path",
+          "inputs": {
+            "vertical": {},
+            "horizontal": {
+              "file_path": "Path to the file to read (literal path, paradigm reads internally)"
+            }
+          },
+          "outputs": {
+            "type": "Literal",
+            "description": "The file content as a string"
+          }
+        }
+      },
+      "duration_ms": 0.9999275207519531,
+      "status": "completed",
+      "error": null,
+      "source": "main",
+      "project_id": "canvas-assistant",
+      "target_panels": [
+        "main_panel"
+      ],
+      "target_panel_types": [
+        "main"
+      ],
+      "worker_id": "user-canvas-assistant"
+    },
+    {
+      "id": "229f5a72",
+      "timestamp": "2026-01-26T01:42:17",
+      "flow_index": "1.2",
+      "agent_id": "default",
+      "tool_name": "composition",
+      "method": "compose",
+      "inputs": {
+        "plan": [
+          {
+            "output_key": "file_path",
+            "function": {
+              "_type": "method"
+            },
+            "params": {
+              "dictionary": "__initial_input__"
+            },
+            "literal_params": {
+              "key": "input_1"
+            }
+          },
+          {
+            "output_key": "read_result",
+            "function": {
+              "_type": "function"
+            },
+            "params": {
+              "__positional__": "file_path"
+            }
+          },
+          {
+            "output_key": "file_content",
+            "function": {
+              "_type": "method"
+            },
+            "params": {
+              "dictionary": "read_result"
+            },
+            "literal_params": {
+              "key": "content"
+            }
+          },
+          {
+            "output_key": "final_result",
+            "function": {
+              "_type": "method"
+            },
+            "params": {
+              "__positional__": "file_content"
+            },
+            "literal_params": {
+              "type": "literal"
+            }
+          }
+        ],
+        "return_key": "final_result"
+      },
+      "outputs": {
+        "_type": "function"
+      },
+      "duration_ms": 0,
+      "status": "completed",
+      "error": null,
+      "source": "main",
+      "project_id": "canvas-assistant",
+      "target_panels": [
+        "main_panel"
+      ],
+      "target_panel_types": [
+        "main"
+      ],
+      "worker_id": "user-canvas-assistant"
+    },
+    {
+      "id": "aac632cb",
+      "timestamp": "2026-01-26T01:42:17",
+      "flow_index": "1.2",
+      "agent_id": "default",
+      "tool_name": "perception",
+      "method": "perceive",
+      "inputs": {
+        "arg0": "provisions/schemas/canvas_commands.json"
+      },
+      "outputs": "provisions/schemas/canvas_commands.json",
+      "duration_ms": 0,
+      "status": "completed",
+      "error": null,
+      "source": "main",
+      "project_id": "canvas-assistant",
+      "target_panels": [
+        "main_panel"
+      ],
+      "target_panel_types": [
+        "main"
+      ],
+      "worker_id": "user-canvas-assistant"
+    },
+    {
+      "id": "d3a09a76",
+      "timestamp": "2026-01-26T01:42:17",
+      "flow_index": "1.2",
+      "agent_id": "default",
+      "tool_name": "composition",
+      "method": "compose→execute",
+      "inputs": {
+        "arg0": {
+          "input_1": "provisions/schemas/canvas_commands.json"
+        }
+      },
+      "outputs": "%24a({\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Canvas Commands Schema v2.0\",\n  \"description\": \"Schema for Canvas Assistant commands using Canvas Integration Tool\",\n  \"version\": \"2.0.0\",\n  \n  \"command_categories\": {\n    \"navigation\": {\n      \"description\": \"View navigation commands\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"zoom_in\": {\n          \"method\": \"zoom_in\",\n          \"params\": {\"amount\": {\"type\": \"number\", \"default\": 0.1}},\n          \"help\": \"Zoom in on the canvas\"\n        },\n        \"zoom_out\": {\n          \"method\": \"zoom_out\",\n          \"params\": {\"amount\": {\"type\": \"number\", \"default\": 0.1}},\n          \"help\": \"Zoom out on the canvas\"\n        },\n        \"zoom_to\": {\n          \"method\": \"zoom_to\",\n          \"params\": {\"level\": {\"type\": \"number\", \"required\": true}},\n          \"help\": \"Zoom to specific level (1.0 = 100%)\"\n        },\n        \"pan\": {\n          \"method\": \"pan\",\n          \"params\": {\n            \"dx\": {\"type\": \"number\", \"required\": true},\n            \"dy\": {\"type\": \"number\", \"required\": true}\n          },\n          \"help\": \"Pan the canvas view\"\n        },\n        \"fit_view\": {\n          \"method\": \"fit_view\",\n          \"params\": {},\n          \"help\": \"Fit all nodes in the viewport\"\n        },\n        \"center_on_node\": {\n          \"method\": \"center_on_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Center view on a specific node\"\n        }\n      }\n    },\n    \n    \"selection\": {\n      \"description\": \"Node selection commands\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"click_node\": {\n          \"method\": \"click_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Select/click a node\"\n        },\n        \"select_nodes\": {\n          \"method\": \"select_nodes\",\n          \"params\": {\"node_ids\": {\"type\": \"array\", \"items\": \"string\", \"required\": true}},\n          \"help\": \"Select multiple nodes\"\n        },\n        \"deselect_all\": {\n          \"method\": \"deselect_all\",\n          \"params\": {},\n          \"help\": \"Clear all selections\"\n        },\n        \"double_click_node\": {\n          \"method\": \"double_click_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Double-click node (open details)\"\n        },\n        \"hover_node\": {\n          \"method\": \"hover_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Hover over node (show tooltip)\"\n        }\n      }\n    },\n    \n    \"structure\": {\n      \"description\": \"Graph structure manipulation\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"collapse_node\": {\n          \"method\": \"collapse_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Collapse a node (hide descendants)\"\n        },\n        \"expand_node\": {\n          \"method\": \"expand_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Expand a collapsed node\"\n        },\n        \"toggle_collapse\": {\n          \"method\": \"toggle_collapse\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Toggle node collapse state\"\n        },\n        \"collapse_all\": {\n          \"method\": \"collapse_all\",\n          \"params\": {},\n          \"help\": \"Collapse all parent nodes\"\n        },\n        \"expand_all\": {\n          \"method\": \"expand_all\",\n          \"params\": {},\n          \"help\": \"Expand all collapsed nodes\"\n        },\n        \"collapse_to_level\": {\n          \"method\": \"collapse_to_level\",\n          \"params\": {\"level\": {\"type\": \"integer\", \"required\": true}},\n          \"help\": \"Collapse to specific depth level\"\n        },\n        \"highlight_branch\": {\n          \"method\": \"highlight_branch\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Highlight ancestors and descendants of a node\"\n        },\n        \"clear_highlight\": {\n          \"method\": \"clear_highlight\",\n          \"params\": {},\n          \"help\": \"Clear branch highlighting\"\n        }\n      }\n    },\n    \n    \"execution\": {\n      \"description\": \"Plan execution control\",\n      \"perspective\": \"me\",\n      \"faculty\": \"mind\",\n      \"commands\": {\n        \"run\": {\n          \"method\": \"run\",\n          \"params\": {\"mode\": {\"type\": \"string\", \"enum\": [\"slow\", \"fast\"], \"default\": \"slow\"}},\n          \"help\": \"Start/resume plan execution\"\n        },\n        \"step\": {\n          \"method\": \"step\",\n          \"params\": {},\n          \"help\": \"Execute one step\"\n        },\n        \"pause\": {\n          \"method\": \"pause\",\n          \"params\": {},\n          \"help\": \"Pause execution\"\n        },\n        \"stop\": {\n          \"method\": \"stop\",\n          \"params\": {},\n          \"help\": \"Stop execution\"\n        },\n        \"add_breakpoint\": {\n          \"method\": \"add_breakpoint\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Add breakpoint to node\"\n        },\n        \"remove_breakpoint\": {\n          \"method\": \"remove_breakpoint\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Remove breakpoint from node\"\n        },\n        \"toggle_breakpoint\": {\n          \"method\": \"toggle_breakpoint\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Toggle breakpoint on node\"\n        },\n        \"clear_all_breakpoints\": {\n          \"method\": \"clear_all_breakpoints\",\n          \"params\": {},\n          \"help\": \"Clear all breakpoints\"\n        }\n      }\n    },\n    \n    \"panels\": {\n      \"description\": \"Panel management\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"open_panel\": {\n          \"method\": \"open_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"enum\": [\"chat\", \"agent\", \"editor\", \"inspector\", \"log\", \"settings\"], \"required\": true}},\n          \"help\": \"Open a panel\"\n        },\n        \"close_panel\": {\n          \"method\": \"close_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Close a panel\"\n        },\n        \"toggle_panel\": {\n          \"method\": \"toggle_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Toggle panel visibility\"\n        },\n        \"focus_panel\": {\n          \"method\": \"focus_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Focus a panel\"\n        }\n      }\n    },\n    \n    \"queries\": {\n      \"description\": \"State and data queries\",\n      \"perspective\": \"me\",\n      \"faculty\": \"vision\",\n      \"commands\": {\n        \"query_project\": {\n          \"method\": \"get_project\",\n          \"params\": {},\n          \"help\": \"Get project information\"\n        },\n        \"query_execution\": {\n          \"method\": \"get_execution\",\n          \"params\": {},\n          \"help\": \"Get execution status\"\n        },\n        \"query_graph\": {\n          \"method\": \"get_canvas\",\n          \"params\": {},\n          \"help\": \"Get visible graph state\"\n        },\n        \"query_node\": {\n          \"method\": \"get_node_details\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Get details of a specific node\"\n        },\n        \"query_value\": {\n          \"method\": \"get_concept_value\",\n          \"params\": {\"concept_name\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Get value of a concept\"\n        },\n        \"query_logs\": {\n          \"method\": \"get_logs\",\n          \"params\": {\"limit\": {\"type\": \"integer\", \"default\": 20}},\n          \"help\": \"Get recent log entries\"\n        }\n      }\n    },\n    \n    \"chat\": {\n      \"description\": \"Conversational (no canvas action)\",\n      \"perspective\": null,\n      \"faculty\": null,\n      \"commands\": {\n        \"chat\": {\n          \"method\": null,\n          \"params\": {},\n          \"help\": \"Conversational message - no canvas action needed\"\n        }\n      }\n    }\n  },\n  \n  \"command_aliases\": {\n    \"select\": \"click_node\",\n    \"click\": \"click_node\",\n    \"focus\": \"center_on_node\",\n    \"goto\": \"center_on_node\",\n    \"show\": \"center_on_node\",\n    \"start\": \"run\",\n    \"execute\": \"run\",\n    \"continue\": \"run\",\n    \"next\": \"step\",\n    \"halt\": \"pause\",\n    \"breakpoint\": \"toggle_breakpoint\",\n    \"bp\": \"toggle_breakpoint\",\n    \"collapse\": \"collapse_node\",\n    \"expand\": \"expand_node\",\n    \"highlight\": \"highlight_branch\",\n    \"unhighlight\": \"clear_highlight\",\n    \"status\": \"query_execution\",\n    \"info\": \"query_node\",\n    \"value\": \"query_value\"\n  }\n}\n\n)",
+      "duration_ms": 1.4820098876953125,
+      "status": "completed",
+      "error": null,
+      "source": "main",
+      "project_id": "canvas-assistant",
+      "target_panels": [
+        "main_panel"
+      ],
+      "target_panel_types": [
+        "main"
+      ],
+      "worker_id": "user-canvas-assistant"
+    },
+    {
+      "id": "88203729",
+      "timestamp": "2026-01-26T01:42:17",
+      "flow_index": "1.2",
+      "agent_id": "default",
+      "tool_name": "file_system",
+      "method": "read",
+      "inputs": {
+        "arg0": "provisions/schemas/canvas_commands.json"
+      },
+      "outputs": {
+        "status": "success",
+        "content": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Canvas Commands Schema v2.0\",\n  \"description\": \"Schema for Canvas Assistant commands using Canvas Integration Tool\",\n  \"version\": \"2.0.0\",\n  \n  \"command_categories\": {\n    \"navigation\": {\n      \"description\": \"View navigation commands\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"zoom_in\": {\n          \"method\": \"zoom_in\",\n          \"params\": {\"amount\": {\"type\": \"number\", \"default\": 0.1}},\n          \"help\": \"Zoom in on the canvas\"\n        },\n        \"zoom_out\": {\n          \"method\": \"zoom_out\",\n          \"params\": {\"amount\": {\"type\": \"number\", \"default\": 0.1}},\n          \"help\": \"Zoom out on the canvas\"\n        },\n        \"zoom_to\": {\n          \"method\": \"zoom_to\",\n          \"params\": {\"level\": {\"type\": \"number\", \"required\": true}},\n          \"help\": \"Zoom to specific level (1.0 = 100%)\"\n        },\n        \"pan\": {\n          \"method\": \"pan\",\n          \"params\": {\n            \"dx\": {\"type\": \"number\", \"required\": true},\n            \"dy\": {\"type\": \"number\", \"required\": true}\n          },\n          \"help\": \"Pan the canvas view\"\n        },\n        \"fit_view\": {\n          \"method\": \"fit_view\",\n          \"params\": {},\n          \"help\": \"Fit all nodes in the viewport\"\n        },\n        \"center_on_node\": {\n          \"method\": \"center_on_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Center view on a specific node\"\n        }\n      }\n    },\n    \n    \"selection\": {\n      \"description\": \"Node selection commands\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"click_node\": {\n          \"method\": \"click_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Select/click a node\"\n        },\n        \"select_nodes\": {\n          \"method\": \"select_nodes\",\n          \"params\": {\"node_ids\": {\"type\": \"array\", \"items\": \"string\", \"required\": true}},\n          \"help\": \"Select multiple nodes\"\n        },\n        \"deselect_all\": {\n          \"method\": \"deselect_all\",\n          \"params\": {},\n          \"help\": \"Clear all selections\"\n        },\n        \"double_click_node\": {\n          \"method\": \"double_click_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Double-click node (open details)\"\n        },\n        \"hover_node\": {\n          \"method\": \"hover_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Hover over node (show tooltip)\"\n        }\n      }\n    },\n    \n    \"structure\": {\n      \"description\": \"Graph structure manipulation\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"collapse_node\": {\n          \"method\": \"collapse_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Collapse a node (hide descendants)\"\n        },\n        \"expand_node\": {\n          \"method\": \"expand_node\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Expand a collapsed node\"\n        },\n        \"toggle_collapse\": {\n          \"method\": \"toggle_collapse\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Toggle node collapse state\"\n        },\n        \"collapse_all\": {\n          \"method\": \"collapse_all\",\n          \"params\": {},\n          \"help\": \"Collapse all parent nodes\"\n        },\n        \"expand_all\": {\n          \"method\": \"expand_all\",\n          \"params\": {},\n          \"help\": \"Expand all collapsed nodes\"\n        },\n        \"collapse_to_level\": {\n          \"method\": \"collapse_to_level\",\n          \"params\": {\"level\": {\"type\": \"integer\", \"required\": true}},\n          \"help\": \"Collapse to specific depth level\"\n        },\n        \"highlight_branch\": {\n          \"method\": \"highlight_branch\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Highlight ancestors and descendants of a node\"\n        },\n        \"clear_highlight\": {\n          \"method\": \"clear_highlight\",\n          \"params\": {},\n          \"help\": \"Clear branch highlighting\"\n        }\n      }\n    },\n    \n    \"execution\": {\n      \"description\": \"Plan execution control\",\n      \"perspective\": \"me\",\n      \"faculty\": \"mind\",\n      \"commands\": {\n        \"run\": {\n          \"method\": \"run\",\n          \"params\": {\"mode\": {\"type\": \"string\", \"enum\": [\"slow\", \"fast\"], \"default\": \"slow\"}},\n          \"help\": \"Start/resume plan execution\"\n        },\n        \"step\": {\n          \"method\": \"step\",\n          \"params\": {},\n          \"help\": \"Execute one step\"\n        },\n        \"pause\": {\n          \"method\": \"pause\",\n          \"params\": {},\n          \"help\": \"Pause execution\"\n        },\n        \"stop\": {\n          \"method\": \"stop\",\n          \"params\": {},\n          \"help\": \"Stop execution\"\n        },\n        \"add_breakpoint\": {\n          \"method\": \"add_breakpoint\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Add breakpoint to node\"\n        },\n        \"remove_breakpoint\": {\n          \"method\": \"remove_breakpoint\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Remove breakpoint from node\"\n        },\n        \"toggle_breakpoint\": {\n          \"method\": \"toggle_breakpoint\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Toggle breakpoint on node\"\n        },\n        \"clear_all_breakpoints\": {\n          \"method\": \"clear_all_breakpoints\",\n          \"params\": {},\n          \"help\": \"Clear all breakpoints\"\n        }\n      }\n    },\n    \n    \"panels\": {\n      \"description\": \"Panel management\",\n      \"perspective\": \"me\",\n      \"faculty\": \"hands\",\n      \"commands\": {\n        \"open_panel\": {\n          \"method\": \"open_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"enum\": [\"chat\", \"agent\", \"editor\", \"inspector\", \"log\", \"settings\"], \"required\": true}},\n          \"help\": \"Open a panel\"\n        },\n        \"close_panel\": {\n          \"method\": \"close_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Close a panel\"\n        },\n        \"toggle_panel\": {\n          \"method\": \"toggle_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Toggle panel visibility\"\n        },\n        \"focus_panel\": {\n          \"method\": \"focus_panel\",\n          \"params\": {\"panel\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Focus a panel\"\n        }\n      }\n    },\n    \n    \"queries\": {\n      \"description\": \"State and data queries\",\n      \"perspective\": \"me\",\n      \"faculty\": \"vision\",\n      \"commands\": {\n        \"query_project\": {\n          \"method\": \"get_project\",\n          \"params\": {},\n          \"help\": \"Get project information\"\n        },\n        \"query_execution\": {\n          \"method\": \"get_execution\",\n          \"params\": {},\n          \"help\": \"Get execution status\"\n        },\n        \"query_graph\": {\n          \"method\": \"get_canvas\",\n          \"params\": {},\n          \"help\": \"Get visible graph state\"\n        },\n        \"query_node\": {\n          \"method\": \"get_node_details\",\n          \"params\": {\"node_id\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Get details of a specific node\"\n        },\n        \"query_value\": {\n          \"method\": \"get_concept_value\",\n          \"params\": {\"concept_name\": {\"type\": \"string\", \"required\": true}},\n          \"help\": \"Get value of a concept\"\n        },\n        \"query_logs\": {\n          \"method\": \"get_logs\",\n          \"params\": {\"limit\": {\"type\": \"integer\", \"default\": 20}},\n          \"help\": \"Get recent log entries\"\n        }\n      }\n    },\n    \n    \"chat\": {\n      \"description\": \"Conversational (no canvas action)\",\n      \"perspective\": null,\n      \"faculty\": null,\n      \"commands\": {\n        \"chat\": {\n          \"method\": null,\n          \"params\": {},\n          \"help\": \"Conversational message - no canvas action needed\"\n        }\n      }\n    }\n  },\n  \n  \"command_aliases\": {\n    \"select\": \"click_node\",\n    \"click\": \"click_node\",\n    \"focus\": \"center_on_node\",\n    \"goto\": \"center_on_node\",\n    \"show\": \"center_on_node\",\n    \"start\": \"run\",\n    \"execute\": \"run\",\n    \"continue\": \"run\",\n    \"next\": \"step\",\n    \"halt\": \"pause\",\n    \"breakpoint\": \"toggle_breakpoint\",\n    \"bp\": \"toggle_breakpoint\",\n    \"collapse\": \"collapse_node\",\n    \"expand\": \"expand_node\",\n    \"highlight\": \"highlight_branch\",\n    \"unhighlight\": \"clear_highlight\",\n    \"status\": \"query_execution\",\n    \"info\": \"query_node\",\n    \"value\": \"query_value\"\n  }\n}\n\n"
+      },
+      "duration_ms": 1.4820098876953125,
+      "status": "completed",
+      "error": null,
+      "source": "main",
+      "project_id": "canvas-assistant",
+      "target_panels": [
+        "main_panel"
+      ],
+      "target_panel_types": [
+        "main"
+      ],
+      "worker_id": "user-canvas-assistant"
+    }
+  ]
+}

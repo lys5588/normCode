@@ -30,6 +30,22 @@ Prefixes:
 ### User Input Paradigms
 - `v_PromptLocation-h_Literal-c_UserTextEditor-o_JsonLiteral.json` - Show prompt to user via text editor, get JSON response
 
+### Canvas Integration Paradigms
+- `c_CanvasIntegrationGetChat-o_Literal.json` - Block and wait for user chat message (no inputs)
+- `h_Literal-c_CanvasIntegrationSay-o_LiteralStatus.json` - Send message to user via chat
+- `h_Literal-c_CanvasIntegrationExecute-o_LiteralStatus.json` - Execute parsed command on canvas
+
+## Paradigm Usage in Canvas Assistant
+
+| Paradigm | Used For |
+|----------|----------|
+| `h_LiteralPath-c_ReadFile-o_Literal` | Loading command schema from file |
+| `c_CanvasIntegrationGetChat-o_Literal` | Blocking wait for user input |
+| `h_Literal-c_CanvasIntegrationSay-o_LiteralStatus` | Emitting status (thinking, executing, generating), sending responses |
+| `h_Literal-c_CanvasIntegrationExecute-o_LiteralStatus` | Executing parsed canvas commands |
+| `v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal` | Summarizing context, classifying commands, generating responses |
+| `v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean` | Judging session termination |
+
 ## Paradigm Usage in RTL AOC Verification
 
 | Paradigm | Used For |

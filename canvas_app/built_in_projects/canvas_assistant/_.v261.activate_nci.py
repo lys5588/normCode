@@ -139,6 +139,15 @@ def is_literal_concept(concept_name: str) -> bool:
 
 def is_ground_concept(concept_data: dict, attached_comments: list) -> bool:
     """Determine if a concept is a ground concept"""
+    # Check for explicit %{is_ground}: true annotation
+    is_ground_annotation = get_annotation_value(attached_comments, "is_ground")
+    if is_ground_annotation and is_ground_annotation.lower() == "true":
+        return True
+    
+    # Check for %{literal_value} annotation (hardcoded values are ground)
+    if get_annotation_value(attached_comments, "literal_value"):
+        return True
+    
     # Check for /: Ground: comment
     for comment in attached_comments:
         nc_comment = comment.get("nc_comment", "")
@@ -304,9 +313,14 @@ def build_concept_repo(nci_data: list) -> list:
         
         # Build reference_data for ground concepts
         reference_data = None
+        literal_value_annotation = get_annotation_value(attached_comments, "literal_value")
         if is_ground:
             if file_location:
                 reference_data = [f"%{{file_location}}({file_location})"]
+            elif literal_value_annotation:
+                # Use explicit literal_value annotation (strip quotes if present)
+                lv = literal_value_annotation.strip('"\'')
+                reference_data = [lv]
             elif is_literal_concept(name):
                 # Extract literal value from concept name like 'phase_name: "phase_1"'
                 literal_value = extract_literal_value(name)

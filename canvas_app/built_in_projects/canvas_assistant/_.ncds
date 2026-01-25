@@ -10,7 +10,9 @@
     /: ══════════════════════════════════════════════════════════════════
     
     <- {canvas command schema}
-        /: Ground: loaded from provisions/schemas/canvas_commands.json
+        <= load the command schema from file
+        <- {command schema file path}
+            /: Ground:provisions/schemas/canvas_commands.json
     
     <- [on-going messages]
         /: !CORRECTION: it needs to be intitated first 
