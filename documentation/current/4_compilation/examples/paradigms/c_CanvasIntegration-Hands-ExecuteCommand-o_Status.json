@@ -1,0 +1,128 @@
+{
+  "$schema": "../../../infra/_agent/_models/_paradigms/paradigm_schema.json",
+  "id": "c_CanvasIntegration-Hands-ExecuteCommand-o_Status",
+  "name": "Canvas Integration: Execute Parsed Command",
+  "description": "Execute a parsed canvas command via Canvas Integration Tool (me.hands.*)",
+  "version": "2.0.0",
+  
+  "category": "canvas_integration",
+  "perspective": "first_person",
+  "faculty": "hands",
+  
+  "inputs": {
+    "horizontal": [
+      {
+        "name": "parsed_command",
+        "type": "dict",
+        "description": "The parsed command with type, params, and confidence",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "params": "dict",
+          "confidence": "float"
+        }
+      }
+    ],
+    "vertical": []
+  },
+  
+  "composition": {
+    "steps": [
+      {
+        "name": "dispatch",
+        "type": "dynamic_dispatch",
+        "description": "Route to appropriate me.hands.* method based on command type",
+        "dispatch_field": "type",
+        "tool_name": "canvas_integration",
+        "method_prefix": "me.hands.",
+        "method_map": {
+          "zoom_in": "zoom_in",
+          "zoom_out": "zoom_out",
+          "zoom_to": "zoom_to",
+          "pan": "pan",
+          "fit_view": "fit_view",
+          "center_on_node": "center_on_node",
+          "click_node": "click_node",
+          "select_nodes": "select_nodes",
+          "deselect_all": "deselect_all",
+          "double_click_node": "double_click_node",
+          "hover_node": "hover_node",
+          "collapse_node": "collapse_node",
+          "expand_node": "expand_node",
+          "toggle_collapse": "toggle_collapse",
+          "collapse_all": "collapse_all",
+          "expand_all": "expand_all",
+          "collapse_to_level": "collapse_to_level",
+          "highlight_branch": "highlight_branch",
+          "clear_highlight": "clear_highlight",
+          "open_panel": "open_panel",
+          "close_panel": "close_panel",
+          "toggle_panel": "toggle_panel",
+          "focus_panel": "focus_panel",
+          "add_breakpoint": "add_breakpoint",
+          "remove_breakpoint": "remove_breakpoint",
+          "toggle_breakpoint": "toggle_breakpoint",
+          "clear_all_breakpoints": "clear_all_breakpoints",
+          "chat": null
+        },
+        "args_field": "params"
+      }
+    ],
+    "fallback": {
+      "type": "chat",
+      "description": "If command type is 'chat' or unknown, return success with no action",
+      "result": {
+        "success": true,
+        "action": "chat",
+        "message": "Conversational message - no canvas action taken"
+      }
+    }
+  },
+  
+  "output": {
+    "type": "status",
+    "format": "ActionResult",
+    "schema": {
+      "success": "bool",
+      "action": "string",
+      "message": "string",
+      "error": "string|null",
+      "new_state": "dict|null"
+    }
+  },
+  
+  "execution": {
+    "blocking": false,
+    "timeout": 10,
+    "retry": false
+  },
+  
+  "mind_commands": {
+    "description": "Commands routed to me.mind.* instead of me.hands.*",
+    "commands": ["run", "step", "pause", "stop"],
+    "method_prefix": "me.mind."
+  },
+  
+  "vision_commands": {
+    "description": "Commands routed to me.vision.* instead of me.hands.*",
+    "commands": ["query_project", "query_execution", "query_graph", "query_node", "query_value", "query_logs"],
+    "method_prefix": "me.vision.",
+    "method_map": {
+      "query_project": "get_project",
+      "query_execution": "get_execution",
+      "query_graph": "get_canvas",
+      "query_node": "get_node_details",
+      "query_value": "get_concept_value",
+      "query_logs": "get_logs"
+    }
+  },
+  
+  "notes": [
+    "Dynamically dispatches to the appropriate Canvas Integration method",
+    "Command type determines which method is called",
+    "Params are passed through to the method",
+    "Returns ActionResult from the Canvas Integration Tool",
+    "Some commands route to me.mind.* (execution control) or me.vision.* (queries)"
+  ]
+}
+

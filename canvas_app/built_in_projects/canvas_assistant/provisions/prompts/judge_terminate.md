@@ -1,60 +1,107 @@
-# Session Termination Judgement
+# Judge Session Termination
 
-Determine whether the user wants to end the current canvas session.
+Determine if the user wants to end the chat session.
 
-## Input
+## Current Message
 
-**Current Message**: $input_1
+<current_message>
+$input_1
+</current_message>
 
-**User Request**: $input_2
+## Conversation History
 
-**Conversation History**: $input_3
+<conversation_history>
+$input_2
+</conversation_history>
 
-## Termination Signals
+## Task
 
-Return **True** if the user's message indicates they want to end the session:
+Analyze the user's current message to determine if they want to end the session.
 
-### Explicit Termination
-- "quit", "exit", "bye", "goodbye"
-- "I'm done", "that's all", "finished"
-- "end session", "close", "stop"
+## Termination Indicators
+
+**Strong indicators (should end)**:
+- "bye", "goodbye", "see you", "exit", "quit", "close", "end session"
+- "that's all", "I'm done", "nothing else", "all good"
 - "thanks, bye", "thank you, goodbye"
-- Commands classified as "quit" or "exit"
 
-### Implicit Termination
-- User says "see you later", "gotta go"
-- User indicates they're leaving: "heading out", "signing off"
-- Farewell expressions in any language
+**Weak indicators (probably continue)**:
+- "thanks" alone (might be mid-conversation gratitude)
+- "ok" (acknowledgment, not termination)
+- "got it" (understanding, not leaving)
 
-## Non-Termination Signals
+**Not termination indicators**:
+- Questions about the canvas
+- Commands to execute
+- Requests for help
+- Conversational messages
 
-Return **False** if:
+## Output Format
 
-- User is asking questions
-- User is giving commands (even if frustrated)
-- User says "stop" but means stop execution, not end session
-- User is making conversation
-- Message is ambiguous - default to continuing
+Return JSON with `thinking` and `result` fields:
 
-## Examples
+```json
+{
+  "thinking": "Your analysis of termination intent...",
+  "result": true
+}
+```
 
-| Message | Result | Reasoning |
-|---------|--------|-----------|
-| "quit" | True | Explicit termination command |
-| "I'm done for today, thanks!" | True | Clear session end intent |
-| "bye!" | True | Farewell |
-| "stop the execution" | False | Stopping execution, not session |
-| "delete that node" | False | Active command |
-| "this is frustrating" | False | Expressing emotion, not leaving |
-| "what does this node do?" | False | Asking question |
-| "ok thanks" | False | Acknowledgment, not farewell |
-| "thanks, that's all I needed" | True | Indicates completion |
+### Result Field
 
-## Output
+- `result` (required): Boolean `true` if session should end, `false` if it should continue
 
-Return a single boolean value:
-- `true` - User wants to end the session
-- `false` - User wants to continue
+**IMPORTANT**: `result` must be a boolean (`true` or `false`), NOT a string.
 
-Consider the conversation history for context - a "thanks" after completing a task might signal end, while "thanks" mid-conversation does not.
+### Examples
+
+**User says "bye"**:
+```json
+{
+  "thinking": "The user said 'bye', which is a clear termination indicator.",
+  "result": true
+}
+```
+
+**User says "thanks, that's all I needed"**:
+```json
+{
+  "thinking": "User is expressing gratitude and indicating they're done.",
+  "result": true
+}
+```
+
+**User says "thanks! now zoom in"**:
+```json
+{
+  "thinking": "User said thanks but immediately followed with another command. They want to continue.",
+  "result": false
+}
+```
+
+**User says "ok"**:
+```json
+{
+  "thinking": "Just an acknowledgment, not a termination signal. Continue the session.",
+  "result": false
+}
+```
+
+**User says "how do I run the plan?"**:
+```json
+{
+  "thinking": "User is asking a question. They want to continue interacting.",
+  "result": false
+}
+```
+
+**User says "exit"**:
+```json
+{
+  "thinking": "Clear termination command.",
+  "result": true
+}
+```
+
+**IMPORTANT**: Your response MUST be valid JSON with exactly the `thinking` and `result` keys. The `result` MUST be a boolean.
 

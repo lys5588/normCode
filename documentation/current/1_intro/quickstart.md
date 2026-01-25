@@ -26,7 +26,7 @@ That's it. Let's break down what this means.
 
 ### Step 2: Understand the Structure
 
-**Read bottom-up** (execution flows from bottom to top):
+**Read bottom-up** (dependencies flow from leaves to root):
 
 1. **`<- raw document`**
    - This is your input (a value concept)

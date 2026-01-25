@@ -23,7 +23,7 @@ This section explains the runtime execution of NormCode plans. You'll learn how 
 **High-level execution model**
 
 Learn about:
-- The bottom-up dependency resolution model
+- The top-to-bottom, inside-out execution model
 - Semantic vs. syntactic sequences
 - Reference system basics
 - Orchestrator role and execution loop
@@ -122,9 +122,11 @@ Learn about:
 ### Execution Model
 
 ```
-Bottom-Up Dependency Resolution
+Top-to-Bottom Processing, Inside-Out Dependency Resolution
     ↓
-Child inferences complete first
+Waitlist sorted by flow index (1 → 1.1 → 1.2 → ...)
+    ↓
+Child inferences complete before parents
     ↓
 Parent inferences wait for all inputs
     ↓
@@ -426,7 +428,7 @@ After mastering execution:
 
 **NormCode's execution enforces data isolation by design**:
 
-1. **Bottom-up resolution**: Can't run until inputs ready
+1. **Inside-out resolution**: Can't run until children/inputs ready
 2. **Reference isolation**: Each concept has its own tensor
 3. **Explicit retrieval**: IR step fetches only declared inputs
 4. **No hidden state**: Everything tracked in Blackboard

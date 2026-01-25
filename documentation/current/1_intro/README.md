@@ -27,7 +27,7 @@ If you're new to NormCode, read these in order:
 **Write your first plan in 5 minutes**
 
 - Basic syntax (`<-` and `<=`)
-- Execution flow (bottom-up)
+- Execution flow (child-to-parent / inside-out)
 - Multi-input operations
 - Loops and conditions
 - Complete working examples

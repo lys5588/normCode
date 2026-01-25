@@ -1,0 +1,630 @@
+[
+  {
+    "id": "c-session-result",
+    "concept_name": "{session result}",
+    "type": "{}",
+    "flow_indices": [
+      "1"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": true,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(status: str, message_count: int, final_status: str)",
+    "natural_name": "session result"
+  },
+  {
+    "id": "fc-canvas-command-schema-on-going-messages-all-canvas",
+    "concept_name": "&[{}] %>([{canvas command schema}, [on-going messages], [all canvas statuses]])",
+    "type": "({})",
+    "flow_indices": [
+      "1.1"
+    ],
+    "description": "&[{}] %>([{canvas command schema}, [on-going messages], [all canvas statuses]])",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "&[{}] %>([{canvas command schema}, [on-going messages], [all canvas statuses]])"
+  },
+  {
+    "id": "c-canvas-command-schema",
+    "concept_name": "{canvas command schema}",
+    "type": "{}",
+    "flow_indices": [
+      "1.2",
+      "1.4.1.4.3"
+    ],
+    "description": null,
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": [
+      "%{file_location}(provisions/schemas/canvas_commands.json)"
+    ],
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "perceptual_sign",
+    "natural_name": "canvas command schema"
+  },
+  {
+    "id": "fc-file-location-provisions-schemas-canvas-commands-j",
+    "concept_name": "$% %>({%{file_location}(provisions/schemas/canvas_commands.json)})",
+    "type": "({})",
+    "flow_indices": [
+      "1.2.1"
+    ],
+    "description": "$% %>({%{file_location}(provisions/schemas/canvas_commands.json)})",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$% %>({%{file_location}(provisions/schemas/canvas_commands.json)})"
+  },
+  {
+    "id": "c-on-going-messages",
+    "concept_name": "[on-going messages]",
+    "type": "[]",
+    "flow_indices": [
+      "1.3",
+      "1.4.1.11.3",
+      "1.4.1.12",
+      "1.4.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": true,
+    "reference_data": null,
+    "axis_name": "message",
+    "reference_axis_names": [
+      "message"
+    ],
+    "reference_element_type": "dict(role: str, content: str, timestamp: float)",
+    "natural_name": "on-going messages"
+  },
+  {
+    "id": "fc-placeholder-true",
+    "concept_name": "$% %>([%({\"__placeholder__\": true})])",
+    "type": "({})",
+    "flow_indices": [
+      "1.3.1"
+    ],
+    "description": "$% %>([%({\"__placeholder__\": true})])",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$% %>([%({\"__placeholder__\": true})])"
+  },
+  {
+    "id": "c-all-canvas-statuses",
+    "concept_name": "[all canvas statuses]",
+    "type": "[]",
+    "flow_indices": [
+      "1.4"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "iteration",
+    "reference_axis_names": [
+      "iteration"
+    ],
+    "reference_element_type": "dict(message: dict, command_status: dict, response_sent: dict)",
+    "natural_name": "all canvas statuses"
+  },
+  {
+    "id": "fc-on-going-messages-canvas-status-message-1",
+    "concept_name": "*. %>([on-going messages]) %<({canvas status}) %:({message}) %@(1)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1"
+    ],
+    "description": "*. %>([on-going messages]) %<({canvas status}) %:({message}) %@(1)",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "*. %>([on-going messages]) %<({canvas status}) %:({message}) %@(1)"
+  },
+  {
+    "id": "fc-canvas-status",
+    "concept_name": "$. %>({canvas status})",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.1"
+    ],
+    "description": "$. %>({canvas status})",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$. %>({canvas status})"
+  },
+  {
+    "id": "fc-read-user-message-from-chat",
+    "concept_name": "::(read user message from chat)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.2.1"
+    ],
+    "description": "read user message from chat",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "read user message from chat"
+  },
+  {
+    "id": "c-thinking-status-emitted",
+    "concept_name": "{thinking status emitted}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.3"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(success: bool, action: str)",
+    "natural_name": "thinking status emitted"
+  },
+  {
+    "id": "fc-emit-thinking-status-to-user",
+    "concept_name": "::(emit thinking status to user)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.3.1"
+    ],
+    "description": "emit thinking status to user",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "emit thinking status to user"
+  },
+  {
+    "id": "c-parsed-command",
+    "concept_name": "{parsed command}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.4",
+      "1.4.1.5.2",
+      "1.4.1.6.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(type: str, params: dict, confidence: float)",
+    "natural_name": "parsed command"
+  },
+  {
+    "id": "fc-classify-user-message-as-canvas-command-using-1-an",
+    "concept_name": "::(classify user message as canvas command using {1} and {2})",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.4.1"
+    ],
+    "description": "classify user message as canvas command using {1} and {2}",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}6a7(provisions/prompts/classify_command.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "classify user message as canvas command using {1} and {2}"
+  },
+  {
+    "id": "c-executing-status-emitted",
+    "concept_name": "{executing status emitted}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.5"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(success: bool, action: str)",
+    "natural_name": "executing status emitted"
+  },
+  {
+    "id": "fc-emit-executing-status-to-user",
+    "concept_name": "::(emit executing status to user)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.5.1"
+    ],
+    "description": "emit executing status to user",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "emit executing status to user"
+  },
+  {
+    "id": "fc-execute-parsed-command-on-canvas-using-1",
+    "concept_name": "::(execute parsed command on canvas using {1})",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.6.1"
+    ],
+    "description": "execute parsed command on canvas using {1}",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "execute parsed command on canvas using {1}"
+  },
+  {
+    "id": "c-generating-status-emitted",
+    "concept_name": "{generating status emitted}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.7"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(success: bool, action: str)",
+    "natural_name": "generating status emitted"
+  },
+  {
+    "id": "fc-emit-generating-status-to-user",
+    "concept_name": "::(emit generating status to user)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.7.1"
+    ],
+    "description": "emit generating status to user",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "emit generating status to user"
+  },
+  {
+    "id": "c-response",
+    "concept_name": "{response}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.8",
+      "1.4.1.9.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(content: str, tone: str)",
+    "natural_name": "response"
+  },
+  {
+    "id": "fc-generate-response-based-on-1-and-2",
+    "concept_name": "::(generate response based on {1} and {2})",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.8.1"
+    ],
+    "description": "generate response based on {1} and {2}",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}102(provisions/prompts/generate_response.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "generate response based on {1} and {2}"
+  },
+  {
+    "id": "fc-send-response-to-chat-using-1",
+    "concept_name": "::(send response to chat using {1})",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.9.1"
+    ],
+    "description": "send response to chat using {1}",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "send response to chat using {1}"
+  },
+  {
+    "id": "c-canvas-status",
+    "concept_name": "{canvas status}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.10"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(message: dict, command_status: dict, response_sent: dict)",
+    "natural_name": "canvas status"
+  },
+  {
+    "id": "fc-current-message-command-status-response-sent",
+    "concept_name": "&[{}] %>([{current message}, {command status}, {response sent}])",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.10.1"
+    ],
+    "description": "&[{}] %>([{current message}, {command status}, {response sent}])",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "&[{}] %>([{current message}, {command status}, {response sent}])"
+  },
+  {
+    "id": "c-current-message",
+    "concept_name": "{current message}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.10.2",
+      "1.4.1.11.2",
+      "1.4.1.12.2",
+      "1.4.1.2",
+      "1.4.1.3.2",
+      "1.4.1.4.2",
+      "1.4.1.8.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(role: str, content: str)",
+    "natural_name": "current message"
+  },
+  {
+    "id": "c-command-status",
+    "concept_name": "{command status}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.10.3",
+      "1.4.1.6",
+      "1.4.1.7.2",
+      "1.4.1.8.3"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(success: bool, action: str, message: str, error: str)",
+    "natural_name": "command status"
+  },
+  {
+    "id": "c-response-sent",
+    "concept_name": "{response sent}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.1.10.4",
+      "1.4.1.9"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(success: bool, action: str)",
+    "natural_name": "response sent"
+  },
+  {
+    "id": "c-session-should-end",
+    "concept_name": "<session should end>",
+    "type": "<>",
+    "flow_indices": [
+      "1.4.1.11",
+      "1.4.1.12.1.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "%{truth value}",
+    "natural_name": "session should end"
+  },
+  {
+    "id": "fc-judge-if-user-wants-to-end-the-session-using-1-and",
+    "concept_name": "::(judge if user wants to end the session using {1} and {2})<ALL True>",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.11.1"
+    ],
+    "description": "judge if user wants to end the session using {1} and {2}",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}ad9(provisions/prompts/judge_terminate.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "judge if user wants to end the session using {1} and {2}"
+  },
+  {
+    "id": "fc-on-going-messages-current-message-message",
+    "concept_name": "$+ %>([on-going messages]) %<({current message}) %:(message)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.12.1"
+    ],
+    "description": "$+ %>([on-going messages]) %<({current message}) %:(message)",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$+ %>([on-going messages]) %<({current message}) %:(message)"
+  },
+  {
+    "id": "fc-session-should-end",
+    "concept_name": "@:!(<session should end>)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1.12.1.1"
+    ],
+    "description": "@:!(<session should end>)",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "@:!(<session should end>)"
+  },
+  {
+    "id": "c-message",
+    "concept_name": "{message}",
+    "type": "{}",
+    "flow_indices": [
+      "1.4.3"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": null,
+    "natural_name": "message"
+  }
+]
