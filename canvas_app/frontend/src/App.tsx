@@ -51,6 +51,7 @@ import { useProjectStore } from './stores/projectStore';
 import { useChatStore } from './stores/chatStore';
 import { useNotificationStore } from './stores/notificationStore';
 import { useLayoutStore, ZOOM_LIMITS } from './stores/layoutStore';
+import { usePanelStore } from './stores/panelStore';
 
 // View modes for the main content area
 type ViewMode = 'canvas' | 'editor';
@@ -171,14 +172,32 @@ function RepositoryPathsModal({ currentPaths, onSave, onClose }: RepositoryPaths
 }
 
 function App() {
-  const [showLoadPanel, setShowLoadPanel] = useState(false);
-  const [showDetailPanel, setShowDetailPanel] = useState(true);
-  const [showLogPanel, setShowLogPanel] = useState(true);
-  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
-  const [showCheckpointPanel, setShowCheckpointPanel] = useState(false);
-  const [showAgentPanel, setShowAgentPanel] = useState(false);
-  const [showWorkersPanel, setShowWorkersPanel] = useState(false);
-  const [showDeploymentPanel, setShowDeploymentPanel] = useState(false);
+  // Panel visibility from panelStore (enables WebSocket control)
+  const panels = usePanelStore((s) => s.panels);
+  const openPanel = usePanelStore((s) => s.openPanel);
+  const closePanel = usePanelStore((s) => s.closePanel);
+  const togglePanel = usePanelStore((s) => s.togglePanel);
+  
+  // Derived panel states for cleaner usage
+  const showLoadPanel = panels.load;
+  const showDetailPanel = panels.detail;
+  const showLogPanel = panels.log;
+  const showSettingsPanel = panels.settings;
+  const showCheckpointPanel = panels.checkpoint;
+  const showAgentPanel = panels.agent;
+  const showWorkersPanel = panels.workers;
+  const showDeploymentPanel = panels.deployment;
+  
+  // Setter functions that work with both boolean values and toggles
+  const setShowLoadPanel = useCallback((show: boolean) => show ? openPanel('load') : closePanel('load'), [openPanel, closePanel]);
+  const setShowDetailPanel = useCallback((show: boolean) => show ? openPanel('detail') : closePanel('detail'), [openPanel, closePanel]);
+  const setShowLogPanel = useCallback((show: boolean) => show ? openPanel('log') : closePanel('log'), [openPanel, closePanel]);
+  const setShowSettingsPanel = useCallback((show: boolean) => show ? openPanel('settings') : closePanel('settings'), [openPanel, closePanel]);
+  const setShowCheckpointPanel = useCallback((show: boolean) => show ? openPanel('checkpoint') : closePanel('checkpoint'), [openPanel, closePanel]);
+  const setShowAgentPanel = useCallback((show: boolean) => show ? openPanel('agent') : closePanel('agent'), [openPanel, closePanel]);
+  const setShowWorkersPanel = useCallback((show: boolean) => show ? openPanel('workers') : closePanel('workers'), [openPanel, closePanel]);
+  const setShowDeploymentPanel = useCallback((show: boolean) => show ? openPanel('deployment') : closePanel('deployment'), [openPanel, closePanel]);
+  
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
   const [detailPanelFullscreen, setDetailPanelFullscreen] = useState(false);
   const [showRepoPathsModal, setShowRepoPathsModal] = useState(false);
@@ -326,15 +345,15 @@ function App() {
       }}
     >
       {/* Single Unified Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between gap-2 overflow-hidden">
         {/* Left side: Logo + Project Info */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* App Logo */}
-          <img src="/psylens-logo.png" alt="NormCode Canvas" className="w-6 h-6" />
+          <img src="/psylens-logo.png" alt="NormCode Canvas" className="w-6 h-6 flex-shrink-0" />
           
           {/* Project Info */}
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-slate-700">{currentProject.name}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-medium text-slate-700 truncate max-w-[120px]" title={currentProject.name}>{currentProject.name}</span>
             {/* Remote projects show "Remote" badge instead of Load button */}
             {isRemoteProject ? (
               <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-xs rounded-full flex items-center gap-1">
@@ -389,13 +408,13 @@ function App() {
           </div>
           
           {/* Config summary */}
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">
             {currentProject.execution.max_cycles} cycles
           </span>
           
           {/* View Mode Tabs */}
-          <div className="w-px h-6 bg-slate-200 mx-2" />
-          <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+          <div className="w-px h-5 bg-slate-200 flex-shrink-0 hidden sm:block" />
+          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 flex-shrink-0">
             <button
               onClick={() => setViewMode('canvas')}
               className={`flex items-center gap-1.5 px-3 py-1 text-sm rounded-md transition-all ${
@@ -422,34 +441,34 @@ function App() {
         </div>
         
         {/* Right side: Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 flex-shrink-0">
           {/* Left panel toggles (Workers, Agent) */}
           {viewMode === 'canvas' && (
             <>
               {/* Plans in Work Panel Toggle */}
               <button
                 onClick={() => setShowWorkersPanel(!showWorkersPanel)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   showWorkersPanel
                     ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 }`}
                 title="Plans in Work - View all active NormCode plans"
               >
-                <Workflow size={18} />
+                <Workflow size={16} />
               </button>
               
               {/* Agent Panel Toggle */}
               <button
                 onClick={() => setShowAgentPanel(!showAgentPanel)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   showAgentPanel
                     ? 'text-purple-600 bg-purple-50 hover:bg-purple-100'
                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 }`}
                 title="Agent Configuration Panel"
               >
-                <Bot size={18} />
+                <Bot size={16} />
               </button>
             </>
           )}
@@ -457,40 +476,40 @@ function App() {
           {/* Panel toggles - show in canvas mode */}
           {viewMode === 'canvas' && (
             <>
-              <div className="w-px h-6 bg-slate-200 mx-1" />
+              <div className="w-px h-5 bg-slate-200 mx-0.5" />
               {/* Detail panel toggle - only when graph loaded */}
               {graphData && (
                 <button
                   onClick={() => setShowDetailPanel(!showDetailPanel)}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-1.5 rounded-lg transition-colors ${
                     showDetailPanel 
                       ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
                       : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                   }`}
                   title={showDetailPanel ? 'Hide detail panel' : 'Show detail panel'}
                 >
-                  {showDetailPanel ? <PanelRightClose size={18} /> : <PanelRight size={18} />}
+                  {showDetailPanel ? <PanelRightClose size={16} /> : <PanelRight size={16} />}
                 </button>
               )}
               {/* Log panel toggle - always available to see loading errors */}
               <button
                 onClick={() => setShowLogPanel(!showLogPanel)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   showLogPanel 
                     ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 }`}
                 title={showLogPanel ? 'Hide log panel' : 'Show log panel'}
               >
-                {showLogPanel ? <PanelBottomClose size={18} /> : <PanelBottom size={18} />}
+                {showLogPanel ? <PanelBottomClose size={16} /> : <PanelBottom size={16} />}
               </button>
             </>
           )}
           
-          <div className="w-px h-6 bg-slate-200 mx-1" />
+          <div className="w-px h-5 bg-slate-200 mx-0.5" />
           
           {/* Zoom Controls */}
-          <div className="flex items-center gap-1 bg-slate-100 rounded-lg px-1 py-0.5">
+          <div className="flex items-center bg-slate-100 rounded-lg px-0.5 py-0.5">
             <button
               onClick={zoomOut}
               disabled={zoom <= ZOOM_LIMITS.min}
@@ -525,73 +544,84 @@ function App() {
             )}
           </div>
           
-          <div className="w-px h-6 bg-slate-200 mx-1" />
+          <div className="w-px h-5 bg-slate-200 mx-0.5" />
           
           {/* Settings */}
           <button
             onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-lg transition-colors ${
               showSettingsPanel
                 ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
             }`}
             title="Execution Settings"
           >
-            <Settings size={18} />
+            <Settings size={16} />
           </button>
           
           {/* Deploy */}
           <button
             onClick={() => setShowDeploymentPanel(true)}
-            className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
             title="Deploy Project"
           >
-            <Rocket size={18} />
+            <Rocket size={16} />
           </button>
           
           {/* Project settings */}
           <button
             onClick={() => setProjectPanelOpen(true)}
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
             title="Project Settings"
           >
-            <Folder size={18} />
+            <Folder size={16} />
           </button>
           
           {/* Help */}
           <button
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-            title="Help"
+            onClick={() => {
+              const url = 'https://www.psylensai.com';
+              // In desktop app (pywebview), open in system browser to avoid losing the app
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const pywebview = (window as any).pywebview;
+              if (pywebview?.api?.open_external_url) {
+                pywebview.api.open_external_url(url);
+              } else {
+                window.open(url, '_blank');
+              }
+            }}
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            title="Help - Visit PsylensAI"
           >
-            <HelpCircle size={18} />
+            <HelpCircle size={16} />
           </button>
           
-          <div className="w-px h-6 bg-slate-200 mx-1" />
+          <div className="w-px h-5 bg-slate-200 mx-0.5" />
           
           {/* Chat Panel Toggle - compiler-driven chat */}
           <button
             onClick={toggleChatPanel}
-            className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
+            className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 ${
               isChatOpen
                 ? 'text-purple-600 bg-purple-50 hover:bg-purple-100'
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
             }`}
             title="Compiler Chat"
           >
-            <Sparkles size={18} />
-            <span className="text-sm font-medium">Chat</span>
+            <Sparkles size={16} />
+            <span className="text-xs font-medium">Chat</span>
             {controllerStatus === 'running' && (
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
             )}
           </button>
           
           {/* Close project */}
           <button
             onClick={closeProject}
-            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             title="Close Project"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
       </header>

@@ -4,10 +4,11 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Terminal, Filter, Trash2, ChevronDown, ChevronUp, AlertCircle, Info, AlertTriangle, Target } from 'lucide-react';
+import { Terminal, Filter, Trash2, AlertCircle, Info, AlertTriangle, Target, X } from 'lucide-react';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useSelectionStore } from '../../stores/selectionStore';
 import { useGraphStore } from '../../stores/graphStore';
+import { usePanelStore } from '../../stores/panelStore';
 
 type LogLevel = 'all' | 'info' | 'warning' | 'error';
 type NodeFilter = 'all' | 'selected';
@@ -29,8 +30,8 @@ export function LogPanel() {
   const clearLogs = useExecutionStore((s) => s.clearLogs);
   const selectedNodeId = useSelectionStore((s) => s.selectedNodeId);
   const getNode = useGraphStore((s) => s.getNode);
+  const closePanel = usePanelStore((s) => s.closePanel);
   
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [levelFilter, setLevelFilter] = useState<LogLevel>('all');
   const [nodeFilter, setNodeFilter] = useState<NodeFilter>('all');
   const [autoScroll, setAutoScroll] = useState(true);
@@ -73,28 +74,6 @@ export function LogPanel() {
       second: '2-digit' 
     });
   };
-
-  if (isCollapsed) {
-    return (
-      <div className="border-t border-slate-200 bg-white">
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="w-full px-4 py-2 flex items-center justify-between text-sm text-slate-600 hover:bg-slate-50"
-        >
-          <div className="flex items-center gap-2">
-            <Terminal size={14} />
-            <span>Logs ({logs.length})</span>
-            {nodeFilter === 'selected' && selectedFlowIndex && (
-              <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
-                Node: {selectedFlowIndex}
-              </span>
-            )}
-          </div>
-          <ChevronUp size={14} />
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white flex flex-col h-full w-full min-h-0">
@@ -155,20 +134,20 @@ export function LogPanel() {
           </label>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={clearLogs}
-            className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-1 text-slate-400 hover:text-slate-600 transition-colors rounded hover:bg-slate-100"
             title="Clear logs"
           >
             <Trash2 size={14} />
           </button>
           <button
-            onClick={() => setIsCollapsed(true)}
-            className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
-            title="Collapse"
+            onClick={() => closePanel('log')}
+            className="p-1 text-slate-400 hover:text-slate-600 transition-colors rounded hover:bg-slate-100"
+            title="Close log panel"
           >
-            <ChevronDown size={14} />
+            <X size={14} />
           </button>
         </div>
       </div>

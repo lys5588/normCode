@@ -85,6 +85,20 @@ def wait_for_server(port: int, timeout: int = 30) -> bool:
     return False
 
 
+class NormCodeAPI:
+    """JavaScript API exposed to the webview for native functionality."""
+    
+    def open_external_url(self, url: str):
+        """Open a URL in the system's default browser."""
+        import webbrowser
+        webbrowser.open(url)
+        return True
+    
+    def get_version(self):
+        """Return the app version."""
+        return __version__
+
+
 class NormCodeApp:
     """Main desktop application using native window."""
     
@@ -97,6 +111,7 @@ class NormCodeApp:
         self.running = False
         self._server_ready = threading.Event()
         self._server_error = None
+        self.api = NormCodeAPI()
         
     def find_available_port(self):
         """Find an available port for the server."""
@@ -231,7 +246,7 @@ class NormCodeApp:
             if icon_file.exists():
                 icon_path = str(icon_file)
         
-        # Create native window
+        # Create native window with JavaScript API
         self.window = webview.create_window(
             title='NormCode Canvas',
             url=self.url,
@@ -243,7 +258,8 @@ class NormCodeApp:
             easy_drag=False,
             text_select=True,
             confirm_close=False,
-            background_color='#0f0f23'
+            background_color='#0f0f23',
+            js_api=self.api  # Expose Python API to JavaScript as window.pywebview.api
         )
         
         # Set window events

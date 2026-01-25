@@ -10,12 +10,13 @@ import { useState, useEffect } from 'react';
 import { 
   Cpu, FileCode, Code, MessageSquare, Workflow,
   ChevronRight, ChevronDown, Settings, Plus, Trash2, Wrench,
-  MessagesSquare, Layout, FileCode2
+  Layout, Hand, Eye, Brain
 } from 'lucide-react';
 import { 
   AgentToolsConfig, 
   CustomToolConfig,
   CanvasIntegrationConfig,
+  normalizeCanvasIntegrationConfig,
 } from '../../stores/agentStore';
 import { useLLMStore } from '../../stores/llmStore';
 import { LLMSettingsPanel } from './LLMSettingsPanel';
@@ -290,7 +291,7 @@ export function EmbeddedToolConfig({ tools, onChange, compact = false }: Embedde
 }
 
 // ============================================================================
-// Canvas Integration Section
+// Canvas Integration Section (Unified Perspectives)
 // ============================================================================
 
 interface CanvasIntegrationSectionProps {
@@ -298,88 +299,148 @@ interface CanvasIntegrationSectionProps {
   onChange: (config: CanvasIntegrationConfig) => void;
 }
 
-function CanvasIntegrationSection({ config, onChange }: CanvasIntegrationSectionProps) {
+function CanvasIntegrationSection({ config: rawConfig, onChange }: CanvasIntegrationSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  const hasAnyEnabled = config?.chat?.enabled || config?.canvas?.enabled || config?.parser?.enabled;
+  // Normalize legacy format to new perspectives format
+  const config = normalizeCanvasIntegrationConfig(rawConfig);
   
-  const updateTool = (tool: keyof CanvasIntegrationConfig, enabled: boolean) => {
+  // Count enabled perspectives
+  const enabledCount = [
+    config?.perspectives?.first_person,
+    config?.perspectives?.second_person,
+    config?.perspectives?.third_person,
+  ].filter(Boolean).length;
+  
+  const updatePerspective = (perspective: 'first_person' | 'second_person' | 'third_person', enabled: boolean) => {
+    onChange({
+      enabled: config?.enabled ?? true,
+      perspectives: {
+        ...config?.perspectives,
+        [perspective]: enabled,
+      },
+    });
+  };
+  
+  const toggleMaster = (enabled: boolean) => {
     onChange({
       ...config,
-      [tool]: { enabled },
+      enabled,
     });
   };
   
   return (
     <div className="mt-3 pt-3 border-t">
-      <div 
-        className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 -mx-1 px-1 py-1 rounded"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
-        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-1">
-          <Layout size={10} className="text-cyan-500" />
-          Canvas Integration
+      {/* Header with master toggle */}
+      <div className="flex items-center gap-2">
+        <div 
+          className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 -mx-1 px-1 py-1 rounded flex-1"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+          <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-1">
+            <Layout size={10} className="text-cyan-500" />
+            Canvas Integration
+          </div>
+          {config?.enabled && enabledCount > 0 && (
+            <span className="text-[10px] text-cyan-600 bg-cyan-100 px-1.5 rounded">
+              {enabledCount}/3 perspectives
+            </span>
+          )}
         </div>
-        {hasAnyEnabled && (
-          <span className="text-[10px] text-cyan-600 bg-cyan-100 px-1.5 rounded">
-            {[config?.chat?.enabled, config?.canvas?.enabled, config?.parser?.enabled].filter(Boolean).length} active
-          </span>
-        )}
+        <label className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={config?.enabled ?? false}
+            onChange={(e) => toggleMaster(e.target.checked)}
+            className="rounded text-cyan-500"
+          />
+          <span className="text-xs text-slate-500">{config?.enabled ? 'On' : 'Off'}</span>
+        </label>
       </div>
       
       {isExpanded && (
         <div className="mt-2 space-y-2">
           <p className="text-[10px] text-slate-400 mb-2">
-            These tools are injected at runtime for Canvas Assistant projects
+            AI perspectives on the Canvas App (for meta-projects/assistants)
           </p>
           
-          {/* Chat Tool */}
-          <div className={`flex items-center gap-2 p-2 rounded border ${config?.chat?.enabled ? 'bg-cyan-50/50 border-cyan-200' : 'bg-slate-50 border-slate-200'}`}>
-            <MessagesSquare size={14} className={config?.chat?.enabled ? 'text-cyan-500' : 'text-slate-400'} />
+          {/* First Person - Hands (Actions) */}
+          <div className={`flex items-center gap-2 p-2 rounded border ${
+            config?.enabled && config?.perspectives?.first_person 
+              ? 'bg-cyan-50/50 border-cyan-200' 
+              : 'bg-slate-50 border-slate-200'
+          } ${!config?.enabled ? 'opacity-50' : ''}`}>
+            <Hand size={14} className={config?.enabled && config?.perspectives?.first_person ? 'text-cyan-500' : 'text-slate-400'} />
             <div className="flex-1">
-              <div className="text-sm font-medium">Chat Tool</div>
-              <div className="text-[10px] text-slate-400">Read/write messages to chat interface</div>
+              <div className="text-sm font-medium flex items-center gap-2">
+                First Person
+                <span className="text-[10px] font-mono text-cyan-600 bg-cyan-50 px-1 rounded">me.*</span>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Actions: click, type, drag, open panels, send messages
+              </div>
             </div>
             <label className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               <input
                 type="checkbox"
-                checked={config?.chat?.enabled ?? false}
-                onChange={(e) => updateTool('chat', e.target.checked)}
+                checked={config?.perspectives?.first_person ?? true}
+                onChange={(e) => updatePerspective('first_person', e.target.checked)}
+                disabled={!config?.enabled}
                 className="rounded text-cyan-500"
               />
             </label>
           </div>
           
-          {/* Canvas Tool */}
-          <div className={`flex items-center gap-2 p-2 rounded border ${config?.canvas?.enabled ? 'bg-cyan-50/50 border-cyan-200' : 'bg-slate-50 border-slate-200'}`}>
-            <Layout size={14} className={config?.canvas?.enabled ? 'text-cyan-500' : 'text-slate-400'} />
+          {/* Second Person - Senses (Queries) */}
+          <div className={`flex items-center gap-2 p-2 rounded border ${
+            config?.enabled && config?.perspectives?.second_person 
+              ? 'bg-cyan-50/50 border-cyan-200' 
+              : 'bg-slate-50 border-slate-200'
+          } ${!config?.enabled ? 'opacity-50' : ''}`}>
+            <Eye size={14} className={config?.enabled && config?.perspectives?.second_person ? 'text-cyan-500' : 'text-slate-400'} />
             <div className="flex-1">
-              <div className="text-sm font-medium">Canvas Tool</div>
-              <div className="text-[10px] text-slate-400">Execute canvas commands for graph manipulation</div>
+              <div className="text-sm font-medium flex items-center gap-2">
+                Second Person
+                <span className="text-[10px] font-mono text-cyan-600 bg-cyan-50 px-1 rounded">you.*</span>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Queries: get canvas state, read values, check status
+              </div>
             </div>
             <label className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               <input
                 type="checkbox"
-                checked={config?.canvas?.enabled ?? false}
-                onChange={(e) => updateTool('canvas', e.target.checked)}
+                checked={config?.perspectives?.second_person ?? true}
+                onChange={(e) => updatePerspective('second_person', e.target.checked)}
+                disabled={!config?.enabled}
                 className="rounded text-cyan-500"
               />
             </label>
           </div>
           
-          {/* Parser Tool */}
-          <div className={`flex items-center gap-2 p-2 rounded border ${config?.parser?.enabled ? 'bg-cyan-50/50 border-cyan-200' : 'bg-slate-50 border-slate-200'}`}>
-            <FileCode2 size={14} className={config?.parser?.enabled ? 'text-cyan-500' : 'text-slate-400'} />
+          {/* Third Person - Memory (Observation) */}
+          <div className={`flex items-center gap-2 p-2 rounded border ${
+            config?.enabled && config?.perspectives?.third_person 
+              ? 'bg-cyan-50/50 border-cyan-200' 
+              : 'bg-slate-50 border-slate-200'
+          } ${!config?.enabled ? 'opacity-50' : ''}`}>
+            <Brain size={14} className={config?.enabled && config?.perspectives?.third_person ? 'text-cyan-500' : 'text-slate-400'} />
             <div className="flex-1">
-              <div className="text-sm font-medium">Parser Tool</div>
-              <div className="text-[10px] text-slate-400">Parse NormCode files (.ncd)</div>
+              <div className="text-sm font-medium flex items-center gap-2">
+                Third Person
+                <span className="text-[10px] font-mono text-cyan-600 bg-cyan-50 px-1 rounded">it.*</span>
+              </div>
+              <div className="text-[10px] text-slate-400">
+                Observation: event history, state changes, past actions
+              </div>
             </div>
             <label className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               <input
                 type="checkbox"
-                checked={config?.parser?.enabled ?? false}
-                onChange={(e) => updateTool('parser', e.target.checked)}
+                checked={config?.perspectives?.third_person ?? true}
+                onChange={(e) => updatePerspective('third_person', e.target.checked)}
+                disabled={!config?.enabled}
                 className="rounded text-cyan-500"
               />
             </label>

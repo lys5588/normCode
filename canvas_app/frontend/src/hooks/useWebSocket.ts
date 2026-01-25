@@ -23,6 +23,7 @@ import { useAgentStore } from '../stores/agentStore';
 import { useProjectStore } from '../stores/projectStore';
 import { useChatStore, type ChatInputRequest, type MessageRole } from '../stores/chatStore';
 import { useCanvasCommandStore } from '../stores/canvasCommandStore';
+import { usePanelStore, type PanelName } from '../stores/panelStore';
 import type { WebSocketEvent, StepProgress, RunMode, ExecutionStatus } from '../types/execution';
 import type { NodeStatus } from '../types/execution';
 import type { ToolCallEvent, AgentConfig } from '../stores/agentStore';
@@ -67,8 +68,19 @@ interface EventHandlerContext {
   updateBufferStatus: (status: ChatBufferStatus) => void;
   clearBuffer: () => void;
   
+  // Chat action handlers (from First Person / Hands)
+  setChatInputValue: (value: string) => void;
+  submitChatInput: () => void;
+  respondToInputRequest: (response: string) => void;
+  
   // Canvas store actions
   addCanvasCommand: (type: string, params: Record<string, unknown>) => void;
+  
+  // Panel store actions
+  openPanel: (panel: PanelName) => void;
+  closePanel: (panel: PanelName) => void;
+  togglePanel: (panel: PanelName) => void;
+  focusPanel: (panel: PanelName) => void;
 }
 
 type EventHandler = (data: EventData, ctx: EventHandlerContext) => void;
@@ -540,6 +552,57 @@ const chatHandlers: Record<string, EventHandler> = {
   'chat:input_cancelled': (_data, ctx) => {
     ctx.setInputRequest(null);
   },
+  
+  // =========================================================================
+  // Chat Action Handlers (from First Person / Hands)
+  // =========================================================================
+  
+  'chat:type': (data, ctx) => {
+    // Type text into the chat input field
+    const text = data.text as string;
+    if (text !== undefined) {
+      ctx.setChatInputValue(text);
+      console.log('[WS] Chat input set:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+    }
+  },
+  
+  'chat:clear_input': (_data, ctx) => {
+    // Clear the chat input field
+    ctx.setChatInputValue('');
+    console.log('[WS] Chat input cleared');
+  },
+  
+  'chat:send': (_data, ctx) => {
+    // Send the current chat input (press Enter)
+    ctx.submitChatInput();
+    console.log('[WS] Chat input submitted');
+  },
+  
+  'chat:respond': (data, ctx) => {
+    // Auto-respond to a pending input request
+    const response = data.response as string;
+    if (response !== undefined) {
+      ctx.respondToInputRequest(response);
+      console.log('[WS] Auto-responded to input request:', response.substring(0, 50));
+    }
+  },
+  
+  'chat:select_option': (data, ctx) => {
+    // Select an option from a pending select prompt (same as respond)
+    const option = data.option as string;
+    if (option !== undefined) {
+      ctx.respondToInputRequest(option);
+      console.log('[WS] Selected option:', option);
+    }
+  },
+  
+  'chat:scroll': (data, _ctx) => {
+    // Scroll chat panel - UI-only concern, log for now
+    const direction = data.direction as string;
+    const amount = data.amount as number;
+    console.log(`[WS] Chat scroll requested: ${direction} by ${amount}`);
+    // Future: could emit custom event for ChatPanel to handle
+  },
 };
 
 // =============================================================================
@@ -553,6 +616,82 @@ const canvasHandlers: Record<string, EventHandler> = {
         data.type as string,
         (data.params as Record<string, unknown>) || {}
       );
+    }
+  },
+};
+
+// =============================================================================
+// Panel Handlers (from First Person / Hands)
+// =============================================================================
+
+/**
+ * Normalize panel name to match PanelName type.
+ * Handles variations like "detail_panel" -> "detail", "detailPanel" -> "detail"
+ */
+function normalizePanelName(panel: string): PanelName | null {
+  const normalized = panel
+    .toLowerCase()
+    .replace(/_panel$/, '')
+    .replace(/panel$/, '')
+    .replace(/_/g, '');
+  
+  // Map common variations
+  const mapping: Record<string, PanelName> = {
+    'detail': 'detail',
+    'details': 'detail',
+    'log': 'log',
+    'logs': 'log',
+    'settings': 'settings',
+    'setting': 'settings',
+    'checkpoint': 'checkpoint',
+    'checkpoints': 'checkpoint',
+    'agent': 'agent',
+    'agents': 'agent',
+    'workers': 'workers',
+    'worker': 'workers',
+    'deployment': 'deployment',
+    'deploy': 'deployment',
+    'load': 'load',
+    'chat': 'chat',
+  };
+  
+  return mapping[normalized] || null;
+}
+
+const panelHandlers: Record<string, EventHandler> = {
+  'panel:open': (data, ctx) => {
+    const panel = normalizePanelName(data.panel as string);
+    if (panel) {
+      ctx.openPanel(panel);
+    } else {
+      console.warn('[WS] Unknown panel:', data.panel);
+    }
+  },
+  
+  'panel:close': (data, ctx) => {
+    const panel = normalizePanelName(data.panel as string);
+    if (panel) {
+      ctx.closePanel(panel);
+    } else {
+      console.warn('[WS] Unknown panel:', data.panel);
+    }
+  },
+  
+  'panel:toggle': (data, ctx) => {
+    const panel = normalizePanelName(data.panel as string);
+    if (panel) {
+      ctx.togglePanel(panel);
+    } else {
+      console.warn('[WS] Unknown panel:', data.panel);
+    }
+  },
+  
+  'panel:focus': (data, ctx) => {
+    const panel = normalizePanelName(data.panel as string);
+    if (panel) {
+      ctx.focusPanel(panel);
+    } else {
+      console.warn('[WS] Unknown panel:', data.panel);
     }
   },
 };
@@ -707,6 +846,7 @@ const allHandlers: Record<string, EventHandler> = {
   ...userInputHandlers,
   ...chatHandlers,
   ...canvasHandlers,
+  ...panelHandlers,
   ...remoteHandlers,
   ...logHandlers,
 };
@@ -795,8 +935,25 @@ export function useWebSocket() {
   const updateBufferStatus = useChatStore((s) => s.updateBufferStatus);
   const clearBuffer = useChatStore((s) => s.clearBuffer);
   
+  // Chat action handlers (from First Person / Hands)
+  const setChatInputValue = useChatStore((s) => s.setInputValue);
+  const respondToInputRequest = useChatStore((s) => s.respondToInputRequest);
+  // submitChatInput needs to be a function that gets the current value and submits
+  const submitChatInput = useCallback(() => {
+    const { inputValue, submitInput } = useChatStore.getState();
+    if (inputValue.trim()) {
+      submitInput(inputValue);
+    }
+  }, []);
+  
   // Canvas command store actions
   const addCanvasCommand = useCanvasCommandStore((s) => s.addCommand);
+  
+  // Panel store actions
+  const openPanel = usePanelStore((s) => s.openPanel);
+  const closePanel = usePanelStore((s) => s.closePanel);
+  const togglePanel = usePanelStore((s) => s.togglePanel);
+  const focusPanel = usePanelStore((s) => s.focusPanel);
 
   // Build handler context
   const ctx: EventHandlerContext = {
@@ -827,6 +984,13 @@ export function useWebSocket() {
     updateBufferStatus,
     clearBuffer,
     addCanvasCommand,
+    openPanel,
+    closePanel,
+    togglePanel,
+    focusPanel,
+    setChatInputValue,
+    submitChatInput,
+    respondToInputRequest,
   };
 
   const handleEvent = useCallback(
@@ -887,7 +1051,9 @@ export function useWebSocket() {
       updateStepProgress, clearStepProgress, fetchConceptStatuses, setRunMode,
       addUserInputRequest, removeUserInputRequest, addToolCall, updateToolCall,
       addAgent, updateAgent, deleteAgent, addMessageFromApi, setInputRequest,
-      updateBufferStatus, clearBuffer, addCanvasCommand, reset
+      updateBufferStatus, clearBuffer, addCanvasCommand, reset,
+      openPanel, closePanel, togglePanel, focusPanel,
+      setChatInputValue, submitChatInput, respondToInputRequest
     ]
   );
 

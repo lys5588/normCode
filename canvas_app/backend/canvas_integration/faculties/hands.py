@@ -45,43 +45,57 @@ class Hands:
         except Exception as e:
             logger.error(f"Failed to emit {event_type}: {e}")
     
+    def _emit_canvas_command(self, command_type: str, params: Dict[str, Any]) -> None:
+        """
+        Emit a canvas command in the format expected by the frontend.
+        
+        The frontend handles canvas operations via 'canvas:command' events
+        with a 'type' field specifying the operation and 'params' for arguments.
+        
+        We also record the semantic event name for the event store (Third Person).
+        """
+        # Emit in frontend-expected format
+        self._emit("canvas:command", {"type": command_type, "params": params})
+        # Record with semantic name for event store / observation
+        self._event_store.record(f"canvas:{command_type}", params)
+    
     # =========================================================================
     # Node Interaction
     # =========================================================================
     
     def click_node(self, node_id: str) -> ActionResult:
         """Click/select a node."""
-        self._do_emit("canvas:select_node", {"node_id": node_id})
+        self._emit_canvas_command("select_node", {"node_id": node_id})
         return ActionResult.ok("click_node", f"Clicked node {node_id}", node_id=node_id)
     
     def double_click_node(self, node_id: str) -> ActionResult:
         """Double-click a node (open details)."""
-        self._do_emit("canvas:double_click_node", {"node_id": node_id})
+        self._emit_canvas_command("double_click_node", {"node_id": node_id})
         return ActionResult.ok("double_click_node", f"Double-clicked node {node_id}")
     
     def right_click_node(self, node_id: str) -> ActionResult:
         """Right-click a node (context menu)."""
-        self._do_emit("canvas:right_click_node", {"node_id": node_id})
+        self._emit_canvas_command("right_click_node", {"node_id": node_id})
         return ActionResult.ok("right_click_node", f"Right-clicked node {node_id}")
     
     def hover_node(self, node_id: str) -> ActionResult:
         """Hover over a node (show tooltip)."""
-        self._do_emit("canvas:hover_node", {"node_id": node_id})
+        self._emit_canvas_command("hover_node", {"node_id": node_id})
         return ActionResult.ok("hover_node", f"Hovering over node {node_id}")
     
     def drag_node(self, node_id: str, to_x: float, to_y: float) -> ActionResult:
         """Drag a node to a new position."""
-        self._do_emit("canvas:drag_node", {"node_id": node_id, "x": to_x, "y": to_y})
+        self._emit_canvas_command("drag_node", {"node_id": node_id, "x": to_x, "y": to_y})
         return ActionResult.ok("drag_node", f"Dragged node {node_id} to ({to_x}, {to_y})")
     
     def select_nodes(self, node_ids: List[str]) -> ActionResult:
         """Select multiple nodes."""
-        self._do_emit("canvas:select_nodes", {"node_ids": node_ids})
+        self._emit_canvas_command("select_nodes", {"node_ids": node_ids})
         return ActionResult.ok("select_nodes", f"Selected {len(node_ids)} nodes")
     
     def deselect_all(self) -> ActionResult:
         """Clear all selections."""
-        self._do_emit("canvas:deselect_all", {})
+        self._emit_canvas_command("deselect_all", {})
         return ActionResult.ok("deselect_all", "Deselected all nodes")
     
     # =========================================================================
@@ -90,42 +104,42 @@ class Hands:
     
     def collapse_node(self, node_id: str) -> ActionResult:
         """Collapse a node (hide its descendants)."""
-        self._do_emit("canvas:collapse_node", {"node_id": node_id})
+        self._emit_canvas_command("collapse_node", {"node_id": node_id})
         return ActionResult.ok("collapse_node", f"Collapsed node {node_id}")
     
     def expand_node(self, node_id: str) -> ActionResult:
         """Expand a collapsed node."""
-        self._do_emit("canvas:expand_node", {"node_id": node_id})
+        self._emit_canvas_command("expand_node", {"node_id": node_id})
         return ActionResult.ok("expand_node", f"Expanded node {node_id}")
     
     def toggle_collapse(self, node_id: str) -> ActionResult:
         """Toggle collapse state of a node."""
-        self._do_emit("canvas:toggle_collapse", {"node_id": node_id})
+        self._emit_canvas_command("toggle_collapse", {"node_id": node_id})
         return ActionResult.ok("toggle_collapse", f"Toggled collapse for node {node_id}")
     
     def collapse_all(self) -> ActionResult:
         """Collapse all nodes that have children."""
-        self._do_emit("canvas:collapse_all", {})
+        self._emit_canvas_command("collapse_all", {})
         return ActionResult.ok("collapse_all", "Collapsed all nodes")
     
     def expand_all(self) -> ActionResult:
         """Expand all collapsed nodes."""
-        self._do_emit("canvas:expand_all", {})
+        self._emit_canvas_command("expand_all", {})
         return ActionResult.ok("expand_all", "Expanded all nodes")
     
     def collapse_to_level(self, level: int) -> ActionResult:
         """Collapse all nodes at or below a level."""
-        self._do_emit("canvas:collapse_to_level", {"level": level})
+        self._emit_canvas_command("collapse_to_level", {"level": level})
         return ActionResult.ok("collapse_to_level", f"Collapsed to level {level}")
     
     def highlight_branch(self, node_id: str) -> ActionResult:
         """Highlight the branch (ancestors + descendants) of a node."""
-        self._do_emit("canvas:highlight_branch", {"node_id": node_id})
+        self._emit_canvas_command("highlight_branch", {"node_id": node_id})
         return ActionResult.ok("highlight_branch", f"Highlighted branch for {node_id}")
     
     def clear_highlight(self) -> ActionResult:
         """Clear branch highlighting."""
-        self._do_emit("canvas:clear_highlight", {})
+        self._emit_canvas_command("clear_highlight", {})
         return ActionResult.ok("clear_highlight", "Cleared highlighting")
     
     # =========================================================================
@@ -134,32 +148,32 @@ class Hands:
     
     def zoom_in(self, amount: float = 0.1) -> ActionResult:
         """Zoom in the canvas."""
-        self._do_emit("canvas:zoom", {"direction": "in", "amount": amount})
+        self._emit_canvas_command("zoom_in", {"amount": amount})
         return ActionResult.ok("zoom_in", f"Zoomed in by {amount}")
     
     def zoom_out(self, amount: float = 0.1) -> ActionResult:
         """Zoom out the canvas."""
-        self._do_emit("canvas:zoom", {"direction": "out", "amount": amount})
+        self._emit_canvas_command("zoom_out", {"amount": amount})
         return ActionResult.ok("zoom_out", f"Zoomed out by {amount}")
     
     def zoom_to(self, level: float) -> ActionResult:
         """Zoom to specific level (1.0 = 100%)."""
-        self._do_emit("canvas:zoom_to", {"level": level})
+        self._emit_canvas_command("zoom_to", {"level": level})
         return ActionResult.ok("zoom_to", f"Zoomed to {level:.0%}")
     
     def pan(self, dx: float, dy: float) -> ActionResult:
         """Pan the canvas view."""
-        self._do_emit("canvas:pan", {"dx": dx, "dy": dy})
+        self._emit_canvas_command("pan", {"dx": dx, "dy": dy})
         return ActionResult.ok("pan", f"Panned by ({dx}, {dy})")
     
     def fit_view(self) -> ActionResult:
         """Fit all nodes in the viewport."""
-        self._do_emit("canvas:fit_view", {})
+        self._emit_canvas_command("fit_view", {})
         return ActionResult.ok("fit_view", "Fit view to all nodes")
     
     def center_on_node(self, node_id: str) -> ActionResult:
         """Center the view on a specific node."""
-        self._do_emit("canvas:center_on_node", {"node_id": node_id})
+        self._emit_canvas_command("center_on_node", {"node_id": node_id})
         return ActionResult.ok("center_on_node", f"Centered on node {node_id}")
     
     # =========================================================================

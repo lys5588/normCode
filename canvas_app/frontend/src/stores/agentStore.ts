@@ -37,11 +37,58 @@ export interface CustomToolConfig {
   settings: Record<string, unknown>;
 }
 
-// Canvas integration tools (for compiler meta-project)
+// Canvas integration perspectives configuration
+export interface CanvasIntegrationPerspectives {
+  first_person?: boolean;   // me.* - Hands (actions like click, type, drag)
+  second_person?: boolean;  // you.* - Senses (queries like get state, read values)
+  third_person?: boolean;   // it.* - Memory (observation of events)
+}
+
+// Canvas integration tool config (unified tool with perspectives)
 export interface CanvasIntegrationConfig {
+  enabled: boolean;  // Master toggle
+  perspectives?: CanvasIntegrationPerspectives;
+  // Optional tool overrides
+  file_system_base_dir?: string;
+  python_timeout?: number;
+}
+
+// Legacy format (for backward compatibility)
+export interface LegacyCanvasIntegrationConfig {
   chat?: { enabled: boolean };
   canvas?: { enabled: boolean };
   parser?: { enabled: boolean };
+}
+
+/**
+ * Convert legacy canvas integration config to new unified format.
+ */
+export function normalizeCanvasIntegrationConfig(
+  config: CanvasIntegrationConfig | LegacyCanvasIntegrationConfig | undefined
+): CanvasIntegrationConfig | undefined {
+  if (!config) return undefined;
+  
+  // Check if it's the legacy format
+  if ('chat' in config || 'canvas' in config || 'parser' in config) {
+    const legacy = config as LegacyCanvasIntegrationConfig;
+    const anyEnabled = 
+      legacy.chat?.enabled || 
+      legacy.canvas?.enabled || 
+      legacy.parser?.enabled || 
+      false;
+    
+    return {
+      enabled: anyEnabled,
+      perspectives: {
+        first_person: anyEnabled,
+        second_person: anyEnabled,
+        third_person: anyEnabled,
+      }
+    };
+  }
+  
+  // Already in new format
+  return config as CanvasIntegrationConfig;
 }
 
 export interface AgentToolsConfig {
