@@ -98,28 +98,91 @@ def create_user_input_tool(settings: Dict[str, Any]) -> Any:
 def create_paradigm_tool(settings: Dict[str, Any]) -> Any:
     """
     Create a paradigm tool for domain-specific code generation.
+    
+    Uses the canvas version (CanvasParadigmTool) from tools/paradigm_tool.py.
     """
     paradigm_dir = settings.get("dir")
     if not paradigm_dir:
         return None
     
     base_dir = settings.get("base_dir", ".")
+    emit_callback = settings.get("emit_callback")
     
     try:
-        from infra._tools._paradigm_use.paradigm_tool import ParadigmTool
-        from pathlib import Path
+        # Use canvas version of paradigm tool
+        from tools.paradigm_tool import create_canvas_paradigm_tool
         
-        paradigm_path = Path(paradigm_dir)
-        if not paradigm_path.is_absolute():
-            paradigm_path = Path(base_dir) / paradigm_path
-        
-        if paradigm_path.exists():
-            return ParadigmTool(paradigm_dir=str(paradigm_path))
-        else:
-            logger.warning(f"Paradigm directory not found: {paradigm_path}")
-            return None
+        return create_canvas_paradigm_tool(
+            paradigm_dir=paradigm_dir,
+            base_dir=base_dir,
+            emit_callback=emit_callback
+        )
     except ImportError:
-        logger.warning("Could not import ParadigmTool from infra")
+        logger.warning("Could not import CanvasParadigmTool from tools")
+        # Fallback to infra version
+        try:
+            from infra._tools._paradigm_use.paradigm_tool import ParadigmTool
+            from pathlib import Path
+            
+            paradigm_path = Path(paradigm_dir)
+            if not paradigm_path.is_absolute():
+                paradigm_path = Path(base_dir) / paradigm_path
+            
+            if paradigm_path.exists():
+                return ParadigmTool(paradigm_dir=str(paradigm_path))
+            else:
+                logger.warning(f"Paradigm directory not found: {paradigm_path}")
+                return None
+        except ImportError:
+            logger.warning("Could not import ParadigmTool from infra")
+            return None
+
+
+def create_model_runner_tool(settings: Dict[str, Any]) -> Any:
+    """
+    Create a model runner tool for paradigm execution.
+    
+    Uses the canvas version (CanvasModelRunnerTool) from tools/model_runner_tool.py.
+    """
+    emit_callback = settings.get("emit_callback")
+    
+    try:
+        from tools.model_runner_tool import CanvasModelRunnerTool
+        return CanvasModelRunnerTool(emit_callback=emit_callback)
+    except ImportError:
+        logger.warning("Could not import CanvasModelRunnerTool from tools")
+        return None
+
+
+def create_composition_tool(settings: Dict[str, Any]) -> Any:
+    """
+    Create a composition tool for function composition in paradigm execution.
+    
+    Uses the canvas version (CanvasCompositionTool) from tools/composition_tool.py.
+    """
+    emit_callback = settings.get("emit_callback")
+    
+    try:
+        from tools.composition_tool import CanvasCompositionTool
+        return CanvasCompositionTool(emit_callback=emit_callback)
+    except ImportError:
+        logger.warning("Could not import CanvasCompositionTool from tools")
+        return None
+
+
+def create_perception_router_tool(settings: Dict[str, Any]) -> Any:
+    """
+    Create a perception router tool for perceptual transformations.
+    
+    Uses the canvas version (CanvasPerceptionRouter) from tools/perception_router_tool.py.
+    """
+    emit_callback = settings.get("emit_callback")
+    
+    try:
+        from tools.perception_router_tool import CanvasPerceptionRouter
+        return CanvasPerceptionRouter(emit_callback=emit_callback)
+    except ImportError:
+        logger.warning("Could not import CanvasPerceptionRouter from tools")
         return None
 
 
@@ -172,6 +235,9 @@ def register_default_factories() -> None:
     ToolFactory.register(ToolType.PYTHON_INTERPRETER, "default", create_python_interpreter_tool, is_default=True)
     ToolFactory.register(ToolType.USER_INPUT, "default", create_user_input_tool, is_default=True)
     ToolFactory.register(ToolType.PARADIGM, "default", create_paradigm_tool, is_default=True)
+    ToolFactory.register(ToolType.MODEL_RUNNER, "default", create_model_runner_tool, is_default=True)
+    ToolFactory.register(ToolType.COMPOSITION, "default", create_composition_tool, is_default=True)
+    ToolFactory.register(ToolType.PERCEPTION, "default", create_perception_router_tool, is_default=True)
     
     # Canvas-specific tools
     ToolFactory.register(ToolType.CANVAS, "default", create_canvas_tool, is_default=True)

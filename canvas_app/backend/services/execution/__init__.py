@@ -3,7 +3,6 @@ Execution service module - manages orchestrator execution with debugging support
 
 This module is organized into sub-modules for clarity:
 - log_handler: Captures and parses orchestrator logs
-- paradigm_tool: Custom paradigm loading from project directories
 - tool_injection: Tool monitoring and injection for Body
 - checkpoint_service: Checkpoint listing, loading, and management
 - value_service: Value override and dependency tracking
@@ -11,11 +10,15 @@ This module is organized into sub-modules for clarity:
 - worker_registry: Normalized worker management with flexible UI bindings (NEW)
 - worker_manager: Legacy worker management (deprecated, use worker_registry)
 
+Note: paradigm_tool has been moved to tools/paradigm_tool.py
+
 The main execution_service.py file provides the facade and backwards-compatible API.
 """
 
 from .log_handler import OrchestratorLogHandler, attach_log_handlers, detach_log_handlers
-from .paradigm_tool import CustomParadigmTool, create_paradigm_tool
+
+# Import from new location (tools/)
+from tools.paradigm_tool import CanvasParadigmTool as CustomParadigmTool, create_canvas_paradigm_tool as create_paradigm_tool
 from .tool_injection import (
     wrap_body_with_monitoring,
     inject_canvas_tools,

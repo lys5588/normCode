@@ -25,6 +25,9 @@ class ToolType(Enum):
     - PYTHON_INTERPRETER: Code execution
     - USER_INPUT: Human-in-the-loop input
     - PARADIGM: Domain-specific paradigm
+    - MODEL_RUNNER: Model/paradigm execution
+    - COMPOSITION: Function composition for paradigm execution
+    - PERCEPTION: Perceptual transformation and routing
     
     Canvas tools (app-specific):
     - CANVAS: Canvas manipulation
@@ -37,6 +40,9 @@ class ToolType(Enum):
     PYTHON_INTERPRETER = "python_interpreter"
     USER_INPUT = "user_input"
     PARADIGM = "paradigm"
+    MODEL_RUNNER = "model_runner"
+    COMPOSITION = "composition"
+    PERCEPTION = "perception"
     
     # Canvas-specific tools
     CANVAS = "canvas"

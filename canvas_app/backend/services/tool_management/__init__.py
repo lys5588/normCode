@@ -6,10 +6,13 @@ This module provides a pluggable tool architecture where:
 - Agents compose tools by referencing them in their config
 - Tool settings are applied directly to tools before injection
 
+Note: This module manages tool INFRASTRUCTURE (registration, factory, caching),
+not the actual tool implementations. Tool implementations live in the `tools/` directory.
+
 Architecture:
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        TOOL SYSTEM                                      │
+│                        TOOL MANAGEMENT SYSTEM                           │
 │                                                                         │
 │  ┌──────────────────┐                                                  │
 │  │  ToolFactory     │  Creates tools from config                       │

@@ -166,6 +166,51 @@ class ToolRegistry:
             tags=["paradigm", "domain", "default"],
         ))
         
+        # Model runner tool
+        self.register_definition(ToolDefinition(
+            tool_type=ToolType.MODEL_RUNNER,
+            type_id="default",
+            name="Model Runner",
+            description="Execute paradigm step sequences",
+            schema={
+                "type": "object",
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                },
+            },
+            tags=["model", "paradigm", "execution", "default"],
+        ))
+        
+        # Composition tool
+        self.register_definition(ToolDefinition(
+            tool_type=ToolType.COMPOSITION,
+            type_id="default",
+            name="Composition Tool",
+            description="Function composition for paradigm execution",
+            schema={
+                "type": "object",
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                },
+            },
+            tags=["composition", "paradigm", "execution", "default"],
+        ))
+        
+        # Perception router tool
+        self.register_definition(ToolDefinition(
+            tool_type=ToolType.PERCEPTION,
+            type_id="default",
+            name="Perception Router",
+            description="Perceptual transformation and routing",
+            schema={
+                "type": "object",
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                },
+            },
+            tags=["perception", "transformation", "default"],
+        ))
+        
         # Canvas tools (app-specific)
         self.register_definition(ToolDefinition(
             tool_type=ToolType.CANVAS,
