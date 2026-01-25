@@ -118,7 +118,11 @@ def inject_canvas_integration(
     # Inject as primary access point
     body.canvas = canvas
     
-    logger.info("Injected CanvasIntegrationTool into body.canvas")
+    # Also register under canvas_integration for paradigm compatibility
+    # Paradigms like c_CanvasIntegrationGetChat-o_Literal use tool_name: "canvas_integration"
+    body.canvas_integration = canvas
+    
+    logger.info("Injected CanvasIntegrationTool into body.canvas (also aliased as body.canvas_integration)")
     
     return canvas
 

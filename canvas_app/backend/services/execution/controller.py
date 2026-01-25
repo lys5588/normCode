@@ -571,13 +571,26 @@ class ExecutionController:
         self.body = self._agent_registry.get_body(default_agent_id)
         self._add_log("info", "", f"Using agent '{default_agent_id}' for execution (project-scoped)")
         
-        # Inject canvas tools into the body
-        from .tool_injection import inject_canvas_tools, setup_tool_monitoring
-        canvas_tools = inject_canvas_tools(self.body, self._emit_sync)
-        self.user_input_tool = canvas_tools.user_input_tool
-        self.chat_tool = canvas_tools.chat_tool
-        self.canvas_tool = canvas_tools.canvas_tool
-        self.parser_tool = canvas_tools.parser_tool
+        # Inject canvas tools into the body (use unified CanvasIntegrationTool)
+        from .tool_injection import inject_canvas_integration, setup_tool_monitoring
+        canvas_result = inject_canvas_integration(
+            self.body, 
+            self._emit_sync,
+            use_unified_tool=True  # Enable me/you/it perspectives
+        )
+        # If unified tool, canvas_result is CanvasIntegrationTool, otherwise CanvasToolSet
+        if hasattr(canvas_result, 'user_input_tool'):
+            # Unified tool
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = self.body.chat  # Injected by full_injection
+            self.canvas_tool = canvas_result  # The unified tool IS the canvas tool
+            self.parser_tool = canvas_result.parser_tool
+        else:
+            # Old style CanvasToolSet
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = canvas_result.chat_tool
+            self.canvas_tool = canvas_result.canvas_tool
+            self.parser_tool = canvas_result.parser_tool
         
         # Set up tool monitoring
         setup_tool_monitoring(
@@ -1518,13 +1531,26 @@ class ExecutionController:
         default_agent_id = self._agent_mapping.default_agent
         self.body = self._agent_registry.get_body(default_agent_id)
         
-        # Inject canvas tools
-        from .tool_injection import inject_canvas_tools, setup_tool_monitoring
-        canvas_tools = inject_canvas_tools(self.body, self._emit_sync)
-        self.user_input_tool = canvas_tools.user_input_tool
-        self.chat_tool = canvas_tools.chat_tool
-        self.canvas_tool = canvas_tools.canvas_tool
-        self.parser_tool = canvas_tools.parser_tool
+        # Inject canvas tools (use unified CanvasIntegrationTool)
+        from .tool_injection import inject_canvas_integration, setup_tool_monitoring
+        canvas_result = inject_canvas_integration(
+            self.body, 
+            self._emit_sync,
+            use_unified_tool=True  # Enable me/you/it perspectives
+        )
+        # If unified tool, canvas_result is CanvasIntegrationTool, otherwise CanvasToolSet
+        if hasattr(canvas_result, 'user_input_tool'):
+            # Unified tool
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = self.body.chat
+            self.canvas_tool = canvas_result
+            self.parser_tool = canvas_result.parser_tool
+        else:
+            # Old style CanvasToolSet
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = canvas_result.chat_tool
+            self.canvas_tool = canvas_result.canvas_tool
+            self.parser_tool = canvas_result.parser_tool
         
         setup_tool_monitoring(
             self.body,

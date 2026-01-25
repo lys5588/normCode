@@ -22,6 +22,7 @@ from tools.paradigm_tool import CanvasParadigmTool as CustomParadigmTool, create
 from .tool_injection import (
     wrap_body_with_monitoring,
     inject_canvas_tools,
+    inject_canvas_integration,
     CanvasToolSet,
     create_tool_event_emitter,
     setup_tool_monitoring,
@@ -90,6 +91,7 @@ __all__ = [
     # Tool injection
     'wrap_body_with_monitoring',
     'inject_canvas_tools',
+    'inject_canvas_integration',
     'CanvasToolSet',
     'create_tool_event_emitter',
     'setup_tool_monitoring',

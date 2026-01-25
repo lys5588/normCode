@@ -28,6 +28,7 @@ from tools.paradigm_tool import CanvasParadigmTool, create_canvas_paradigm_tool
 from tools.model_runner_tool import CanvasModelRunnerTool
 from tools.composition_tool import CanvasCompositionTool
 from tools.perception_router_tool import CanvasPerceptionRouter
+from tools.formatter_tool import CanvasFormatterTool
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +96,18 @@ def wrap_body_with_monitoring(
             "default", "canvas", body.canvas,
             emit_tool_event, get_flow_index
         )
+    
+    # Also wrap canvas_integration alias (for paradigm compatibility)
+    if hasattr(body, 'canvas_integration') and body.canvas_integration is not None:
+        # Only wrap if it's not the same object as body.canvas (avoid double-wrapping)
+        if not hasattr(body, 'canvas') or body.canvas_integration is not body.canvas:
+            body.canvas_integration = MonitoredToolProxy(
+                "default", "canvas_integration", body.canvas_integration,
+                emit_tool_event, get_flow_index
+            )
+        else:
+            # Same object, just update the reference after canvas was wrapped
+            body.canvas_integration = body.canvas
     
     if hasattr(body, 'parser') and body.parser is not None:
         body.parser = MonitoredToolProxy(
@@ -164,6 +177,10 @@ class CanvasToolSet:
         self.model_runner_tool = CanvasModelRunnerTool(emit_callback=emit_callback)
         self.composition_tool = CanvasCompositionTool(emit_callback=emit_callback)
         self.perception_router = CanvasPerceptionRouter(emit_callback=emit_callback)
+        self.formatter_tool = CanvasFormatterTool(emit_callback=emit_callback)
+        
+        # Wire perception router into formatter tool for wrap() operations
+        self.formatter_tool.perception_router = self.perception_router
         
         # Create paradigm tool if directory is specified
         self.paradigm_tool = None
@@ -186,11 +203,12 @@ class CanvasToolSet:
         body.model_runner = self.model_runner_tool
         body.composition_tool = self.composition_tool
         body.perception_router = self.perception_router
+        body.formatter_tool = self.formatter_tool
         
         if self.paradigm_tool:
             body.paradigm_tool = self.paradigm_tool
         
-        logger.info("Injected canvas tools into body (parser, model_runner, composition, perception)")
+        logger.info("Injected canvas tools into body (parser, model_runner, composition, perception, formatter)")
     
     def set_execution_getter(self, getter: Callable[[], Any]) -> None:
         """
@@ -338,6 +356,10 @@ def inject_canvas_integration(
         tools['model_runner'] = CanvasModelRunnerTool(emit_callback=emit_callback)
         tools['composition'] = CanvasCompositionTool(emit_callback=emit_callback)
         tools['perception'] = CanvasPerceptionRouter(emit_callback=emit_callback)
+        tools['formatter'] = CanvasFormatterTool(emit_callback=emit_callback)
+        
+        # Wire perception router into formatter tool
+        tools['formatter'].perception_router = tools['perception']
         
         if paradigm_dir and base_dir:
             tools['paradigm'] = create_canvas_paradigm_tool(
@@ -366,10 +388,11 @@ def inject_canvas_integration(
         body.model_runner = canvas.model_runner_tool
         body.composition_tool = canvas.composition_tool
         body.perception_router = canvas.perception_router
+        body.formatter_tool = canvas.formatter_tool if canvas.formatter_tool else tools['formatter']
         if canvas.paradigm_tool:
             body.paradigm_tool = canvas.paradigm_tool
         
-        logger.info("Injected CanvasIntegrationTool with unified me/you/it perspectives")
+        logger.info("Injected CanvasIntegrationTool with unified me/you/it perspectives (includes formatter_tool)")
         return canvas
     else:
         # OLD: Use separate tools (backward compatible)
