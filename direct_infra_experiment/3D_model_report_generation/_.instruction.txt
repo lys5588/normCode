@@ -1,0 +1,52 @@
+# Report Generation: 3D Urban Scene Generation
+
+## Objective
+Generate a thorough academic-style report on **3D Urban Scene Generation** covering state-of-the-art methods, techniques, applications, and future directions.
+
+---
+
+## Workflow
+
+### Phase 1: Outline & Topic Identification
+- Brainstorm and identify the key areas/aspects to cover in the report
+- Create a structured outline with main sections and subsections
+- Define the scope and depth for each section
+
+**Potential Areas to Explore:**
+1. Introduction & Background
+2. Problem Definition & Challenges
+3. Data Sources & Representations (point clouds, meshes, voxels, implicit representations)
+4. Traditional Methods (procedural generation, rule-based systems)
+5. Deep Learning Approaches (GANs, VAEs, diffusion models, transformers)
+6. Neural Radiance Fields (NeRF) and Gaussian Splatting for urban scenes
+7. Text-to-3D and Image-to-3D urban generation
+8. Datasets & Benchmarks
+9. Evaluation Metrics
+10. Applications (autonomous driving, urban planning, gaming, AR/VR)
+11. Current Limitations & Open Challenges
+12. Future Directions
+
+### Phase 2: Section Writing
+- Research and write each identified section individually
+- Include relevant citations, figures, and technical details
+- Maintain consistent academic tone and formatting
+
+### Phase 3: Integration & Finalization
+- Combine all sections into a cohesive report
+- Add abstract, conclusion, and references
+- Review for consistency, flow, and completeness
+- Final editing and polish
+
+---
+
+## Output Files
+- `outline.md` - Initial outline and structure
+- `sections/` - Individual section drafts
+- `report_final.md` - Complete integrated report
+
+---
+
+## Notes
+- Focus on recent advances (2020-2026)
+- Balance between breadth (survey-style) and depth (technical details)
+- Include visual diagrams/tables where appropriate

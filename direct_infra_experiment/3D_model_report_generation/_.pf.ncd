@@ -1,0 +1,121 @@
+:<:{final report} | ?{flow_index}: 1
+    | %{ref_axes}: [_none_axis]
+    | %{ref_shape}: (1,)
+    | %{ref_element}: dict(title: str, abstract: str, sections: list, conclusion: str, references: list)
+    <= ::(integrate all sections into cohesive report with abstract, conclusion, and references) | ?{flow_index}: 1.1 | ?{sequence}: imperative
+        | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+        | %{v_input_norm}: prompt_location
+        | %{v_input_provision}: provisions/prompts/integrate_report.md
+        | %{h_input_norm}: Literal
+        | %{body_faculty}: llm
+        | %{o_shape}: dict in memory
+        | %{value_order}: [{report topic}, {outline}, {all section drafts collection}]
+        /: Combine all sections, review for consistency, flow, and completeness
+        /: Final editing and polish
+    
+    /: ============================================================
+    /: GROUND CONCEPT - The main report topic
+    /: ============================================================
+    <- {report topic}<:{1}> | ?{flow_index}: 1.2
+        | %{ref_axes}: [_none_axis]
+        | %{ref_shape}: (1,)
+        | %{ref_element}: str
+        <= $% %>(%{<3D Urban Scene Generation>}) | ?{flow_index}: 1.2.1 | ?{sequence}: assigning
+            | %{literal<$% report_topic>}: "3D Urban Scene Generation"
+    
+    /: ============================================================
+    /: PHASE 1 - Outline & Topic Identification
+    /: ============================================================
+    <- {outline}<:{2}> | ?{flow_index}: 1.3
+        | %{ref_axes}: [_none_axis]
+        | %{ref_shape}: (1,)
+        | %{ref_element}: dict(title: str, sections: list[dict(name: str, subsections: list, scope: str, depth: str)])
+        <= ::(create structured outline with main sections and subsections) | ?{flow_index}: 1.3.1 | ?{sequence}: imperative
+            | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+            | %{v_input_norm}: prompt_location
+            | %{v_input_provision}: provisions/prompts/create_outline.md
+            | %{h_input_norm}: Literal
+            | %{body_faculty}: llm
+            | %{o_shape}: dict in memory
+            /: Define scope and depth for each section
+        <- {topic areas}<:{1}> | ?{flow_index}: 1.3.2
+            | %{ref_axes}: [_none_axis]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: dict(areas: list[dict(name: str, description: str)])
+            <= ::(brainstorm and identify key areas to cover for 3D Urban Scene Generation) | ?{flow_index}: 1.3.2.1 | ?{sequence}: imperative
+                | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+                | %{v_input_norm}: prompt_location
+                | %{v_input_provision}: provisions/prompts/brainstorm_topics.md
+                | %{h_input_norm}: Literal
+                | %{body_faculty}: llm
+                | %{o_shape}: dict in memory
+                /: Areas to explore:
+                /: 1. Introduction & Background
+                /: 2. Problem Definition & Challenges
+                /: 3. Data Sources & Representations (point clouds, meshes, voxels, implicit)
+                /: 4. Traditional Methods (procedural generation, rule-based systems)
+                /: 5. Deep Learning Approaches (GANs, VAEs, diffusion models, transformers)
+                /: 6. Neural Radiance Fields (NeRF) and Gaussian Splatting for urban scenes
+                /: 7. Text-to-3D and Image-to-3D urban generation
+                /: 8. Datasets & Benchmarks
+                /: 9. Evaluation Metrics
+                /: 10. Applications (autonomous driving, urban planning, gaming, AR/VR)
+                /: 11. Current Limitations & Open Challenges
+                /: 12. Future Directions
+            <- {report topic} | ?{flow_index}: 1.3.2.2
+    
+    /: ============================================================
+    /: PHASE 2 - Section Writing (iteration over sections)
+    /: ============================================================
+    <- [sections] | ?{flow_index}: 1.4
+        | %{ref_axes}: [section]
+        | %{ref_shape}: (n_section,)
+        | %{ref_element}: dict(name: str, subsections: list, scope: str, depth: str)
+        <= ::(extract sections list from outline) | ?{flow_index}: 1.4.1 | ?{sequence}: imperative
+            | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_ListLiteral
+            | %{v_input_norm}: prompt_location
+            | %{v_input_provision}: provisions/prompts/extract_sections.md
+            | %{h_input_norm}: Literal
+            | %{body_faculty}: llm
+            | %{o_shape}: list in memory
+        <- {outline} | ?{flow_index}: 1.4.2
+
+    <- [all section drafts] | ?{flow_index}: 1.5
+        | %{ref_axes}: [section]
+        | %{ref_shape}: (n_section,)
+        | %{ref_element}: dict(section_name: str, content: str, citations: list, figures: list)
+        <= *. %>([sections]) %<({section draft}) %:({section}) %@(1) | ?{flow_index}: 1.5.1 | ?{sequence}: looping
+            /: Loop over each section from the outline
+            <= $. %>({section draft}) | ?{flow_index}: 1.5.1.1 | ?{sequence}: assigning
+                /: Return specification - select section draft for aggregation
+            <- {section draft} | ?{flow_index}: 1.5.1.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_shape}: (1,)
+                | %{ref_element}: dict(section_name: str, content: str, citations: list, figures: list)
+                <= ::(research and write this section with citations, figures, and technical details) | ?{flow_index}: 1.5.1.2.1 | ?{sequence}: imperative
+                    | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+                    | %{v_input_norm}: prompt_location
+                    | %{v_input_provision}: provisions/prompts/write_section.md
+                    | %{h_input_norm}: Literal
+                    | %{body_faculty}: llm
+                    | %{o_shape}: dict in memory
+                    /: Maintain consistent academic tone and formatting
+                    /: Focus on recent advances (2020-2026)
+                    /: Balance between breadth (survey-style) and depth (technical details)
+                    /: Include visual diagrams/tables where appropriate
+                <- {current section}*1 | ?{flow_index}: 1.5.1.2.2
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_shape}: (1,)
+                    | %{ref_element}: dict(name: str, subsections: list, scope: str, depth: str)
+        <- [sections] | ?{flow_index}: 1.5.2
+        <* {current section}<$([sections])*> | ?{flow_index}: 1.5.3
+
+    <- {all section drafts collection}<:{3}> | ?{flow_index}: 1.6
+        | %{ref_axes}: [_none_axis]
+        | %{ref_shape}: (1,)
+        | %{ref_element}: list[dict(section_name: str, content: str, citations: list, figures: list)]
+        <= &[#] %>[{[all section drafts]}] | ?{flow_index}: 1.6.1 | ?{sequence}: grouping
+            /: Collect all section drafts into a single grouped collection
+            /: No %+ means create_axis: null → packed output (1,) containing list
+        <- [all section drafts] | ?{flow_index}: 1.6.2
+

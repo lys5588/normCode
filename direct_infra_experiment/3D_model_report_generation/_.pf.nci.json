@@ -1,0 +1,1289 @@
+[
+  {
+    "concept_to_infer": {
+      "flow_index": "1",
+      "type": "main",
+      "depth": 0,
+      "nc_main": ":<:{final report}",
+      "inference_marker": ":<:",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "final report",
+      "attached_comments": [
+        {
+          "flow_index": "1",
+          "type": "inline_comment",
+          "depth": 0,
+          "nc_comment": "?{flow_index}: 1"
+        },
+        {
+          "flow_index": "1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "| %{ref_element}: dict(title: str, abstract: str, sections: list, conclusion: str, references: list)"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.1",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<= ::(integrate all sections into cohesive report with abstract, conclusion, and references)",
+      "inference_marker": "<=",
+      "concept_type": "imperative",
+      "operator_type": null,
+      "concept_name": "integrate all sections into cohesive report with abstract, conclusion, and references",
+      "attached_comments": [
+        {
+          "flow_index": "1.1",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.1 | ?{sequence}: imperative"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{v_input_norm}: prompt_location"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{v_input_provision}: provisions/prompts/integrate_report.md"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{h_input_norm}: Literal"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{body_faculty}: llm"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{o_shape}: dict in memory"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{value_order}: [{report topic}, {outline}, {all section drafts collection}]"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "/: Combine all sections, review for consistency, flow, and completeness"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "/: Final editing and polish"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "/: ============================================================"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "/: GROUND CONCEPT - The main report topic"
+        },
+        {
+          "flow_index": "1.1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "/: ============================================================"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.2",
+        "type": "main",
+        "depth": 1,
+        "nc_main": "<- {report topic}<:{1}>",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "report topic",
+        "attached_comments": [
+          {
+            "flow_index": "1.2",
+            "type": "inline_comment",
+            "depth": 1,
+            "nc_comment": "?{flow_index}: 1.2"
+          },
+          {
+            "flow_index": "1.2",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.2",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.2",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_element}: str"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.3",
+        "type": "main",
+        "depth": 1,
+        "nc_main": "<- {outline}<:{2}>",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "outline",
+        "attached_comments": [
+          {
+            "flow_index": "1.3",
+            "type": "inline_comment",
+            "depth": 1,
+            "nc_comment": "?{flow_index}: 1.3"
+          },
+          {
+            "flow_index": "1.3",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.3",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.3",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_element}: dict(title: str, sections: list[dict(name: str, subsections: list, scope: str, depth: str)])"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.4",
+        "type": "main",
+        "depth": 1,
+        "nc_main": "<- [sections]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "sections",
+        "attached_comments": [
+          {
+            "flow_index": "1.4",
+            "type": "inline_comment",
+            "depth": 1,
+            "nc_comment": "?{flow_index}: 1.4"
+          },
+          {
+            "flow_index": "1.4",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_axes}: [section]"
+          },
+          {
+            "flow_index": "1.4",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_shape}: (n_section,)"
+          },
+          {
+            "flow_index": "1.4",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_element}: dict(name: str, subsections: list, scope: str, depth: str)"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.5",
+        "type": "main",
+        "depth": 1,
+        "nc_main": "<- [all section drafts]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "all section drafts",
+        "attached_comments": [
+          {
+            "flow_index": "1.5",
+            "type": "inline_comment",
+            "depth": 1,
+            "nc_comment": "?{flow_index}: 1.5"
+          },
+          {
+            "flow_index": "1.5",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_axes}: [section]"
+          },
+          {
+            "flow_index": "1.5",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_shape}: (n_section,)"
+          },
+          {
+            "flow_index": "1.5",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_element}: dict(section_name: str, content: str, citations: list, figures: list)"
+          }
+        ]
+      },
+      {
+        "flow_index": "1.6",
+        "type": "main",
+        "depth": 1,
+        "nc_main": "<- {all section drafts collection}<:{3}>",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "all section drafts collection",
+        "attached_comments": [
+          {
+            "flow_index": "1.6",
+            "type": "inline_comment",
+            "depth": 1,
+            "nc_comment": "?{flow_index}: 1.6"
+          },
+          {
+            "flow_index": "1.6",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.6",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.6",
+            "type": "comment",
+            "depth": 2,
+            "nc_comment": "| %{ref_element}: list[dict(section_name: str, content: str, citations: list, figures: list)]"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.2",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<- {report topic}<:{1}>",
+      "inference_marker": "<-",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "report topic",
+      "attached_comments": [
+        {
+          "flow_index": "1.2",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.2"
+        },
+        {
+          "flow_index": "1.2",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.2",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.2",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_element}: str"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.2.1",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<= $% %>(%{<3D Urban Scene Generation>})",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "abstraction",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.2.1",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.2.1 | ?{sequence}: assigning"
+        },
+        {
+          "flow_index": "1.2.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{literal<$% report_topic>}: \"3D Urban Scene Generation\""
+        },
+        {
+          "flow_index": "1.2.1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "/: ============================================================"
+        },
+        {
+          "flow_index": "1.2.1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "/: PHASE 1 - Outline & Topic Identification"
+        },
+        {
+          "flow_index": "1.2.1",
+          "type": "comment",
+          "depth": 1,
+          "nc_comment": "/: ============================================================"
+        }
+      ]
+    },
+    "value_concepts": [],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.3",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<- {outline}<:{2}>",
+      "inference_marker": "<-",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "outline",
+      "attached_comments": [
+        {
+          "flow_index": "1.3",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.3"
+        },
+        {
+          "flow_index": "1.3",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.3",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.3",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_element}: dict(title: str, sections: list[dict(name: str, subsections: list, scope: str, depth: str)])"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.3.1",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<= ::(create structured outline with main sections and subsections)",
+      "inference_marker": "<=",
+      "concept_type": "imperative",
+      "operator_type": null,
+      "concept_name": "create structured outline with main sections and subsections",
+      "attached_comments": [
+        {
+          "flow_index": "1.3.1",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.3.1 | ?{sequence}: imperative"
+        },
+        {
+          "flow_index": "1.3.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal"
+        },
+        {
+          "flow_index": "1.3.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{v_input_norm}: prompt_location"
+        },
+        {
+          "flow_index": "1.3.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{v_input_provision}: provisions/prompts/create_outline.md"
+        },
+        {
+          "flow_index": "1.3.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{h_input_norm}: Literal"
+        },
+        {
+          "flow_index": "1.3.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{body_faculty}: llm"
+        },
+        {
+          "flow_index": "1.3.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{o_shape}: dict in memory"
+        },
+        {
+          "flow_index": "1.3.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "/: Define scope and depth for each section"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.3.2",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- {topic areas}<:{1}>",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "topic areas",
+        "attached_comments": [
+          {
+            "flow_index": "1.3.2",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.3.2"
+          },
+          {
+            "flow_index": "1.3.2",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.3.2",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.3.2",
+            "type": "comment",
+            "depth": 3,
+            "nc_comment": "| %{ref_element}: dict(areas: list[dict(name: str, description: str)])"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.3.2",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<- {topic areas}<:{1}>",
+      "inference_marker": "<-",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "topic areas",
+      "attached_comments": [
+        {
+          "flow_index": "1.3.2",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.3.2"
+        },
+        {
+          "flow_index": "1.3.2",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.3.2",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.3.2",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{ref_element}: dict(areas: list[dict(name: str, description: str)])"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.3.2.1",
+      "type": "main",
+      "depth": 3,
+      "nc_main": "<= ::(brainstorm and identify key areas to cover for 3D Urban Scene Generation)",
+      "inference_marker": "<=",
+      "concept_type": "imperative",
+      "operator_type": null,
+      "concept_name": "brainstorm and identify key areas to cover for 3D Urban Scene Generation",
+      "attached_comments": [
+        {
+          "flow_index": "1.3.2.1",
+          "type": "inline_comment",
+          "depth": 3,
+          "nc_comment": "?{flow_index}: 1.3.2.1 | ?{sequence}: imperative"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{v_input_norm}: prompt_location"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{v_input_provision}: provisions/prompts/brainstorm_topics.md"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{h_input_norm}: Literal"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{body_faculty}: llm"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{o_shape}: dict in memory"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: Areas to explore:"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 1. Introduction & Background"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 2. Problem Definition & Challenges"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 3. Data Sources & Representations (point clouds, meshes, voxels, implicit)"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 4. Traditional Methods (procedural generation, rule-based systems)"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 5. Deep Learning Approaches (GANs, VAEs, diffusion models, transformers)"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 6. Neural Radiance Fields (NeRF) and Gaussian Splatting for urban scenes"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 7. Text-to-3D and Image-to-3D urban generation"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 8. Datasets & Benchmarks"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 9. Evaluation Metrics"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 10. Applications (autonomous driving, urban planning, gaming, AR/VR)"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 11. Current Limitations & Open Challenges"
+        },
+        {
+          "flow_index": "1.3.2.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: 12. Future Directions"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.3.2.2",
+        "type": "main",
+        "depth": 3,
+        "nc_main": "<- {report topic}",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "report topic",
+        "attached_comments": [
+          {
+            "flow_index": "1.3.2.2",
+            "type": "inline_comment",
+            "depth": 3,
+            "nc_comment": "?{flow_index}: 1.3.2.2"
+          },
+          {
+            "flow_index": "1.3.2.2",
+            "type": "comment",
+            "depth": 1,
+            "nc_comment": "/: ============================================================"
+          },
+          {
+            "flow_index": "1.3.2.2",
+            "type": "comment",
+            "depth": 1,
+            "nc_comment": "/: PHASE 2 - Section Writing (iteration over sections)"
+          },
+          {
+            "flow_index": "1.3.2.2",
+            "type": "comment",
+            "depth": 1,
+            "nc_comment": "/: ============================================================"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.4",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<- [sections]",
+      "inference_marker": "<-",
+      "concept_type": "relation",
+      "operator_type": null,
+      "concept_name": "sections",
+      "attached_comments": [
+        {
+          "flow_index": "1.4",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.4"
+        },
+        {
+          "flow_index": "1.4",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_axes}: [section]"
+        },
+        {
+          "flow_index": "1.4",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_shape}: (n_section,)"
+        },
+        {
+          "flow_index": "1.4",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_element}: dict(name: str, subsections: list, scope: str, depth: str)"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.4.1",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<= ::(extract sections list from outline)",
+      "inference_marker": "<=",
+      "concept_type": "imperative",
+      "operator_type": null,
+      "concept_name": "extract sections list from outline",
+      "attached_comments": [
+        {
+          "flow_index": "1.4.1",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.4.1 | ?{sequence}: imperative"
+        },
+        {
+          "flow_index": "1.4.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_ListLiteral"
+        },
+        {
+          "flow_index": "1.4.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{v_input_norm}: prompt_location"
+        },
+        {
+          "flow_index": "1.4.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{v_input_provision}: provisions/prompts/extract_sections.md"
+        },
+        {
+          "flow_index": "1.4.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{h_input_norm}: Literal"
+        },
+        {
+          "flow_index": "1.4.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{body_faculty}: llm"
+        },
+        {
+          "flow_index": "1.4.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "| %{o_shape}: list in memory"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.4.2",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- {outline}",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "outline",
+        "attached_comments": [
+          {
+            "flow_index": "1.4.2",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.4.2"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.5",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<- [all section drafts]",
+      "inference_marker": "<-",
+      "concept_type": "relation",
+      "operator_type": null,
+      "concept_name": "all section drafts",
+      "attached_comments": [
+        {
+          "flow_index": "1.5",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.5"
+        },
+        {
+          "flow_index": "1.5",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_axes}: [section]"
+        },
+        {
+          "flow_index": "1.5",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_shape}: (n_section,)"
+        },
+        {
+          "flow_index": "1.5",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_element}: dict(section_name: str, content: str, citations: list, figures: list)"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.5.1",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<= *. %>([sections]) %<({section draft}) %:({section}) %@(1)",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "looping",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.5.1",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.5.1 | ?{sequence}: looping"
+        },
+        {
+          "flow_index": "1.5.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "/: Loop over each section from the outline"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.5.2",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- [sections]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "sections",
+        "attached_comments": [
+          {
+            "flow_index": "1.5.2",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.5.2"
+          }
+        ]
+      }
+    ],
+    "other_concepts": [
+      {
+        "flow_index": "1.5.3",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<* {current section}<$([sections])*>",
+        "inference_marker": "<*",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "current section",
+        "attached_comments": [
+          {
+            "flow_index": "1.5.3",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.5.3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.5.1",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<= *. %>([sections]) %<({section draft}) %:({section}) %@(1)",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "looping",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.5.1",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.5.1 | ?{sequence}: looping"
+        },
+        {
+          "flow_index": "1.5.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "/: Loop over each section from the outline"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.5.1.1",
+      "type": "main",
+      "depth": 3,
+      "nc_main": "<= $. %>({section draft})",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "specification",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.5.1.1",
+          "type": "inline_comment",
+          "depth": 3,
+          "nc_comment": "?{flow_index}: 1.5.1.1 | ?{sequence}: assigning"
+        },
+        {
+          "flow_index": "1.5.1.1",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "/: Return specification - select section draft for aggregation"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.5.1.2",
+        "type": "main",
+        "depth": 3,
+        "nc_main": "<- {section draft}",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "section draft",
+        "attached_comments": [
+          {
+            "flow_index": "1.5.1.2",
+            "type": "inline_comment",
+            "depth": 3,
+            "nc_comment": "?{flow_index}: 1.5.1.2"
+          },
+          {
+            "flow_index": "1.5.1.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.5.1.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.5.1.2",
+            "type": "comment",
+            "depth": 4,
+            "nc_comment": "| %{ref_element}: dict(section_name: str, content: str, citations: list, figures: list)"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.5.1.2",
+      "type": "main",
+      "depth": 3,
+      "nc_main": "<- {section draft}",
+      "inference_marker": "<-",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "section draft",
+      "attached_comments": [
+        {
+          "flow_index": "1.5.1.2",
+          "type": "inline_comment",
+          "depth": 3,
+          "nc_comment": "?{flow_index}: 1.5.1.2"
+        },
+        {
+          "flow_index": "1.5.1.2",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.5.1.2",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.5.1.2",
+          "type": "comment",
+          "depth": 4,
+          "nc_comment": "| %{ref_element}: dict(section_name: str, content: str, citations: list, figures: list)"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.5.1.2.1",
+      "type": "main",
+      "depth": 4,
+      "nc_main": "<= ::(research and write this section with citations, figures, and technical details)",
+      "inference_marker": "<=",
+      "concept_type": "imperative",
+      "operator_type": null,
+      "concept_name": "research and write this section with citations, figures, and technical details",
+      "attached_comments": [
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "inline_comment",
+          "depth": 4,
+          "nc_comment": "?{flow_index}: 1.5.1.2.1 | ?{sequence}: imperative"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "| %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "| %{v_input_norm}: prompt_location"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "| %{v_input_provision}: provisions/prompts/write_section.md"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "| %{h_input_norm}: Literal"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "| %{body_faculty}: llm"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "| %{o_shape}: dict in memory"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "/: Maintain consistent academic tone and formatting"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "/: Focus on recent advances (2020-2026)"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "/: Balance between breadth (survey-style) and depth (technical details)"
+        },
+        {
+          "flow_index": "1.5.1.2.1",
+          "type": "comment",
+          "depth": 5,
+          "nc_comment": "/: Include visual diagrams/tables where appropriate"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.5.1.2.2",
+        "type": "main",
+        "depth": 4,
+        "nc_main": "<- {current section}*1",
+        "inference_marker": "<-",
+        "concept_type": "object",
+        "operator_type": null,
+        "concept_name": "current section",
+        "attached_comments": [
+          {
+            "flow_index": "1.5.1.2.2",
+            "type": "inline_comment",
+            "depth": 4,
+            "nc_comment": "?{flow_index}: 1.5.1.2.2"
+          },
+          {
+            "flow_index": "1.5.1.2.2",
+            "type": "comment",
+            "depth": 5,
+            "nc_comment": "| %{ref_axes}: [_none_axis]"
+          },
+          {
+            "flow_index": "1.5.1.2.2",
+            "type": "comment",
+            "depth": 5,
+            "nc_comment": "| %{ref_shape}: (1,)"
+          },
+          {
+            "flow_index": "1.5.1.2.2",
+            "type": "comment",
+            "depth": 5,
+            "nc_comment": "| %{ref_element}: dict(name: str, subsections: list, scope: str, depth: str)"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  },
+  {
+    "concept_to_infer": {
+      "flow_index": "1.6",
+      "type": "main",
+      "depth": 1,
+      "nc_main": "<- {all section drafts collection}<:{3}>",
+      "inference_marker": "<-",
+      "concept_type": "object",
+      "operator_type": null,
+      "concept_name": "all section drafts collection",
+      "attached_comments": [
+        {
+          "flow_index": "1.6",
+          "type": "inline_comment",
+          "depth": 1,
+          "nc_comment": "?{flow_index}: 1.6"
+        },
+        {
+          "flow_index": "1.6",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_axes}: [_none_axis]"
+        },
+        {
+          "flow_index": "1.6",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_shape}: (1,)"
+        },
+        {
+          "flow_index": "1.6",
+          "type": "comment",
+          "depth": 2,
+          "nc_comment": "| %{ref_element}: list[dict(section_name: str, content: str, citations: list, figures: list)]"
+        }
+      ]
+    },
+    "function_concept": {
+      "flow_index": "1.6.1",
+      "type": "main",
+      "depth": 2,
+      "nc_main": "<= &[#] %>[{[all section drafts]}]",
+      "inference_marker": "<=",
+      "concept_type": "operator",
+      "operator_type": "grouping",
+      "concept_name": null,
+      "attached_comments": [
+        {
+          "flow_index": "1.6.1",
+          "type": "inline_comment",
+          "depth": 2,
+          "nc_comment": "?{flow_index}: 1.6.1 | ?{sequence}: grouping"
+        },
+        {
+          "flow_index": "1.6.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "/: Collect all section drafts into a single grouped collection"
+        },
+        {
+          "flow_index": "1.6.1",
+          "type": "comment",
+          "depth": 3,
+          "nc_comment": "/: No %+ means create_axis: null → packed output (1,) containing list"
+        }
+      ]
+    },
+    "value_concepts": [
+      {
+        "flow_index": "1.6.2",
+        "type": "main",
+        "depth": 2,
+        "nc_main": "<- [all section drafts]",
+        "inference_marker": "<-",
+        "concept_type": "relation",
+        "operator_type": null,
+        "concept_name": "all section drafts",
+        "attached_comments": [
+          {
+            "flow_index": "1.6.2",
+            "type": "inline_comment",
+            "depth": 2,
+            "nc_comment": "?{flow_index}: 1.6.2"
+          }
+        ]
+      }
+    ],
+    "other_concepts": []
+  }
+]
