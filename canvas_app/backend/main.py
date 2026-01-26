@@ -21,8 +21,9 @@ _frontend_dist = None
 possible_frontend_paths = [
     backend_dir.parent / "frontend" / "dist",  # Development: canvas_app/frontend/dist
     backend_dir.parent / "dist",  # Alternative layout
-    Path(sys.executable).parent / "frontend" / "dist",  # PyInstaller bundled
-    Path(sys.executable).parent / "_internal" / "frontend" / "dist",  # PyInstaller _internal
+    Path(sys.executable).parent / "frontend" / "dist",  # PyInstaller bundled (COLLECT mode)
+    Path(sys.executable).parent / "_internal" / "frontend" / "dist",  # PyInstaller _internal (ONEFILE mode)
+    Path(sys.executable).parent.parent / "Resources" / "frontend" / "dist",  # macOS .app bundle
 ]
 for fp in possible_frontend_paths:
     if fp.exists() and (fp / "index.html").exists():

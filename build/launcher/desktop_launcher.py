@@ -53,6 +53,27 @@ BACKEND_DIR = BUNDLE_DIR / "canvas_app" / "backend" if not IS_FROZEN else BUNDLE
 PROJECT_ROOT = BUNDLE_DIR if not IS_FROZEN else APP_DIR
 
 
+def get_app_data_dir() -> Path:
+    """
+    Get application data directory for storing runtime data.
+
+    Uses platform-specific standard locations:
+    - macOS: ~/Library/Application Support/NormCode Canvas
+    - Windows: ~/.normcode-canvas
+    - Linux: ~/.normcode-canvas
+    """
+    if sys.platform == "darwin":  # macOS
+        app_data = Path.home() / "Library" / "Application Support" / "NormCode Canvas"
+    else:  # Windows and Linux
+        app_data = Path.home() / ".normcode-canvas"
+    app_data.mkdir(parents=True, exist_ok=True)
+    return app_data
+
+
+# Application data directory for webview storage and other runtime data
+APP_DATA_DIR = get_app_data_dir() if IS_FROZEN else None
+
+
 def find_free_port(start_port: int = 8000, max_tries: int = 100) -> int:
     """Find an available port starting from start_port."""
     for port in range(start_port, start_port + max_tries):
@@ -254,7 +275,7 @@ class NormCodeApp:
         webview.start(
             debug=not IS_FROZEN,
             private_mode=False,
-            storage_path=str(APP_DIR / "webview_data") if IS_FROZEN else None,
+            storage_path=str(APP_DATA_DIR / "webview_data") if IS_FROZEN else None,
             gui='edgechromium'  # Use Edge WebView2 on Windows for best compatibility
         )
         
@@ -321,3 +342,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

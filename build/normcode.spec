@@ -132,6 +132,8 @@ hidden_imports = [
     # OpenAI (for infra)
     'openai',
     'httpx',
+    'requests',
+    'requests.exceptions',
     
     # ===== pywebview for native desktop window =====
     'webview',

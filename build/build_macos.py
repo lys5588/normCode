@@ -553,7 +553,7 @@ hidden_imports = [
     
     # Other
     'click', 'email_validator', 'encodings', 'encodings.idna', 'yaml',
-    'openai', 'httpx',
+    'openai', 'httpx', 'requests', 'requests.exceptions',
 ]
 
 # Collect submodules
