@@ -504,7 +504,7 @@ Output the .ncds file:
         <- input
 ```
 
-### Mistake 5: Wrong Concept Order (Later-Executed Before Earlier-Executed)
+### Mistake 5: Wrong Concept Order (Dependencies After Dependents)
 
 **Problem**: Writing concepts in wrong order causes incorrect flow index assignment.
 
@@ -543,6 +543,60 @@ Output the .ncds file:
 ```
 
 **Rule**: Within any scope, write concepts in execution order. Dependencies must be resolved before they're used.
+
+### Mistake 6: Missing Explicit Input References
+
+**Problem**: Operators (grouping, specification, loops) don't have explicit input declarations.
+
+**Example (Wrong)**:
+```ncds
+<- {all data}
+    <= bundle all information
+    /: Missing explicit input references!
+```
+
+**Why wrong**: The operator doesn't know what inputs to consume. This causes runtime errors like "empty reference" or "missing assign_source".
+
+**Correct**:
+```ncds
+<- {all data}
+    <= bundle all information
+    <- {data A}
+    <- {data B}
+    <- {data C}
+```
+
+**Rule**: Every operator must have explicit child value concepts for each input it consumes.
+
+### Mistake 7: Forgetting Return Operations in Loops
+
+**Problem**: Loop body doesn't specify what gets collected.
+
+**Example (Wrong)**:
+```ncds
+<- [all results]
+    <= for each item
+    <- {result}
+        <= process item
+        <- {item}
+    <* [items]
+```
+
+**Why wrong**: The looper doesn't know what to collect and aggregate.
+
+**Correct**:
+```ncds
+<- [all results]
+    <= for each item
+        <= return result for this iteration    ← RETURN OPERATION
+        <- {result}
+            <= process item
+            <- {item}
+    <- [items]
+    <* {current item}
+```
+
+**Rule**: Loops need an explicit return operation that wraps the per-iteration result.
 
 ---
 
@@ -604,6 +658,18 @@ Before moving to formalization, verify:
 - [ ] Operation descriptions are clear
 - [ ] No unnecessary complexity
 
+### Ordering (Critical!)
+- [ ] Dependencies written BEFORE dependents
+- [ ] Conditions written BEFORE timing-gated operations
+- [ ] Ground inputs written BEFORE operations that use them
+- [ ] Loop inputs written BEFORE loop body (or as siblings)
+
+### Explicit References (Critical!)
+- [ ] Every operator has explicit input value concepts as children
+- [ ] Loops have explicit return operations
+- [ ] Grouping operations list all items to bundle
+- [ ] Specification operations identify their source
+
 ---
 
 ## Tools for Derivation
@@ -623,16 +689,6 @@ Before moving to formalization, verify:
 3. Review output
 4. Iterate if needed
 5. Validate with checklist
-
-### Editor Tools
-
-The NormCode editor can help visualize structure:
-- Load `.ncds`
-- See hierarchical tree
-- Edit inline
-- Validate syntax
-
-See [Editor](editor.md) for details.
 
 ---
 
@@ -682,18 +738,6 @@ Traditional programming uses explicit control flow (`if`, `for`, `while`). NormC
 
 ---
 
-<<<<<<< HEAD
-### 2. Loops Are Self-Extending Collections
-
-NormCode loops don't have traditional "iterate N times" semantics. Instead:
-
-1. **A collection exists** (e.g., `on-going messages`)
-2. **Something iterates over it** (e.g., `for every message`)
-3. **Each iteration may append to the same collection** (conditional)
-4. **When append stops, loop stops**
-
-**Example (Chat Session)**:
-=======
 ### 2. Loops Have Explicit Return Operations
 
 NormCode loops have a specific structure:
@@ -726,7 +770,6 @@ NormCode loops have a specific structure:
 - Without it, the looper doesn't know what to join
 
 **Self-Seeding Loops** (Chat Session example):
->>>>>>> origin/dev
 ```ncds
 <- on-going messages
     <= append current message
@@ -735,15 +778,9 @@ NormCode loops have a specific structure:
     <- current message
 ```
 
-<<<<<<< HEAD
-**This is a "self-seeding loop"**: Starts empty, but `start_without_value: true` lets iteration begin, creating the first item.
-
-**Takeaway**: Loops terminate via **conditional append**, not via a counter or explicit `break`.
-=======
 Starts empty, but `start_without_value: true` lets iteration begin.
 
 **Takeaway**: Loops need an explicit return operation that wraps the per-iteration result.
->>>>>>> origin/dev
 
 ---
 
@@ -812,31 +849,6 @@ Every `.ncds` derivation uses just three markers:
 
 ---
 
-<<<<<<< HEAD
-### 6. Bottom-Up Execution, Top-Down Writing
-
-**Writing order** (natural language → `.ncds`):
-1. What's the final output? → Root `<-`
-2. What operation produces it? → First `<=`
-3. What does that operation need? → Children `<-`
-4. Recurse until reaching base inputs
-
-**Execution order** (runtime):
-1. Start at leaves (deepest concepts)
-2. Execute operations bottom-up
-3. Results flow toward root
-
-**Example**:
-```ncds
-<- summary                    ← 4. Produced last
-    <= summarize              ← 3. Runs third
-    <- key points             ← 2. Produced second
-        <= extract key points ← 1. Runs first
-        <- document           ← 0. Input (exists)
-```
-
-**Takeaway**: Write top-down (goal-first), but read bottom-up (dependency order).
-=======
 ### 6. Execution Order Principle: First-Executed, First-Written
 
 **The Core Rule**: Within any scope, concepts that execute first should be written first.
@@ -916,7 +928,6 @@ The orchestrator assigns flow indices based on position in the file. Concepts wr
 3. The execution order matches the reading order
 
 **Takeaway**: Write concepts in the order they should execute. First things first.
->>>>>>> origin/dev
 
 ---
 
@@ -1016,8 +1027,6 @@ The same small set of patterns appears across all examples:
 | Carry state between iterations | Axis reference (`%^` / `*-1`) |
 | Execute after something completes | Timing dependency (`@.`) |
 
-<<<<<<< HEAD
-=======
 ### Quick Reference: Ordering Principles
 
 | Scope | Order |
@@ -1029,7 +1038,18 @@ The same small set of patterns appears across all examples:
 
 **The Rule**: First-executed, first-written. Write concepts in execution order.
 
->>>>>>> origin/dev
+### Quick Reference: Explicit References Checklist
+
+| Operator Type | Required Explicit Inputs |
+|---------------|-------------------------|
+| **Grouping** (`&`) | All items to bundle as child `<-` concepts |
+| **Loop** (`*.`) | Return operation, input collection, context variable |
+| **Specification** (`$.`) | Source concept as child `<-` |
+| **Selection** (`$@`) | All options as child `<-` concepts |
+| **Imperative** | All input data as child `<-` concepts |
+
+**The Rule**: Never assume implicit inputs. Every operator must explicitly declare what it consumes.
+
 ---
 
 ## Summary
@@ -1046,6 +1066,7 @@ The same small set of patterns appears across all examples:
 | **LLM-friendly** | Both humans and LLMs can write `.ncds` |
 | **Patterns over syntax** | Learn the 10 patterns; syntax follows naturally |
 | **Control via data flow** | Loops and conditionals emerge from dependencies |
+| **Explicit references** | Every operator must explicitly list its inputs |
 
 ### The Derivation Promise
 

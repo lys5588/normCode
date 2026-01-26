@@ -26,7 +26,7 @@ That's it. Let's break down what this means.
 
 ### Step 2: Understand the Structure
 
-**Read bottom-up** (execution flows from bottom to top):
+**Read bottom-up** (dependencies flow from leaves to root):
 
 1. **`<- raw document`**
    - This is your input (a value concept)
@@ -266,10 +266,10 @@ To actually execute a plan, you need:
 
 Most of this is automated by the tooling.
 
-See the [Tools section](../5_tools/README.md) for:
-- CLI commands
-- Editor usage
-- Streamlit executor
+See the [Tools section](../5_tools/README.md) for the Canvas App:
+- Graph visualization
+- Execution control with breakpoints
+- Integrated NormCode editor
 
 ### Learn More
 

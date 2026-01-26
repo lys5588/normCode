@@ -123,131 +123,283 @@ function GraphCanvasInner() {
     
     console.log('[GraphCanvas] Executing command:', command);
     
-    // Import executionApi dynamically to avoid circular dependencies
+    // Import stores and APIs dynamically to avoid circular dependencies
     import('../../services/api').then(({ executionApi }) => {
-      switch (command.type) {
-        // View operations
-        case 'zoom_in':
-          zoomIn({ duration: 300 });
-          break;
-        case 'zoom_out':
-          zoomOut({ duration: 300 });
-          break;
-        case 'fit_view':
-          fitView({ padding: 0.2, duration: 300 });
-          break;
-        case 'center_on':
-          const { x, y, zoom } = command.params as { x?: number; y?: number; zoom?: number };
-          if (x !== undefined && y !== undefined) {
-            setCenter(x, y, { zoom: zoom ?? getViewport().zoom, duration: 300 });
-          }
-          break;
-        
-        // Execution operations
-        case 'run':
-          executionApi.start()
-            .then(() => console.log('[GraphCanvas] Execution started via command'))
-            .catch((err) => console.error('[GraphCanvas] Failed to start execution:', err));
-          break;
-        case 'step':
-          executionApi.step()
-            .then(() => console.log('[GraphCanvas] Step executed via command'))
-            .catch((err) => console.error('[GraphCanvas] Failed to step:', err));
-          break;
-        case 'pause':
-          executionApi.pause()
-            .then(() => console.log('[GraphCanvas] Execution paused via command'))
-            .catch((err) => console.error('[GraphCanvas] Failed to pause:', err));
-          break;
-        case 'stop':
-          executionApi.stop()
-            .then(() => console.log('[GraphCanvas] Execution stopped via command'))
-            .catch((err) => console.error('[GraphCanvas] Failed to stop:', err));
-          break;
-        case 'resume':
-          executionApi.resume()
-            .then(() => console.log('[GraphCanvas] Execution resumed via command'))
-            .catch((err) => console.error('[GraphCanvas] Failed to resume:', err));
-          break;
-        case 'restart':
-          executionApi.restart()
-            .then(() => console.log('[GraphCanvas] Execution restarted via command'))
-            .catch((err) => console.error('[GraphCanvas] Failed to restart:', err));
-          break;
-        case 'run_to':
-          const flowIndex = command.params.flow_index as string;
-          if (flowIndex) {
-            executionApi.runTo(flowIndex)
-              .then(() => console.log(`[GraphCanvas] Run to ${flowIndex} via command`))
-              .catch((err) => console.error('[GraphCanvas] Failed to run to:', err));
-          }
-          break;
-        case 'set_breakpoint':
-          const bpFlowIndex = (command.params.flow_index || command.params.node_id) as string;
-          if (bpFlowIndex) {
-            executionApi.setBreakpoint(bpFlowIndex)
-              .then(() => console.log(`[GraphCanvas] Breakpoint set at ${bpFlowIndex}`))
-              .catch((err) => console.error('[GraphCanvas] Failed to set breakpoint:', err));
-          }
-          break;
-        case 'clear_breakpoint':
-          const clearBpFlowIndex = (command.params.flow_index || command.params.node_id) as string;
-          if (clearBpFlowIndex) {
-            executionApi.clearBreakpoint(clearBpFlowIndex)
-              .then(() => console.log(`[GraphCanvas] Breakpoint cleared at ${clearBpFlowIndex}`))
-              .catch((err) => console.error('[GraphCanvas] Failed to clear breakpoint:', err));
-          }
-          break;
-        
-        // File/Project operations
-        case 'load_repositories':
-          // Call the project API to load repositories
-          import('../../services/api').then(({ projectApi, graphApi }) => {
-            projectApi.loadRepositories()
-              .then(() => {
-                console.log('[GraphCanvas] Repositories loaded via command');
-                // Reload graph data
-                return graphApi.get();
-              })
-              .then((graphData) => {
-                import('../../stores/graphStore').then(({ useGraphStore }) => {
-                  useGraphStore.getState().setGraphData(graphData);
-                  console.log('[GraphCanvas] Graph data reloaded');
-                });
-              })
-              .catch((err: Error) => console.error('[GraphCanvas] Failed to load repositories:', err));
-          });
-          break;
-        
-        case 'focus_node':
-          // Focus on a node by its flow_index - center view and select it
-          const focusFlowIndex = command.params.flow_index as string;
-          if (focusFlowIndex) {
-            import('../../stores/graphStore').then(({ useGraphStore }) => {
-              const graphState = useGraphStore.getState();
-              const node = graphState.graphData?.nodes.find(n => n.flow_index === focusFlowIndex);
-              if (node) {
-                // Center view on the node
-                setCenter(node.position.x, node.position.y, { 
-                  zoom: Math.max(getViewport().zoom, 0.8), 
-                  duration: 400 
-                });
-                // Select and highlight the node
-                import('../../stores/selectionStore').then(({ useSelectionStore }) => {
-                  useSelectionStore.getState().setSelectedNode(node.id);
+      import('../../stores/graphStore').then(({ useGraphStore }) => {
+        import('../../stores/selectionStore').then(({ useSelectionStore }) => {
+          const graphState = useGraphStore.getState();
+          const selectionState = useSelectionStore.getState();
+          
+          switch (command.type) {
+            // =========================================================
+            // View operations
+            // =========================================================
+            case 'zoom_in':
+              zoomIn({ duration: 300 });
+              break;
+            case 'zoom_out':
+              zoomOut({ duration: 300 });
+              break;
+            case 'fit_view':
+              fitView({ padding: 0.2, duration: 300 });
+              break;
+            case 'center_on': {
+              const { x, y, zoom } = command.params as { x?: number; y?: number; zoom?: number };
+              if (x !== undefined && y !== undefined) {
+                setCenter(x, y, { zoom: zoom ?? getViewport().zoom, duration: 300 });
+              }
+              break;
+            }
+            case 'zoom_to': {
+              const level = command.params.level as number;
+              if (level !== undefined) {
+                const vp = getViewport();
+                setCenter(vp.x, vp.y, { zoom: level, duration: 300 });
+              }
+              break;
+            }
+            case 'pan': {
+              const dx = command.params.dx as number;
+              const dy = command.params.dy as number;
+              if (dx !== undefined && dy !== undefined) {
+                const vp = getViewport();
+                setCenter(vp.x - dx, vp.y - dy, { zoom: vp.zoom, duration: 200 });
+              }
+              break;
+            }
+            
+            // =========================================================
+            // Node Selection commands (from First Person / Hands)
+            // =========================================================
+            case 'select_node': {
+              const nodeId = command.params.node_id as string;
+              if (nodeId) {
+                selectionState.setSelectedNode(nodeId);
+                graphState.highlightBranch(nodeId);
+                console.log(`[GraphCanvas] Selected node: ${nodeId}`);
+              }
+              break;
+            }
+            case 'select_nodes': {
+              const nodeIds = command.params.node_ids as string[];
+              if (nodeIds && nodeIds.length > 0) {
+                // Select first node (multi-select not yet fully supported)
+                selectionState.setSelectedNode(nodeIds[0]);
+                graphState.highlightBranch(nodeIds[0]);
+                console.log(`[GraphCanvas] Selected ${nodeIds.length} nodes (first: ${nodeIds[0]})`);
+              }
+              break;
+            }
+            case 'deselect_all':
+              selectionState.clearSelection();
+              graphState.clearHighlight();
+              console.log('[GraphCanvas] Deselected all nodes');
+              break;
+            
+            // =========================================================
+            // Collapse/Expand commands
+            // =========================================================
+            case 'collapse_node': {
+              const nodeId = command.params.node_id as string;
+              if (nodeId) {
+                graphState.collapseNode(nodeId);
+                console.log(`[GraphCanvas] Collapsed node: ${nodeId}`);
+              }
+              break;
+            }
+            case 'expand_node': {
+              const nodeId = command.params.node_id as string;
+              if (nodeId) {
+                graphState.expandNode(nodeId);
+                console.log(`[GraphCanvas] Expanded node: ${nodeId}`);
+              }
+              break;
+            }
+            case 'toggle_collapse': {
+              const nodeId = command.params.node_id as string;
+              if (nodeId) {
+                graphState.toggleCollapse(nodeId);
+                console.log(`[GraphCanvas] Toggled collapse: ${nodeId}`);
+              }
+              break;
+            }
+            case 'collapse_all':
+              graphState.collapseAll();
+              console.log('[GraphCanvas] Collapsed all nodes');
+              break;
+            case 'expand_all':
+              graphState.expandAll();
+              console.log('[GraphCanvas] Expanded all nodes');
+              break;
+            case 'collapse_to_level': {
+              const level = command.params.level as number;
+              if (level !== undefined) {
+                graphState.collapseToLevel(level);
+                console.log(`[GraphCanvas] Collapsed to level: ${level}`);
+              }
+              break;
+            }
+            
+            // =========================================================
+            // Highlight commands
+            // =========================================================
+            case 'highlight_branch': {
+              const nodeId = command.params.node_id as string;
+              if (nodeId) {
+                graphState.highlightBranch(nodeId);
+                console.log(`[GraphCanvas] Highlighted branch: ${nodeId}`);
+              }
+              break;
+            }
+            case 'clear_highlight':
+              graphState.clearHighlight();
+              console.log('[GraphCanvas] Cleared highlight');
+              break;
+            
+            // =========================================================
+            // Center on node by node_id (different from focus_node)
+            // =========================================================
+            case 'center_on_node': {
+              const nodeId = command.params.node_id as string;
+              if (nodeId && graphState.graphData) {
+                const node = graphState.graphData.nodes.find(n => n.id === nodeId);
+                if (node) {
+                  setCenter(node.position.x, node.position.y, { 
+                    zoom: Math.max(getViewport().zoom, 0.8), 
+                    duration: 400 
+                  });
+                  console.log(`[GraphCanvas] Centered on node: ${nodeId}`);
+                } else {
+                  console.warn(`[GraphCanvas] Node ${nodeId} not found`);
+                }
+              }
+              break;
+            }
+            
+            // =========================================================
+            // Mouse interaction simulation (logging only for now)
+            // =========================================================
+            case 'double_click_node':
+              console.log(`[GraphCanvas] Double-click on node: ${command.params.node_id}`);
+              // Could open detail panel in the future
+              break;
+            case 'right_click_node':
+              console.log(`[GraphCanvas] Right-click on node: ${command.params.node_id}`);
+              // Could show context menu in the future
+              break;
+            case 'hover_node':
+              console.log(`[GraphCanvas] Hover on node: ${command.params.node_id}`);
+              // Could show tooltip in the future
+              break;
+            case 'drag_node':
+              console.log(`[GraphCanvas] Drag node ${command.params.node_id} to (${command.params.x}, ${command.params.y})`);
+              // Nodes are currently not draggable
+              break;
+            
+            // =========================================================
+            // Execution operations
+            // =========================================================
+            case 'run':
+              executionApi.start()
+                .then(() => console.log('[GraphCanvas] Execution started via command'))
+                .catch((err) => console.error('[GraphCanvas] Failed to start execution:', err));
+              break;
+            case 'step':
+              executionApi.step()
+                .then(() => console.log('[GraphCanvas] Step executed via command'))
+                .catch((err) => console.error('[GraphCanvas] Failed to step:', err));
+              break;
+            case 'pause':
+              executionApi.pause()
+                .then(() => console.log('[GraphCanvas] Execution paused via command'))
+                .catch((err) => console.error('[GraphCanvas] Failed to pause:', err));
+              break;
+            case 'stop':
+              executionApi.stop()
+                .then(() => console.log('[GraphCanvas] Execution stopped via command'))
+                .catch((err) => console.error('[GraphCanvas] Failed to stop:', err));
+              break;
+            case 'resume':
+              executionApi.resume()
+                .then(() => console.log('[GraphCanvas] Execution resumed via command'))
+                .catch((err) => console.error('[GraphCanvas] Failed to resume:', err));
+              break;
+            case 'restart':
+              executionApi.restart()
+                .then(() => console.log('[GraphCanvas] Execution restarted via command'))
+                .catch((err) => console.error('[GraphCanvas] Failed to restart:', err));
+              break;
+            case 'run_to': {
+              const flowIndex = command.params.flow_index as string;
+              if (flowIndex) {
+                executionApi.runTo(flowIndex)
+                  .then(() => console.log(`[GraphCanvas] Run to ${flowIndex} via command`))
+                  .catch((err) => console.error('[GraphCanvas] Failed to run to:', err));
+              }
+              break;
+            }
+            case 'set_breakpoint': {
+              const bpFlowIndex = (command.params.flow_index || command.params.node_id) as string;
+              if (bpFlowIndex) {
+                executionApi.setBreakpoint(bpFlowIndex)
+                  .then(() => console.log(`[GraphCanvas] Breakpoint set at ${bpFlowIndex}`))
+                  .catch((err) => console.error('[GraphCanvas] Failed to set breakpoint:', err));
+              }
+              break;
+            }
+            case 'clear_breakpoint': {
+              const clearBpFlowIndex = (command.params.flow_index || command.params.node_id) as string;
+              if (clearBpFlowIndex) {
+                executionApi.clearBreakpoint(clearBpFlowIndex)
+                  .then(() => console.log(`[GraphCanvas] Breakpoint cleared at ${clearBpFlowIndex}`))
+                  .catch((err) => console.error('[GraphCanvas] Failed to clear breakpoint:', err));
+              }
+              break;
+            }
+            
+            // =========================================================
+            // File/Project operations
+            // =========================================================
+            case 'load_repositories':
+              import('../../services/api').then(({ projectApi, graphApi }) => {
+                projectApi.loadRepositories()
+                  .then(() => {
+                    console.log('[GraphCanvas] Repositories loaded via command');
+                    return graphApi.get();
+                  })
+                  .then((graphData) => {
+                    useGraphStore.getState().setGraphData(graphData);
+                    console.log('[GraphCanvas] Graph data reloaded');
+                  })
+                  .catch((err: Error) => console.error('[GraphCanvas] Failed to load repositories:', err));
+              });
+              break;
+            
+            case 'focus_node': {
+              // Focus on a node by its flow_index - center view and select it
+              const focusFlowIndex = command.params.flow_index as string;
+              if (focusFlowIndex && graphState.graphData) {
+                const node = graphState.graphData.nodes.find(n => n.flow_index === focusFlowIndex);
+                if (node) {
+                  setCenter(node.position.x, node.position.y, { 
+                    zoom: Math.max(getViewport().zoom, 0.8), 
+                    duration: 400 
+                  });
+                  selectionState.setSelectedNode(node.id);
                   graphState.highlightBranch(node.id);
                   console.log(`[GraphCanvas] Focused on node with flow_index ${focusFlowIndex}`);
-                });
-              } else {
-                console.warn(`[GraphCanvas] Node with flow_index ${focusFlowIndex} not found`);
+                } else {
+                  console.warn(`[GraphCanvas] Node with flow_index ${focusFlowIndex} not found`);
+                }
               }
-            });
+              break;
+            }
+            
+            default:
+              console.log('[GraphCanvas] Unknown command type:', command.type);
           }
-          break;
-        
-        default:
-          console.log('[GraphCanvas] Unknown command type:', command.type);
-      }
+        });
+      });
     });
   }, [pendingCommands, popCommand, zoomIn, zoomOut, fitView, setCenter, getViewport]);
   
@@ -392,7 +544,7 @@ function GraphCanvasInner() {
         selectionOnDrag={false}
       >
         <Background color="#e2e8f0" gap={16} variant={BackgroundVariant.Dots} />
-        <Controls className="bg-white rounded-lg shadow-md" />
+        <Controls className="bg-white rounded-lg shadow-md" showInteractive={false} />
         
         {/* Minimap with click-to-teleport and integrated toggle */}
         <Panel position="bottom-right" className="!p-0">

@@ -1,132 +1,147 @@
-# Canvas Command Classification
+# Classify User Message as Canvas Command
 
-You are a command parser for a NormCode Canvas application. Your task is to understand the user's message and classify it as a canvas command.
+You are an assistant that interprets user messages and classifies them as canvas commands.
 
-## Available Commands
+## User Message
 
-Based on the provided schema, classify the user's intent into one of these command types:
+<user_message>
+$input_1
+</user_message>
 
-### Node Operations
-- `create_node` - Create a new node (concept or function)
-- `delete_node` - Delete an existing node
-- `move_node` - Move a node to a new position
-- `edit_node` - Edit node content or properties
-- `select_node` - Select a node for inspection
+## Available Commands Schema
 
-### Edge Operations
-- `create_edge` - Connect two nodes
-- `delete_edge` - Remove a connection
-- `edit_edge` - Modify edge properties
+<command_schema>
+$input_2
+</command_schema>
 
-### View Operations
-- `zoom_in` - Zoom into the canvas
-- `zoom_out` - Zoom out of the canvas
-- `fit_view` - Fit all nodes in view
-- `center_on` - Center view on a specific node
+## Conversation Context (v2.0)
 
-### Execution Operations
-- `run` - Execute the entire plan
-- `step` - Execute one inference
-- `pause` - Pause execution
-- `stop` - Stop execution
-- `set_breakpoint` - Set a breakpoint on a node
-- `clear_breakpoint` - Clear a breakpoint
+<context_summary>
+$input_3
+</context_summary>
 
-### File Operations
-- `save` - Save the current plan
-- `load` - Load a plan from file
-- `export` - Export to a format
-- `import` - Import from a format
+## Task
 
-### Session Operations
-- `help` - Show help information
-- `status` - Show current status
-- `undo` - Undo last action
-- `redo` - Redo last undone action
-- `quit` / `exit` / `end` - End the session
+Analyze the user message and determine:
+1. What canvas operation they want to perform
+2. Extract any parameters mentioned
+3. Assess confidence in your interpretation
 
-### Compilation Operations
-- `compile` - Compile the plan
-- `validate` - Validate the plan structure
-- `formalize` - Run formalization phase
-- `activate` - Run activation phase
+## Command Categories
 
-## Input
+### Navigation Commands
+- `zoom_in`, `zoom_out`, `zoom_to` - Adjust view zoom
+- `pan` - Move the view
+- `fit_view` - Fit all nodes in viewport
+- `center_on_node` - Focus on specific node
 
-**User Message**: $input_1
+### Selection Commands
+- `click_node`, `select_nodes` - Select nodes
+- `deselect_all` - Clear selections
 
-**Command Schema**: $input_2
+### Structure Commands
+- `collapse_node`, `expand_node`, `toggle_collapse` - Node collapse state
+- `collapse_all`, `expand_all`, `collapse_to_level` - Bulk collapse
+- `highlight_branch`, `clear_highlight` - Branch highlighting
+
+### Execution Commands
+- `run`, `step`, `pause`, `stop` - Execution control
+- `add_breakpoint`, `remove_breakpoint`, `clear_all_breakpoints` - Breakpoints
+
+### Panel Commands
+- `open_panel`, `close_panel`, `toggle_panel`, `focus_panel` - Panel management
+
+### Query Commands
+- `query_project`, `query_execution`, `query_graph` - State queries
+- `query_value`, `query_node`, `query_logs` - Data queries
+
+### Chat Commands
+- `chat` - Conversational message (no canvas action needed)
 
 ## Output Format
 
-Return a JSON object with:
+Return JSON with `thinking` and `result` fields:
 
 ```json
 {
-  "type": "command_type",
-  "params": {
-    // command-specific parameters
-  },
-  "confidence": 0.0-1.0,
-  "reasoning": "brief explanation"
+  "thinking": "Your analysis of what the user wants...",
+  "result": {
+    "type": "command_type",
+    "params": {
+      "param1": "value1"
+    },
+    "confidence": 0.95
+  }
 }
 ```
 
-## Examples
+### Result Fields
 
-**User**: "Add a new function node called 'analyze sentiment'"
+- `type` (required): The command type from the schema, or `"chat"` for conversational messages
+- `params` (required): Object with command parameters, or `{}` if none
+- `confidence` (required): Number 0-1 indicating interpretation confidence
+
+### Examples
+
+**User**: "zoom in a bit"
 ```json
 {
-  "type": "create_node",
-  "params": {
-    "node_type": "function",
-    "label": "analyze sentiment",
-    "concept_type": "imperative"
-  },
-  "confidence": 0.95,
-  "reasoning": "User explicitly requested creating a function node with a name"
+  "thinking": "User wants to zoom in on the canvas view.",
+  "result": {
+    "type": "zoom_in",
+    "params": {"amount": 0.1},
+    "confidence": 0.98
+  }
 }
 ```
 
-**User**: "Run the plan"
+**User**: "show me node 1.3"
 ```json
 {
-  "type": "run",
-  "params": {},
-  "confidence": 0.99,
-  "reasoning": "Direct execution request"
+  "thinking": "User wants to focus on a specific node. I'll center the view on it.",
+  "result": {
+    "type": "center_on_node",
+    "params": {"node_id": "1.3"},
+    "confidence": 0.92
+  }
 }
 ```
 
-**User**: "Connect the input to the analyzer"
+**User**: "hello, how are you?"
 ```json
 {
-  "type": "create_edge",
-  "params": {
-    "source_hint": "input",
-    "target_hint": "analyzer"
-  },
-  "confidence": 0.85,
-  "reasoning": "User wants to create a connection between two nodes"
+  "thinking": "This is a conversational greeting, not a canvas command.",
+  "result": {
+    "type": "chat",
+    "params": {},
+    "confidence": 0.99
+  }
 }
 ```
 
-**User**: "I'm done for today"
+**User**: "collapse everything"
 ```json
 {
-  "type": "quit",
-  "params": {},
-  "confidence": 0.90,
-  "reasoning": "User indicating session end"
+  "thinking": "User wants to collapse all nodes in the graph.",
+  "result": {
+    "type": "collapse_all",
+    "params": {},
+    "confidence": 0.95
+  }
 }
 ```
 
-## Notes
+**User**: "run the plan"
+```json
+{
+  "thinking": "User wants to start execution of the loaded plan.",
+  "result": {
+    "type": "run",
+    "params": {},
+    "confidence": 0.97
+  }
+}
+```
 
-- If the message is ambiguous, ask for clarification by setting type to "clarify"
-- If the message is conversational (not a command), set type to "chat"
-- Extract as many relevant parameters as possible from the message
-- Use node names/labels mentioned by the user as hints for identification
-
-Now classify the user's message:
+**IMPORTANT**: Your response MUST be valid JSON with exactly the `thinking` and `result` keys.
 

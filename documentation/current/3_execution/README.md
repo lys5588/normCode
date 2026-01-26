@@ -23,7 +23,7 @@ This section explains the runtime execution of NormCode plans. You'll learn how 
 **High-level execution model**
 
 Learn about:
-- The bottom-up dependency resolution model
+- The top-to-bottom, inside-out execution model
 - Semantic vs. syntactic sequences
 - Reference system basics
 - Orchestrator role and execution loop
@@ -84,7 +84,7 @@ Learn about:
 - Skip propagation
 - Checkpointing and persistence
 - Resume modes (PATCH, OVERWRITE, FILL_GAPS)
-- CLI and Streamlit tools
+- Canvas App integration
 
 **Start here if**: You want to understand how the engine coordinates everything.
 
@@ -122,9 +122,11 @@ Learn about:
 ### Execution Model
 
 ```
-Bottom-Up Dependency Resolution
+Top-to-Bottom Processing, Inside-Out Dependency Resolution
     ↓
-Child inferences complete first
+Waitlist sorted by flow index (1 → 1.1 → 1.2 → ...)
+    ↓
+Child inferences complete before parents
     ↓
 Parent inferences wait for all inputs
     ↓
@@ -254,7 +256,7 @@ A: Yes! Check the Reference for any concept in the ConceptRepo. Everything is ex
 - [Overview](overview.md) - Execution model
 - [Orchestrator](orchestrator.md) - How to run plans
 
-**You can**: Execute plans, use CLI/Streamlit, inspect results.
+**You can**: Execute plans, use Canvas App, inspect results.
 
 ---
 
@@ -390,8 +392,8 @@ for cycle in history:
 - **[Grammar](../2_grammar/README.md)** - The `.ncd` syntax
 
 ### Next Sections
-- **[Compilation](../4_compilation/README.md)** *(Coming Soon)* - The 5-phase compilation pipeline
-- **[Tools](../5_tools/README.md)** *(Coming Soon)* - CLI, editor, Streamlit app
+- **[Compilation](../4_compilation/README.md)** - The 4-phase compilation pipeline
+- **[Tools](../5_tools/README.md)** - Canvas App (visualization, execution, debugging, editor)
 
 ### Source Code
 - `infra/_orchestrator/` - Orchestrator implementation
@@ -415,8 +417,8 @@ for cycle in history:
 
 After mastering execution:
 
-- **[4. Compilation](../4_compilation/README.md)** *(Coming Soon)* - How `.ncd` becomes executable
-- **[5. Tools](../5_tools/README.md)** *(Coming Soon)* - User-facing tools and APIs
+- **[4. Compilation](../4_compilation/README.md)** - How `.ncd` becomes executable (4-phase pipeline)
+- **[5. Tools](../5_tools/README.md)** - Canvas App for visualization, execution, debugging
 
 ---
 
@@ -426,7 +428,7 @@ After mastering execution:
 
 **NormCode's execution enforces data isolation by design**:
 
-1. **Bottom-up resolution**: Can't run until inputs ready
+1. **Inside-out resolution**: Can't run until children/inputs ready
 2. **Reference isolation**: Each concept has its own tensor
 3. **Explicit retrieval**: IR step fetches only declared inputs
 4. **No hidden state**: Everything tracked in Blackboard

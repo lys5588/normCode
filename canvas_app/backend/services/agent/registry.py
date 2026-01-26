@@ -160,14 +160,14 @@ class AgentRegistry:
     
     def _create_paradigm_tool(self, paradigm_dir: str, base_dir: str) -> Any:
         """Create a custom paradigm tool for the specified directory."""
-        from services.execution.paradigm_tool import CustomParadigmTool
+        from tools.paradigm_tool import CanvasParadigmTool
         
         paradigm_path = Path(paradigm_dir)
         if not paradigm_path.is_absolute():
             paradigm_path = Path(base_dir) / paradigm_dir
         
         if paradigm_path.exists() and paradigm_path.is_dir():
-            return CustomParadigmTool(paradigm_path)
+            return CanvasParadigmTool(paradigm_path)
         
         logger.warning(f"Paradigm directory not found: {paradigm_path}")
         return None

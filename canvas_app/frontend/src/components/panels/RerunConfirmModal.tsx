@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, RefreshCw, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
 import { executionApi, DescendantsResponse } from '../../services/api';
 
@@ -71,7 +72,8 @@ export function RerunConfirmModal({
 
   const totalNodes = 1 + (descendants?.count || 0);
 
-  return (
+  // Use portal to escape any CSS transform containers
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
       <div 
         className="bg-white rounded-lg shadow-xl w-[500px] max-h-[80vh] flex flex-col"
@@ -192,6 +194,7 @@ export function RerunConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

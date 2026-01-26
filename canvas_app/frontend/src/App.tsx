@@ -3,7 +3,7 @@
  * Project-based NormCode Canvas - opens like a PyCharm/IDE project
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   FolderOpen, 
   Settings, 
@@ -24,6 +24,9 @@ import {
   Workflow,
   Rocket,
   Globe,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from 'lucide-react';
 import { GraphCanvas } from './components/graph/GraphCanvas';
 import { ControlPanel } from './components/panels/ControlPanel';
@@ -40,13 +43,15 @@ import { UserInputModal } from './components/panels/UserInputModal';
 import { ProjectTabs } from './components/panels/ProjectTabs';
 import { ChatPanel } from './components/panels/ChatPanel';
 import { DeploymentPanel } from './components/panels/DeploymentPanel';
-import { ToastContainer } from './components/common/ToastNotification';
+import { ToastContainer, ResizeDivider } from './components/common';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useGraphStore } from './stores/graphStore';
 import { useExecutionStore } from './stores/executionStore';
 import { useProjectStore } from './stores/projectStore';
 import { useChatStore } from './stores/chatStore';
 import { useNotificationStore } from './stores/notificationStore';
+import { useLayoutStore, ZOOM_LIMITS } from './stores/layoutStore';
+import { usePanelStore } from './stores/panelStore';
 
 // View modes for the main content area
 type ViewMode = 'canvas' | 'editor';
@@ -167,14 +172,32 @@ function RepositoryPathsModal({ currentPaths, onSave, onClose }: RepositoryPaths
 }
 
 function App() {
-  const [showLoadPanel, setShowLoadPanel] = useState(false);
-  const [showDetailPanel, setShowDetailPanel] = useState(true);
-  const [showLogPanel, setShowLogPanel] = useState(true);
-  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
-  const [showCheckpointPanel, setShowCheckpointPanel] = useState(false);
-  const [showAgentPanel, setShowAgentPanel] = useState(false);
-  const [showWorkersPanel, setShowWorkersPanel] = useState(false);
-  const [showDeploymentPanel, setShowDeploymentPanel] = useState(false);
+  // Panel visibility from panelStore (enables WebSocket control)
+  const panels = usePanelStore((s) => s.panels);
+  const openPanel = usePanelStore((s) => s.openPanel);
+  const closePanel = usePanelStore((s) => s.closePanel);
+  const togglePanel = usePanelStore((s) => s.togglePanel);
+  
+  // Derived panel states for cleaner usage
+  const showLoadPanel = panels.load;
+  const showDetailPanel = panels.detail;
+  const showLogPanel = panels.log;
+  const showSettingsPanel = panels.settings;
+  const showCheckpointPanel = panels.checkpoint;
+  const showAgentPanel = panels.agent;
+  const showWorkersPanel = panels.workers;
+  const showDeploymentPanel = panels.deployment;
+  
+  // Setter functions that work with both boolean values and toggles
+  const setShowLoadPanel = useCallback((show: boolean) => show ? openPanel('load') : closePanel('load'), [openPanel, closePanel]);
+  const setShowDetailPanel = useCallback((show: boolean) => show ? openPanel('detail') : closePanel('detail'), [openPanel, closePanel]);
+  const setShowLogPanel = useCallback((show: boolean) => show ? openPanel('log') : closePanel('log'), [openPanel, closePanel]);
+  const setShowSettingsPanel = useCallback((show: boolean) => show ? openPanel('settings') : closePanel('settings'), [openPanel, closePanel]);
+  const setShowCheckpointPanel = useCallback((show: boolean) => show ? openPanel('checkpoint') : closePanel('checkpoint'), [openPanel, closePanel]);
+  const setShowAgentPanel = useCallback((show: boolean) => show ? openPanel('agent') : closePanel('agent'), [openPanel, closePanel]);
+  const setShowWorkersPanel = useCallback((show: boolean) => show ? openPanel('workers') : closePanel('workers'), [openPanel, closePanel]);
+  const setShowDeploymentPanel = useCallback((show: boolean) => show ? openPanel('deployment') : closePanel('deployment'), [openPanel, closePanel]);
+  
   const [viewMode, setViewMode] = useState<ViewMode>('canvas');
   const [detailPanelFullscreen, setDetailPanelFullscreen] = useState(false);
   const [showRepoPathsModal, setShowRepoPathsModal] = useState(false);
@@ -186,11 +209,60 @@ function App() {
   const showError = useNotificationStore((s) => s.showError);
   const showWarning = useNotificationStore((s) => s.showWarning);
   
+  // Layout state (zoom and panel sizes)
+  const zoom = useLayoutStore((s) => s.zoom);
+  const zoomIn = useLayoutStore((s) => s.zoomIn);
+  const zoomOut = useLayoutStore((s) => s.zoomOut);
+  const resetZoom = useLayoutStore((s) => s.resetZoom);
+  const panelSizes = useLayoutStore((s) => s.panelSizes);
+  const setPanelSize = useLayoutStore((s) => s.setPanelSize);
+  
   // Track shown error logs to avoid duplicates
   const [lastErrorLogCount, setLastErrorLogCount] = useState(0);
   
   // Chat state
   const { isOpen: isChatOpen, togglePanel: toggleChatPanel, controllerStatus } = useChatStore();
+  
+  // Keyboard shortcuts for zoom
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + Plus = Zoom In
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+        e.preventDefault();
+        zoomIn();
+      }
+      // Ctrl/Cmd + Minus = Zoom Out
+      if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+        e.preventDefault();
+        zoomOut();
+      }
+      // Ctrl/Cmd + 0 = Reset Zoom
+      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        resetZoom();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [zoomIn, zoomOut, resetZoom]);
+  
+  // Panel resize handlers
+  const handleDetailPanelResize = useCallback((delta: number) => {
+    setPanelSize('detailPanel', Math.max(200, Math.min(600, panelSizes.detailPanel - delta)));
+  }, [panelSizes.detailPanel, setPanelSize]);
+  
+  const handleLogPanelResize = useCallback((delta: number) => {
+    setPanelSize('logPanel', Math.max(100, Math.min(500, panelSizes.logPanel - delta)));
+  }, [panelSizes.logPanel, setPanelSize]);
+  
+  const handleWorkersPanelResize = useCallback((delta: number) => {
+    setPanelSize('workersPanel', Math.max(200, Math.min(500, panelSizes.workersPanel + delta)));
+  }, [panelSizes.workersPanel, setPanelSize]);
+  
+  const handleAgentPanelResize = useCallback((delta: number) => {
+    setPanelSize('agentPanel', Math.max(200, Math.min(500, panelSizes.agentPanel + delta)));
+  }, [panelSizes.agentPanel, setPanelSize]);
   
   
   // Project state
@@ -264,17 +336,24 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-slate-50">
+    <div 
+      className="flex flex-col bg-slate-50" 
+      style={{ 
+        zoom: zoom,
+        width: `${100 / zoom}vw`,
+        height: `${100 / zoom}vh`,
+      }}
+    >
       {/* Single Unified Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200 px-3 py-2 flex items-center justify-between gap-2 overflow-hidden">
         {/* Left side: Logo + Project Info */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* App Logo */}
-          <img src="/psylens-logo.png" alt="NormCode Canvas" className="w-6 h-6" />
+          <img src="/psylens-logo.png" alt="NormCode Canvas" className="w-6 h-6 flex-shrink-0" />
           
           {/* Project Info */}
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-slate-700">{currentProject.name}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="font-medium text-slate-700 truncate max-w-[120px]" title={currentProject.name}>{currentProject.name}</span>
             {/* Remote projects show "Remote" badge instead of Load button */}
             {isRemoteProject ? (
               <span className="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-xs rounded-full flex items-center gap-1">
@@ -329,13 +408,13 @@ function App() {
           </div>
           
           {/* Config summary */}
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">
             {currentProject.execution.max_cycles} cycles
           </span>
           
           {/* View Mode Tabs */}
-          <div className="w-px h-6 bg-slate-200 mx-2" />
-          <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+          <div className="w-px h-5 bg-slate-200 flex-shrink-0 hidden sm:block" />
+          <div className="flex items-center bg-slate-100 rounded-lg p-0.5 flex-shrink-0">
             <button
               onClick={() => setViewMode('canvas')}
               className={`flex items-center gap-1.5 px-3 py-1 text-sm rounded-md transition-all ${
@@ -362,34 +441,34 @@ function App() {
         </div>
         
         {/* Right side: Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 flex-shrink-0">
           {/* Left panel toggles (Workers, Agent) */}
           {viewMode === 'canvas' && (
             <>
               {/* Plans in Work Panel Toggle */}
               <button
                 onClick={() => setShowWorkersPanel(!showWorkersPanel)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   showWorkersPanel
                     ? 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 }`}
                 title="Plans in Work - View all active NormCode plans"
               >
-                <Workflow size={18} />
+                <Workflow size={16} />
               </button>
               
               {/* Agent Panel Toggle */}
               <button
                 onClick={() => setShowAgentPanel(!showAgentPanel)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   showAgentPanel
                     ? 'text-purple-600 bg-purple-50 hover:bg-purple-100'
                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 }`}
                 title="Agent Configuration Panel"
               >
-                <Bot size={18} />
+                <Bot size={16} />
               </button>
             </>
           )}
@@ -397,103 +476,152 @@ function App() {
           {/* Panel toggles - show in canvas mode */}
           {viewMode === 'canvas' && (
             <>
-              <div className="w-px h-6 bg-slate-200 mx-1" />
+              <div className="w-px h-5 bg-slate-200 mx-0.5" />
               {/* Detail panel toggle - only when graph loaded */}
               {graphData && (
                 <button
                   onClick={() => setShowDetailPanel(!showDetailPanel)}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-1.5 rounded-lg transition-colors ${
                     showDetailPanel 
                       ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
                       : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                   }`}
                   title={showDetailPanel ? 'Hide detail panel' : 'Show detail panel'}
                 >
-                  {showDetailPanel ? <PanelRightClose size={18} /> : <PanelRight size={18} />}
+                  {showDetailPanel ? <PanelRightClose size={16} /> : <PanelRight size={16} />}
                 </button>
               )}
               {/* Log panel toggle - always available to see loading errors */}
               <button
                 onClick={() => setShowLogPanel(!showLogPanel)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors ${
                   showLogPanel 
                     ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
                 }`}
                 title={showLogPanel ? 'Hide log panel' : 'Show log panel'}
               >
-                {showLogPanel ? <PanelBottomClose size={18} /> : <PanelBottom size={18} />}
+                {showLogPanel ? <PanelBottomClose size={16} /> : <PanelBottom size={16} />}
               </button>
             </>
           )}
           
-          <div className="w-px h-6 bg-slate-200 mx-1" />
+          <div className="w-px h-5 bg-slate-200 mx-0.5" />
+          
+          {/* Zoom Controls */}
+          <div className="flex items-center bg-slate-100 rounded-lg px-0.5 py-0.5">
+            <button
+              onClick={zoomOut}
+              disabled={zoom <= ZOOM_LIMITS.min}
+              className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Zoom out (Ctrl+-)"
+            >
+              <ZoomOut size={14} />
+            </button>
+            <button
+              onClick={resetZoom}
+              className="px-1.5 py-0.5 text-xs font-mono text-slate-600 hover:bg-slate-200 rounded min-w-[42px] text-center transition-colors"
+              title="Click to reset zoom (Ctrl+0)"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              onClick={zoomIn}
+              disabled={zoom >= ZOOM_LIMITS.max}
+              className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              title="Zoom in (Ctrl++)"
+            >
+              <ZoomIn size={14} />
+            </button>
+            {zoom !== 1 && (
+              <button
+                onClick={resetZoom}
+                className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                title="Reset to 100%"
+              >
+                <RotateCcw size={12} />
+              </button>
+            )}
+          </div>
+          
+          <div className="w-px h-5 bg-slate-200 mx-0.5" />
           
           {/* Settings */}
           <button
             onClick={() => setShowSettingsPanel(!showSettingsPanel)}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-lg transition-colors ${
               showSettingsPanel
                 ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
             }`}
             title="Execution Settings"
           >
-            <Settings size={18} />
+            <Settings size={16} />
           </button>
           
           {/* Deploy */}
           <button
             onClick={() => setShowDeploymentPanel(true)}
-            className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
             title="Deploy Project"
           >
-            <Rocket size={18} />
+            <Rocket size={16} />
           </button>
           
           {/* Project settings */}
           <button
             onClick={() => setProjectPanelOpen(true)}
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
             title="Project Settings"
           >
-            <Folder size={18} />
+            <Folder size={16} />
           </button>
           
           {/* Help */}
           <button
-            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-            title="Help"
+            onClick={() => {
+              const url = 'https://www.psylensai.com';
+              // In desktop app (pywebview), open in system browser to avoid losing the app
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const pywebview = (window as any).pywebview;
+              if (pywebview?.api?.open_external_url) {
+                pywebview.api.open_external_url(url);
+              } else {
+                window.open(url, '_blank');
+              }
+            }}
+            className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            title="Help - Visit PsylensAI"
           >
-            <HelpCircle size={18} />
+            <HelpCircle size={16} />
           </button>
           
-          <div className="w-px h-6 bg-slate-200 mx-1" />
+          <div className="w-px h-5 bg-slate-200 mx-0.5" />
           
           {/* Chat Panel Toggle - compiler-driven chat */}
           <button
             onClick={toggleChatPanel}
-            className={`p-2 rounded-lg transition-colors flex items-center gap-1.5 ${
+            className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 ${
               isChatOpen
                 ? 'text-purple-600 bg-purple-50 hover:bg-purple-100'
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
             }`}
             title="Compiler Chat"
           >
-            <Sparkles size={18} />
-            <span className="text-sm font-medium">Chat</span>
+            <Sparkles size={16} />
+            <span className="text-xs font-medium">Chat</span>
             {controllerStatus === 'running' && (
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
             )}
           </button>
           
           {/* Close project */}
           <button
             onClick={closeProject}
-            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
             title="Close Project"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
       </header>
@@ -535,7 +663,7 @@ function App() {
           />
 
           {/* Main Content */}
-          <main className="flex-1 flex flex-col overflow-hidden relative z-0">
+          <main className="flex-1 flex flex-col overflow-hidden">
             {viewMode === 'editor' ? (
               // Editor View
               <EditorPanel />
@@ -574,35 +702,78 @@ function App() {
           </>
         ) : (
           // Canvas View
-          <>
+          <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 flex overflow-hidden">
-              {/* Left side panels */}
-              {showWorkersPanel && <WorkersPanel />}
-              {showAgentPanel && <AgentPanel />}
+              {/* Left side panels with resize handles */}
+              {showWorkersPanel && (
+                <>
+                  <div 
+                    className="bg-white border-r border-slate-200 flex flex-col overflow-hidden"
+                    style={{ width: panelSizes.workersPanel }}
+                  >
+                    <WorkersPanel />
+                  </div>
+                  <ResizeDivider direction="horizontal" onResize={handleWorkersPanelResize} />
+                </>
+              )}
+              {showAgentPanel && (
+                <>
+                  <div 
+                    className="bg-white border-r border-slate-200 flex flex-col overflow-hidden"
+                    style={{ width: panelSizes.agentPanel }}
+                  >
+                    <AgentPanel />
+                  </div>
+                  <ResizeDivider direction="horizontal" onResize={handleAgentPanelResize} />
+                </>
+              )}
               
               {/* Graph Canvas */}
               <div className="flex-1 overflow-hidden">
                 <GraphCanvas />
               </div>
 
-              {/* Detail Panel */}
+              {/* Detail Panel with resize handle */}
               {graphData && showDetailPanel && !detailPanelFullscreen && (
-                <DetailPanel 
-                  isFullscreen={false}
-                  onToggleFullscreen={() => setDetailPanelFullscreen(true)}
-                />
+                <>
+                  <ResizeDivider direction="horizontal" onResize={handleDetailPanelResize} />
+                  <div style={{ width: panelSizes.detailPanel }}>
+                    <DetailPanel 
+                      isFullscreen={false}
+                      onToggleFullscreen={() => setDetailPanelFullscreen(true)}
+                    />
+                  </div>
+                </>
               )}
             </div>
 
-            {/* Log Panel */}
-            {graphData && showLogPanel && <LogPanel />}
-          </>
+            {/* Log Panel with resize handle */}
+            {graphData && showLogPanel && (
+              <>
+                <ResizeDivider direction="vertical" onResize={handleLogPanelResize} />
+                <div style={{ height: panelSizes.logPanel }} className="flex-shrink-0 flex flex-col overflow-hidden border-t border-slate-200">
+                  <LogPanel />
+                </div>
+              </>
+            )}
+          </div>
         )}
           </main>
         </div>
 
         {/* Chat Panel - appears on right side, independent of view mode */}
-        <ChatPanel />
+        {isChatOpen && (
+          <>
+            <ResizeDivider 
+              direction="horizontal" 
+              onResize={(delta) => setPanelSize('chatPanel', Math.max(300, Math.min(600, panelSizes.chatPanel - delta)))} 
+            />
+            <div style={{ width: panelSizes.chatPanel }} className="h-full flex-shrink-0">
+              <ChatPanel />
+            </div>
+          </>
+        )}
+        {!isChatOpen && <ChatPanel />}
       </div>
 
       {/* Fullscreen Detail Panel */}
@@ -679,6 +850,16 @@ function App() {
           )}
         </div>
         <div className="flex items-center gap-4">
+          {/* Zoom level indicator */}
+          {zoom !== 1 && (
+            <span 
+              className="text-slate-400 cursor-pointer hover:text-slate-600" 
+              onClick={resetZoom}
+              title="Click to reset zoom"
+            >
+              Zoom: {Math.round(zoom * 100)}%
+            </span>
+          )}
           <span className="text-slate-400 truncate max-w-xs" title={projectPath || ''}>
             {projectPath}
           </span>

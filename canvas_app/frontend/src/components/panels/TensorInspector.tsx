@@ -5,6 +5,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Layers, Grid3X3, List, Code, ChevronDown, ChevronUp, ChevronRight, X, Copy, Check, Maximize2 } from 'lucide-react';
 import {
   TensorData,
@@ -386,7 +387,8 @@ function ItemModal({ index, axisName, item, onClose }: ItemModalProps) {
     typeLabel = typeof item;
   }
   
-  return (
+  // Use portal to escape any CSS transform containers and render at document body level
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div 
         className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col m-4"
@@ -463,7 +465,8 @@ function ItemModal({ index, axisName, item, onClose }: ItemModalProps) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

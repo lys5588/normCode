@@ -1,0 +1,33 @@
+{
+  "default_agent": "default",
+  "agents": [
+    {
+      "id": "default",
+      "name": "gold finance demo Agent",
+      "description": "Default agent for gold finance demo",
+      "tools": {
+        "llm": {
+          "model": "qwen-plus"
+        },
+        "paradigm": {
+          "dir": "C:\\Users\\ProgU\\PycharmProjects\\normCode\\direct_infra_experiment\\nc_ai_planning_ex\\iteration_6\\gold\\provision\\paradigm"
+        },
+        "file_system": {
+          "enabled": true,
+          "base_dir": "C:\\Users\\ProgU\\PycharmProjects\\normCode\\direct_infra_experiment\\nc_ai_planning_ex\\iteration_6\\gold\\repos"
+        },
+        "python_interpreter": {
+          "enabled": true,
+          "timeout": 30
+        },
+        "user_input": {
+          "enabled": true,
+          "mode": "blocking"
+        }
+      }
+    }
+  ],
+  "description": "Agent configuration for gold finance demo",
+  "created_at": "2026-01-25T22:37:42.614081",
+  "updated_at": "2026-01-25T22:37:42.614081"
+}

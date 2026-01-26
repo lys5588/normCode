@@ -47,27 +47,31 @@ The execution layer consists of three interconnected systems:
 
 ## Core Execution Model
 
-### Bottom-Up Dependency Resolution
+### Top-to-Bottom, Inside-Out Dependency Resolution
 
-NormCode executes **bottom-up**: child inferences complete before their parents can run.
+NormCode processes inferences **top-to-bottom by flow index** (1 → 1.1 → 1.2 → ...), but **dependencies resolve inside-out**: child inferences must complete before their parents can finalize.
 
 ```ncd
 :<:{result} | ?{flow_index}: 1
     <= ::(calculate) | ?{flow_index}: 1.1
     <- {input A} | ?{flow_index}: 1.2
         <= ::(process A) | ?{flow_index}: 1.2.1
-        <- {raw A} | ?{flow_index}: 1.2.1.1
+        <- {raw A} | ?{flow_index}: 1.2.2
     <- {input B} | ?{flow_index}: 1.3
         <= ::(process B) | ?{flow_index}: 1.3.1
-        <- {raw B} | ?{flow_index}: 1.3.1.1
+        <- {raw B} | ?{flow_index}: 1.3.2
 ```
 
-**Execution order**:
+**Processing order** (by flow index): 1 → 1.1 → 1.2 → 1.2.1 → 1.2.2 → 1.3 → 1.3.1 → 1.3.2
+
+**Dependency resolution** (inside-out):
 1. Inferences 1.2.1 and 1.3.1 are ready immediately (only need raw inputs)
 2. Once 1.2.1 completes → `{input A}` is ready
 3. Once 1.3.1 completes → `{input B}` is ready
 4. Once both inputs are ready → Inference 1.1 can execute
 5. Once 1.1 completes → `{result}` is produced
+
+**Key insight**: The waitlist is sorted top-to-bottom by flow index, but the orchestrator only executes an inference when its children (supporting items) have completed—creating an inside-out completion pattern.
 
 ### Readiness Criteria
 
@@ -431,7 +435,7 @@ How this is enforced:
 
 | Mechanism | Enforcement |
 |-----------|-------------|
-| **Bottom-up execution** | Can't run until inputs ready |
+| **Inside-out dependency resolution** | Can't run until children/inputs ready |
 | **Reference isolation** | Each concept has its own Reference |
 | **Explicit retrieval** | IR step fetches only declared inputs |
 | **No global state** | No hidden context bleeding |

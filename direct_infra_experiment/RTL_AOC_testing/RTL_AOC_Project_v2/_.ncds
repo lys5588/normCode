@@ -1,0 +1,128 @@
+/: RTL AOC Verification Workflow
+/: Generates AOC schemas from ISA specs, then verifies RTL traces against them
+/: STATUS: Draft - needs compilation
+
+<- verification report
+    <= combine AOC definitions, validity, trace, and per-cycle verification into report
+    
+    /: ============================================================
+    /: PHASE 1: AOC Schema Generation
+    /: ============================================================
+    
+    <- AOC definitions
+        <= select the final AOC schema as output
+        
+        /: Ground inputs: Load specification files
+        <- ISA spec text
+            <= load file
+            <- file path: "specs/isa_v1.md"
+        
+        <- MA spec text
+            <= load file
+            <- file path: "specs/uarch_v2.md"
+        
+        /: User decomposition of specs
+        <- intent blocks
+            <= ask user to clarify and decompose the specs
+            <- ISA spec text
+            <- MA spec text
+        
+        <- all user inputs
+            <= collect ISA, MA, and intent blocks together
+            <- ISA spec text
+            <- MA spec text
+            <- intent blocks
+
+        <- counters
+            <= initialize to list containing only 1
+
+        <- AOC schemas records
+            <= initialize to empty list
+        
+        /: Iterative extraction loop
+        <- all AOC schemas
+            <= for each counter in counters
+            
+                <= return the new AOC for this iteration
+                
+                <- new AOC
+                    <= extract a new action-obligation canonical
+                    <- all user inputs
+                    <- AOC schemas extracted so far
+                        <= collect all AOC schemas from previous iterations
+                        <- AOC schemas records
+                
+                <- AOC schemas records
+                    <= append next new AOC to AOC schemas records
+                    <- AOC schemas records
+                    <- new AOC
+
+                <- no more canonicals to process?
+                    <= judge if there are more canonicals to process
+                    <- all user inputs
+                    <- AOC schemas records
+                
+                /: Continue unless done: append next counter if not terminated
+                <- counters
+                    <= append next counter to counters
+                        <= if session should NOT end
+                        <* no more canonicals to process?
+                    <- counters
+                    <- next counter
+                        <= compute next counter as current counter plus one
+                        <- current counter
+            
+            <- counters
+            <* current counter from counters
+        
+        <- all AOC schema
+            <= clean up and consolidate all AOC schemas into one
+            <- AOC schemas extracted so far
+    
+    /: Validate the generated AOC
+    <- AOC is valid?
+        <= judge if all AOC rules are valid
+        <- AOC definitions
+    
+    /: ============================================================
+    /: PHASE 2: Verification Against RTL Trace
+    /: ============================================================
+    
+    /: Load and prepare trace data
+    <- RTL simulation trace
+        <= load trace from simulation output
+        <- trace file
+    
+    <- trace per cycle
+        <= split trace into discrete cycles
+        <- RTL simulation trace
+    
+    /: The verification loop
+    <- verification per cycle
+        <= for each cycle trace in trace per cycle
+        
+            <= return the verification result for this iteration
+                <= only if AOC is valid
+                <* AOC is valid?
+            
+            <- active rules
+                <= update active rules based on current cycle
+                <- current cycle trace
+                <- previous active rules
+                <- AOC definitions
+            
+            <- verification
+                <= verify trace against active rules for this cycle
+                <- current cycle trace
+                <- active rules
+        
+        <- trace per cycle
+        <* current cycle trace from trace per cycle
+        <* previous active rules carried from active rules
+
+    <- all information about the testing
+        <= collect (into a single annotation dict) all information about AOC definitions, verification per cycle, RTL simulation trace, all user inputs, 
+        <- AOC definitions
+        <- verification per cycle
+        <- trace per cycle
+        <- all user inputs

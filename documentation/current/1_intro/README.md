@@ -27,7 +27,7 @@ If you're new to NormCode, read these in order:
 **Write your first plan in 5 minutes**
 
 - Basic syntax (`<-` and `<=`)
-- Execution flow (bottom-up)
+- Execution flow (child-to-parent / inside-out)
 - Multi-input operations
 - Loops and conditions
 - Complete working examples
@@ -136,15 +136,8 @@ After reading the intro section, continue to:
 
 - **[Grammar](../2_grammar/README.md)** - Complete `.ncd` syntax specification
 - **[Execution](../3_execution/README.md)** - How plans run at runtime
-- **[Compilation](../4_compilation/README.md)** - The 5-phase compilation pipeline
-- **[Tools](../5_tools/README.md)** - CLI, editor, and executor
-
----
-
-## External Resources
-
-- **[Paper Draft](../../paper_draft.md)** - Academic paper (detailed background)
-- **[Editor Examples](../../Editor_EXAMPLES.md)** - Advanced editor usage patterns
+- **[Compilation](../4_compilation/README.md)** - The 4-phase compilation pipeline
+- **[Tools](../5_tools/README.md)** - Canvas App (visualization, execution, debugging, editor)
 
 ---
 

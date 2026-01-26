@@ -174,6 +174,87 @@ class CustomToolConfig:
 
 
 @dataclass
+class CanvasIntegrationToolConfig:
+    """
+    Configuration for the unified Canvas Integration tool.
+    
+    The Canvas Integration tool provides three "perspectives" for AI interaction:
+    - First Person (me.*): Actions the AI takes (click, type, drag)
+    - Second Person (you.*): Queries the AI makes to the system (get state)
+    - Third Person (it.*): Observations of system events (event history)
+    
+    Example:
+    {
+        "enabled": true,
+        "perspectives": {
+            "first_person": true,   // me.* - Hands (actions)
+            "second_person": true,  // you.* - Senses (queries)
+            "third_person": true    // it.* - Memory (observation)
+        }
+    }
+    """
+    enabled: bool = True
+    
+    # Perspective toggles (all enabled by default)
+    first_person_enabled: bool = True   # me.* actions (Hands faculty)
+    second_person_enabled: bool = True  # you.* queries (Senses faculty)
+    third_person_enabled: bool = True   # it.* observation (Memory faculty)
+    
+    # Optional: contained tool overrides
+    file_system_base_dir: Optional[str] = None
+    python_timeout: int = 30
+    
+    def to_dict(self) -> Dict[str, Any]:
+        result: Dict[str, Any] = {
+            "enabled": self.enabled,
+            "perspectives": {
+                "first_person": self.first_person_enabled,
+                "second_person": self.second_person_enabled,
+                "third_person": self.third_person_enabled,
+            }
+        }
+        # Only include overrides if non-default
+        if self.file_system_base_dir:
+            result["file_system_base_dir"] = self.file_system_base_dir
+        if self.python_timeout != 30:
+            result["python_timeout"] = self.python_timeout
+        return result
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'CanvasIntegrationToolConfig':
+        if data is None:
+            return cls()
+        
+        # Handle both new format (perspectives) and legacy format (chat/canvas/parser)
+        perspectives = data.get("perspectives", {})
+        
+        # Legacy format conversion
+        if not perspectives and any(k in data for k in ["chat", "canvas", "parser"]):
+            # Old format had separate chat/canvas/parser toggles
+            # Map to new perspectives (all enabled if any were enabled)
+            any_enabled = (
+                data.get("chat", {}).get("enabled", False) or
+                data.get("canvas", {}).get("enabled", False) or
+                data.get("parser", {}).get("enabled", False)
+            )
+            return cls(
+                enabled=any_enabled,
+                first_person_enabled=any_enabled,
+                second_person_enabled=any_enabled,
+                third_person_enabled=any_enabled,
+            )
+        
+        return cls(
+            enabled=data.get("enabled", True),
+            first_person_enabled=perspectives.get("first_person", True),
+            second_person_enabled=perspectives.get("second_person", True),
+            third_person_enabled=perspectives.get("third_person", True),
+            file_system_base_dir=data.get("file_system_base_dir"),
+            python_timeout=data.get("python_timeout", 30),
+        )
+
+
+@dataclass
 class AgentToolsConfig:
     """
     Container for all tool configurations.
@@ -188,10 +269,13 @@ class AgentToolsConfig:
     │  │  - temp     │  │  - enabled  │  │             │                 │
     │  └─────────────┘  └─────────────┘  └─────────────┘                 │
     │                                                                     │
-    │  ┌─────────────┐  ┌─────────────┐                                  │
-    │  │ python_int. │  │ user_input  │  (core tools)                    │
-    │  │  - timeout  │  │  - mode     │                                  │
-    │  └─────────────┘  └─────────────┘                                  │
+    │  ┌─────────────┐  ┌─────────────┐  ┌───────────────────────┐       │
+    │  │ python_int. │  │ user_input  │  │ canvas_integration    │       │
+    │  │  - timeout  │  │  - mode     │  │  - perspectives       │       │
+    │  └─────────────┘  └─────────────┘  │    - first_person     │       │
+    │                                     │    - second_person    │       │
+    │                                     │    - third_person     │       │
+    │                                     └───────────────────────┘       │
     │                                                                     │
     │  ┌────────────────────────────────────────────────────────────┐    │
     │  │ custom: Dict[str, CustomToolConfig]                        │    │
@@ -202,6 +286,7 @@ class AgentToolsConfig:
     
     Each tool is a peer - LLM is treated the same as file_system, paradigm, etc.
     Custom tools can be injected via the 'custom' dict.
+    Canvas integration provides AI with perspectives on the canvas app.
     """
     # Core tools (always available, can be configured)
     llm: LLMToolConfig = field(default_factory=LLMToolConfig)
@@ -209,6 +294,9 @@ class AgentToolsConfig:
     file_system: FileSystemToolConfig = field(default_factory=FileSystemToolConfig)
     python_interpreter: PythonInterpreterToolConfig = field(default_factory=PythonInterpreterToolConfig)
     user_input: UserInputToolConfig = field(default_factory=UserInputToolConfig)
+    
+    # Canvas Integration - unified tool with perspectives (for compiler/meta-projects)
+    canvas_integration: Optional[CanvasIntegrationToolConfig] = None
     
     # Custom/injectable tools (extensibility point)
     # Key is tool name, value is the tool configuration
@@ -222,6 +310,8 @@ class AgentToolsConfig:
             "python_interpreter": self.python_interpreter.to_dict(),
             "user_input": self.user_input.to_dict(),
         }
+        if self.canvas_integration:
+            result["canvas_integration"] = self.canvas_integration.to_dict()
         if self.custom:
             result["custom"] = {k: v.to_dict() for k, v in self.custom.items()}
         return result
@@ -238,18 +328,26 @@ class AgentToolsConfig:
             for name, cfg in custom_data.items()
         }
         
+        # Parse canvas integration (if present)
+        canvas_integration = None
+        if "canvas_integration" in data:
+            canvas_integration = CanvasIntegrationToolConfig.from_dict(data.get("canvas_integration"))
+        
         return cls(
             llm=LLMToolConfig.from_dict(data.get("llm")),
             paradigm=ParadigmToolConfig.from_dict(data.get("paradigm")),
             file_system=FileSystemToolConfig.from_dict(data.get("file_system")),
             python_interpreter=PythonInterpreterToolConfig.from_dict(data.get("python_interpreter")),
             user_input=UserInputToolConfig.from_dict(data.get("user_input")),
+            canvas_integration=canvas_integration,
             custom=custom_tools,
         )
     
     def get_tool_names(self) -> List[str]:
-        """Get all configured tool names (core + custom)."""
+        """Get all configured tool names (core + canvas_integration + custom)."""
         core = ["llm", "paradigm", "file_system", "python_interpreter", "user_input"]
+        if self.canvas_integration and self.canvas_integration.enabled:
+            core.append("canvas_integration")
         return core + list(self.custom.keys())
 
 

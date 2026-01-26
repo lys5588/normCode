@@ -1,17 +1,29 @@
 # Activation
 
-**Phase 4: Generating executable JSON repositories from enriched `.ncd` files.**
+**Phase 4: Generating executable JSON repositories from enriched `.pf.ncd` files.**
 
 ---
 
 ## Overview
 
-**Activation** is the final phase of NormCode compilation. It transforms the enriched `.ncd` file into executable JSON repositories that the Orchestrator can load and run.
+**Activation** is the final phase of NormCode compilation. It transforms the enriched `.pf.ncd` file into executable JSON repositories that the Orchestrator can load and run.
 
-**Input**: `.ncd` (enriched with post-formalization annotations)  
+**Input**: `.pf.ncd` (enriched with post-formalization annotations)  
 **Output**: `concept_repo.json` + `inference_repo.json`
 
 **Core Task**: Extract and structure all information needed by the Orchestrator's execution engine.
+
+### The Activation Pipeline
+
+```
+_.pf.ncd (Post-Formalized Plan)
+    ↓ _.parse_to_nci.py
+_.pf.nci.json (Intermediate - parsed structure)
+    ↓ _.activate_nci.py
+repos/concept_repo.json + repos/inference_repo.json
+```
+
+The activator reads the parsed NCI (NormCode Intermediate) format and generates the final JSON repositories.
 
 ### Key Sub-Tasks
 
@@ -36,14 +48,65 @@ Post-Formalization **declares demands** (resource paths as annotations). Activat
 
 ### Why Activation Is Needed
 
-The `.ncd` format is optimized for human readability and editability, but:
+The `.pf.ncd` format is optimized for human readability and editability, but:
 - The Orchestrator needs structured JSON
 - Each sequence type expects specific `working_interpretation` fields
 - References need initialization data
 - Execution order needs to be determinable
 - **Resource demands must be validated and resolved**
 
-**Activation bridges the gap** between human-readable `.ncd` and machine-executable JSON.
+**Activation bridges the gap** between human-readable `.pf.ncd` and machine-executable JSON.
+
+### ⚠️ CRITICAL: Flow Index Structure Requirements
+
+The activator expects a specific flow index pattern. Getting this wrong causes runtime failures.
+
+**Correct Pattern:**
+```
+1.7      - {parent value}           (depth 2)
+  1.7.1  - <= (functional)          (depth 3) - ALWAYS .1
+  1.7.2  - {input1}                 (depth 3) - sibling
+  1.7.3  - {input2}                 (depth 3) - sibling
+    1.7.3.1 - <= (child functional) (depth 4) - child's .1
+    1.7.3.2 - <source>              (depth 4) - sibling of child functional
+  1.7.4  - {input3}                 (depth 3) - sibling
+```
+
+**Rules:**
+1. **Functional concept is always `.1`** - The operator/imperative is the first child
+2. **Same depth = same index length** - Siblings have indices with same number of parts
+3. **Value concepts are siblings, not children** - Inputs at same depth as functional
+4. **Each functional can have its own child tree** - Nested inferences follow same pattern
+
+**Common Mistake (causes bugs):**
+```
+# WRONG - nesting inputs under functional
+1.7.1    - <= (functional)
+  1.7.1.1  - {input1}  ← Should be 1.7.2
+  1.7.1.2  - {input2}  ← Should be 1.7.3
+```
+
+### ⚠️ CRITICAL: Explicit Input References for Operators
+
+Operators that reference concepts in their syntax (like `$. %>(<source>)`) **MUST** declare those concepts as sibling value concepts.
+
+**WRONG - Missing input reference:**
+```ncd
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    /: BUG: <AOC is valid> is referenced but not declared!
+```
+
+**CORRECT - Explicit input reference:**
+```ncd
+<- {AOC validity} | ?{flow_index}: 1.7.3
+    <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+    <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+```
+
+**Why?** The scheduler builds a dependency graph from value concepts. Without explicit declarations, it doesn't know to wait for the source concept to complete.
+
+**Symptom:** Value concept shows "empty" status even though source is "complete".
 
 ---
 
@@ -139,10 +202,36 @@ Activation generates two separate JSON files:
 | `description` | string | Optional description | `"Input document to process"` |
 | `is_ground_concept` | boolean | Pre-initialized? | `true` for inputs |
 | `is_final_concept` | boolean | Final output? | `true` for root |
+| `is_invariant` | boolean | Persist across loop iterations? | `true` for loop state |
 | `reference_data` | array or null | Initial perceptual signs | `["%{file_location}(...)"]` |
-| `reference_axis_names` | array | Axis names | `["_none_axis"]`, `["signal", "date"]` |
+| `axis_name` | string | Primary axis (for TVA) | `"cycle"`, `"_none_axis"` |
+| `reference_axis_names` | array | Full axis list | `["_none_axis"]`, `["signal", "date"]` |
 | `reference_element_type` | string | Element data type | `"str"`, `"paradigm"`, `"operator"` |
 | `natural_name` | string | Human-readable name | `"document"`, `"summarize the text"` |
+
+### ⚠️ Important: `axis_name` vs `reference_axis_names`
+
+| Field | Purpose | Used By |
+|-------|---------|---------|
+| `axis_name` | **Primary** axis for list-to-axis conversion | TVA step |
+| `reference_axis_names` | **Full list** of expected axes | Shape validation |
+
+**When a paradigm returns a list**, TVA uses `axis_name` to create a new axis dimension:
+- Script returns: `[{cycle: 1, events: [...]}, {cycle: 2, events: [...]}, ...]`
+- TVA reads `concept.axis_name` (e.g., `"cycle"`)
+- TVA creates Reference with shape `(N,)` along that axis
+
+**Extraction from `.pf.ncd`:**
+```python
+axis_names = parse_axes(axes_str)  # From |%{ref_axes}: [cycle]
+primary_axis_name = axis_names[0] if axis_names else "_none_axis"
+
+concept_entry = {
+    "axis_name": primary_axis_name,  # Primary for TVA
+    "reference_axis_names": axis_names,  # Full list
+    ...
+}
+```
 
 ### ID Prefixes
 
@@ -284,7 +373,8 @@ The orchestrator's execution engine looks up each `function_concept` string from
 **Required Fields**:
 ```json
 {
-  "paradigm": "h_PromptTemplate-c_Generate-o_Text",
+  "paradigm": "v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal",
+  "body_faculty": "llm",
   "value_order": {
     "{input 1}": 1,
     "{input 2}": 2
@@ -298,11 +388,12 @@ The orchestrator's execution engine looks up each `function_concept` string from
 ```json
 {
   "value_selectors": {
-    "intermediate_key": {
-      "source_concept": "{grouped_input}",
-      "key": "{sub_key}",
+    "{concept}": {
+      "packed": true,
+      "source": "{another_concept}",
+      "key": "field_name",
       "index": 0,
-      "branch": {"path": "NULL", "content": "file_location"}
+      "unpack": false
     }
   },
   "values": {"{ground_concept}": "pre_set_value"},
@@ -312,10 +403,59 @@ The orchestrator's execution engine looks up each `function_concept` string from
 
 **Extraction**:
 1. **paradigm**: From `|%{norm_input}` annotation
-2. **value_order**: From `<:{N}>` bindings on value concepts
-3. **value_selectors**: For concepts created by grouping (`&[{}]`)
-4. **values**: For ground concepts with direct values
-5. **create_axis_on_list_output**: Based on output type (`[]` → false)
+2. **body_faculty**: From `|%{body_faculty}` annotation (default: `"llm"`)
+3. **value_order**: From `<:{N}>` bindings OR explicit `|%{value_order}` annotation
+4. **value_selectors**: From `|%{selector_packed}`, `|%{selector_source}`, etc.
+5. **values**: For ground concepts with direct values
+6. **create_axis_on_list_output**: Based on output type (`[]` → false)
+
+### ⚠️ Explicit Value Order (`%{value_order}`)
+
+When an inference has many value concepts but only needs a subset as inputs, use explicit value_order:
+
+```ncd
+<= ::(combine information) | ?{flow_index}: 1.1 | ?{sequence}: imperative
+    | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+    | %{value_order}: [{all testing information}]
+```
+
+**Generated working_interpretation:**
+```json
+"value_order": {
+  "{all testing information}": 1
+}
+```
+
+Without explicit `%{value_order}`, the activator infers from all value_concepts in the tree, which may include unwanted concepts.
+
+### Value Selectors
+
+When bundled data needs special handling:
+
+| Annotation | Purpose | Selector Field |
+|------------|---------|----------------|
+| `%{selector_packed}: true` | Keep as single input | `"packed": true` |
+| `%{selector_source}: {concept}` | Read from another concept | `"source": "{concept}"` |
+| `%{selector_key}: field` | Select dict key | `"key": "field"` |
+| `%{selector_index}: N` | Select list index | `"index": N` |
+| `%{selector_unpack}: true` | Unpack into separate inputs | `"unpack": true` |
+
+**Example `.pf.ncd`:**
+```ncd
+<- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.2.2
+    | %{ref_axes}: [_none_axis]
+    | %{ref_element}: dict
+    | %{selector_packed}: true
+```
+
+**Generated value_selectors:**
+```json
+"value_selectors": {
+  "{all user inputs}": {
+    "packed": true
+  }
+}
+```
 
 ### 2. Judgement Sequence
 
@@ -348,8 +488,7 @@ The orchestrator's execution engine looks up each `function_concept` string from
 {
   "syntax": {
     "marker": ".",
-    "assign_source": "{source}",
-    "assign_destination": "{destination}"
+    "assign_source": "{source}"
   },
   "workspace": {},
   "flow_info": {"flow_index": "1.1"}
@@ -358,57 +497,173 @@ The orchestrator's execution engine looks up each `function_concept` string from
 
 **Marker-Specific Fields**:
 
-| Marker | Additional Fields |
-|--------|------------------|
-| `"="` (identity) | `"canonical_concept"`, `"alias_concept"` |
-| `"%"` (abstraction) | `"face_value"`, `"axis_names"` |
-| `"."` (specification) | (none) |
-| `"+"` (continuation) | `"by_axes"` |
-| `"-"` (derelation) | `"selector": {"index": N}` or `{"key": "..."}` or `{"unpack": true}` |
+| Marker | Operator | Required Fields |
+|--------|----------|-----------------|
+| `"="` (identity) | `$=` | `canonical_concept`, `alias_concept` |
+| `"%"` (abstraction) | `$%` | `face_value`, `axis_names` |
+| `"."` (specification) | `$.` | `assign_source` (can be string or array) |
+| `"+"` (continuation) | `$+` | `assign_source`, `assign_destination`, `by_axes` |
+| `"-"` (derelation) | `$-` | `selector` |
+
+### Specification Operator (`$.`)
+
+**Syntax**: `$. %>({output}) %<[{src1}, {src2}]` or `$. %>({output})`
+
+**Source Selection Priority**:
+1. **Annotation** (highest): `%{assign_sources}: [{src1}, {src2}]`
+2. **Inline list**: `%<[{src1}, {src2}]`
+3. **Inline single** (fallback): `%>({X})` - X is both output and source
+
+**Example:**
+```ncd
+<= $. %>({output}) | ?{sequence}: assigning
+    | %{assign_sources}: [{src1}, {src2}, {src3}]
+```
+
+**Generated syntax:**
+```json
+"syntax": {
+  "marker": ".",
+  "assign_source": ["{src1}", "{src2}", "{src3}"]
+}
+```
+
+### Continuation Operator (`$+`)
+
+**Syntax**: `$+ %>([destination]) %<({source}) %:(axis)`
+
+**Example:**
+```ncd
+<= $+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis) | ?{sequence}: assigning
+```
+
+**Generated syntax:**
+```json
+"syntax": {
+  "marker": "+",
+  "assign_source": "{new AOC}",
+  "assign_destination": "[AOC schemas records]",
+  "by_axes": "_none_axis"
+}
+```
+
+**Note**: Use `%:(_none_axis)` when appending to lists with grouped values (shape `(1,)` on `_none_axis`).
+
+### Abstraction Operator (`$%`)
+
+**Syntax**: `$% %>([%(literal_value)])`
+
+**Annotation for literal value**: `%{literal<$% name>}: value`
+
+**Example:**
+```ncd
+<= $% %>([%(1)]) | ?{sequence}: assigning
+    | %{literal<$% counters>}: [1]
+```
+
+**Generated syntax:**
+```json
+"syntax": {
+  "marker": "%",
+  "face_value": ["%(1)"],
+  "axis_names": ["counter"]
+}
+```
+
+**Important**: The activator must preserve the literal wrapper notation (`%(1)`) in `face_value`, not parse it to raw values.
 
 **Extraction**:
 1. **marker**: From operator symbol (`$=` → `"="`, `$.` → `"."`, etc.)
-2. **assign_source**: From `%>({concept})` modifier
-3. **assign_destination**: From `%<({concept})` modifier
-4. **by_axes**: From `%:({axis})` modifier (for continuation)
-5. **face_value**: From literal in `$% %>(...)`
+2. **assign_source**: From `%>({concept})` or `%<({concept})` depending on operator
+3. **assign_destination**: From `%>([dest])` for continuation
+4. **by_axes**: From `%:(axis)` modifier
+5. **face_value**: From `%{literal<$% name>}` annotation (preserves literal wrapper)
 6. **selector**: From `%^(<selector>)` modifier
 
 ### 4. Grouping Sequence
 
 **For**: `inference_sequence: "grouping"`
 
+**Two Grouping Operators**:
+
+| Operator | Marker | Result | Use Case |
+|----------|--------|--------|----------|
+| `&[{}]` | `"in"` | Dict with labeled keys | Bundle named items |
+| `&[#]` | `"across"` | Flat list | Collect items |
+
 **Required Fields**:
 ```json
 {
   "syntax": {
     "marker": "in",
-    "by_axis_concepts": ["{context_concept}"],
-    "protect_axes": []
+    "sources": ["{source1}", "{source2}"],
+    "create_axis": null,
+    "by_axes": [["_none_axis"], ["_none_axis"]]
   },
   "workspace": {},
   "flow_info": {"flow_index": "1.1"}
 }
 ```
 
-**New Format** (per-reference collapse):
+### ⚠️ Grouping WITHOUT Axis Creation (Packed Output)
+
+When `%+(axis)` is NOT specified, `create_axis` is `null`:
+
+```ncd
+<= &[#] %>[{source}] | ?{sequence}: grouping
+    /: NO %+(axis) = packed output with shape (1,)
+```
+
+**Generated syntax:**
 ```json
-{
-  "syntax": {
-    "marker": "across",
-    "by_axes": [["axis1"], ["axis2"]],
-    "create_axis": "new_axis",
-    "protect_axes": []
-  }
+"syntax": {
+  "marker": "across",
+  "sources": ["{source}"],
+  "create_axis": null,
+  "by_axes": [["_none_axis"]]
 }
 ```
 
+**Result**: Shape `(1,)` with all items wrapped in single element.
+
+### Grouping WITH Axis Creation
+
+When `%+(axis)` IS specified:
+
+```ncd
+<= &[#] %>[{source}] %+(new_axis) | ?{sequence}: grouping
+```
+
+**Generated syntax:**
+```json
+"syntax": {
+  "marker": "across",
+  "sources": ["{source}"],
+  "create_axis": "new_axis",
+  "by_axes": [["_none_axis"]]
+}
+```
+
+**Result**: Shape `(N,)` with N separate elements along `new_axis`.
+
+### `by_axes` Field
+
+The `by_axes` field specifies which axes to collapse from **each** input:
+
+```json
+"by_axes": [["_none_axis"], ["_none_axis"], ["_none_axis"]]
+```
+
+- One entry per value concept (source)
+- Each entry is a list of axes to collapse from that input
+- `["_none_axis"]` collapses the singleton axis from each input
+
 **Extraction**:
 1. **marker**: From operator (`&[{}]` → `"in"`, `&[#]` → `"across"`)
-2. **by_axis_concepts**: From context concepts (`<*` lines)
-3. **by_axes**: From per-input axis analysis (new format)
-4. **create_axis**: From `%+({axis_name})` modifier
-5. **protect_axes**: From `<$!{axis}>` markers in `%:(...)` modifier
+2. **sources**: From `%>[{src1}, {src2}]` modifier
+3. **create_axis**: From `%+(axis_name)` modifier, or `null` if not present
+4. **by_axes**: Build as `[["_none_axis"]]` for each value concept
+5. **protect_axes**: From `<$!{axis}>` markers (rarely used)
 
 ### 5. Timing Sequence
 
@@ -495,11 +750,29 @@ After provision, the `working_interpretation` contains:
 Activation uses a **bidirectional approach**:
 
 1. **Bottom-up (Execution Requirements)**: Know what each IWI step expects
-2. **Top-down (Extraction Rules)**: Parse `.ncd` syntax to produce that structure
+2. **Top-down (Extraction Rules)**: Parse `.pf.ncd` syntax to produce that structure
+
+### Annotation Pattern Reference
+
+The activator extracts fields from these annotation patterns:
+
+| Annotation | Pattern | Purpose | Example |
+|------------|---------|---------|---------|
+| `%{name}: value` | `r"%\{(\w+)\}:\s*(.+)"` | Key-value annotation | `%{ref_axes}: [signal]` |
+| `%{literal<$% X>}: value` | `r"%\{literal<\$([%=.+-])\s*([^>]+)>\}:\s*(.+)"` | Literal for abstraction | `%{literal<$% counters>}: [1]` |
+| `<:{N}>` | `r"<:\{(\d+)\}>"` | Input binding order | `<:{1}>`, `<:{2}>` |
+| `%>({concept})` | `r"%>\(\{([^}]+)\}\)"` | Output/source (object) | `%>({result})` |
+| `%>[{concept}]` | `r"%>\(\[([^\]]+)\]\)"` | Output/source (relation) | `%>[{items}]` |
+| `%<({concept})` | `r"%<\(\{([^}]+)\}\)"` | Source element | `%<({new item})` |
+| `%:(axis)` | `r"%:\(([^)]+)\)"` | Axis name | `%:(_none_axis)` |
+| `%+(axis)` | `r"%\+\(([^)]+)\)"` | Create axis (grouping) | `%+(signal)` |
+| `%{value_order}: [...]` | Custom parser | Explicit input ordering | `%{value_order}: [{a}, {b}]` |
+| `%{selector_packed}: true` | `r"%\{selector_packed\}:\s*(.+)"` | Keep bundled | `%{selector_packed}: true` |
+| `%{is_invariant}: true` | `r"%\{is_invariant\}:\s*(.+)"` | Loop persistence | `%{is_invariant}: true` |
 
 ### The Syntax Mapping Task
 
-**Core challenge**: Transform dense `.ncd` annotations into structured `working_interpretation` dicts.
+**Core challenge**: Transform dense `.pf.ncd` annotations into structured `working_interpretation` dicts.
 
 **Algorithm**:
 
@@ -690,10 +963,44 @@ After generating repositories, validate:
 | Error | Symptom | Fix |
 |-------|---------|-----|
 | **Missing paradigm** | No `paradigm` field in WI | Add `\|%{norm_input}` annotation |
-| **Missing value_order** | Empty `value_order` dict | Add value bindings (`<:{N}>`) |
+| **Missing value_order** | Empty `value_order` dict | Add value bindings (`<:{N}>`) or `%{value_order}` |
 | **Invalid flow_index** | Non-hierarchical indices | Re-run formalization |
 | **Missing axes** | `reference_axis_names` is null | Add `\|%{ref_axes}` annotation |
 | **Wrong sequence type** | IWI expects different fields | Fix `?{sequence}:` marker |
+
+### ⚠️ Critical Errors from Debugging
+
+| Error | Symptom | Fix |
+|-------|---------|-----|
+| **Function concept not found** | `'Function concept '<= ::()' not found in ConceptRepo'` | Ensure activator adds function concepts to concept_repo |
+| **Missing assign_source** | `AR failed: 'assign_source' must be specified` | Add explicit input reference as sibling value concept |
+| **Missing assign_destination** | `AR failed for continuation (+)` | Add `%>([dest])` and `%<({src})` to `$+` operator |
+| **Wrong flow index nesting** | Inputs at `.1.1` instead of `.2` | Fix flow indices - inputs are siblings of functional |
+| **Empty reference status** | Value concept "empty" but source "complete" | Add explicit input reference for operators |
+| **Shape mismatch** | Cross product with `(0,)` produces nothing | Initialize lists with placeholder `(1,)` |
+| **Too many inputs** | Wrong concepts passed to paradigm | Use explicit `%{value_order}` |
+| **Literal not preserved** | `%(1)` becomes `1` | Use `extract_literal_annotation_value` to preserve wrapper |
+
+### ⚠️ Activator Indentation Bug (Critical)
+
+**Problem**: Python code running outside intended conditional blocks.
+
+```python
+# BUG: This runs for ALL markers and OVERWRITES!
+if marker == "%":
+    wi["syntax"] = {"marker": "%", "face_value": ...}
+elif marker == ".":
+    wi["syntax"] = {"marker": ".", "assign_source": ...}
+
+wi["syntax"] = {"marker": marker, "assign_source": None}  # OVERWRITES!
+```
+
+**Fix**: Ensure all syntax assignments are inside their respective blocks:
+```python
+else:
+    # Only for unhandled markers
+    wi["syntax"] = {"marker": marker, "assign_source": None}
+```
 
 ---
 
@@ -796,7 +1103,6 @@ def deactivate(concept_repo, inference_repo):
 After activation:
 
 - **[Execution Section](../3_execution/README.md)** - How the orchestrator runs the generated repositories
-- **[Editor](editor.md)** - Tools for working with repositories
 
 ---
 
@@ -808,25 +1114,48 @@ After activation:
 |---------|---------|
 | **Two repositories** | Concepts (data) separated from inferences (logic) |
 | **working_interpretation** | Critical field containing sequence-specific configuration |
-| **Syntax mapping** | Transform `.ncd` annotations to WI dicts |
-| **Value selectors** | Handle decomposition of grouped concepts |
+| **Syntax mapping** | Transform `.pf.ncd` annotations to WI dicts |
+| **Value selectors** | Handle `packed`, `source`, `key`, `index` annotations |
 | **Ground concepts** | Pre-initialized with reference_data |
-| **Round-trip** | Can go from JSON back to `.ncd` |
+| **Round-trip** | Can go from JSON back to `.pf.ncd` |
+
+### ⚠️ Critical Lessons from Debugging
+
+| Lesson | Detail |
+|--------|--------|
+| **Flow index sibling pattern** | Functional is `.1`, inputs are `.2`, `.3`, `.4` (NOT `.1.1`, `.1.2`) |
+| **Explicit input references** | Operators MUST declare inputs as sibling value concepts |
+| **Function concepts required** | Must be in concept_repo.json or orchestrator fails |
+| **axis_name vs reference_axis_names** | TVA uses `axis_name`, validation uses `reference_axis_names` |
+| **Preserve literal wrappers** | `%(1)` must stay as `%(1)` in face_value, not become `1` |
+| **is_invariant field** | Loop state containers need `is_invariant: true` |
+| **Grouping create_axis** | `null` = packed `(1,)`, `"axis"` = expanded `(N,)` |
+| **by_axes for each input** | One `["_none_axis"]` entry per source concept |
+
+### Required Fields by Sequence Type
+
+| Sequence | Required in `syntax` |
+|----------|---------------------|
+| **assigning** (abstraction `%`) | `marker`, `face_value`, `axis_names` |
+| **assigning** (specification `.`) | `marker`, `assign_source` |
+| **assigning** (continuation `+`) | `marker`, `assign_source`, `assign_destination`, `by_axes` |
+| **grouping** | `marker`, `sources`, `create_axis`, `by_axes` |
+| **looping** | `marker`, `LoopBaseConcept`, `CurrentLoopBaseConcept`, `ConceptToInfer` |
+| **imperative/judgement** | `paradigm`, `body_faculty`, `value_order` |
 
 ### The Activation Promise
 
 **Activation makes plans executable**:
 
-1. Enriched `.ncd` → Structured JSON repositories
+1. Enriched `.pf.ncd` → Structured JSON repositories
 2. Each sequence gets exactly what it needs
 3. Ground concepts pre-initialized
-4. Ready for orchestrator loading
-5. Fully auditable and traceable
+4. Function concepts included for orchestrator lookup
+5. Ready for orchestrator loading
+6. Fully auditable and traceable
 
-**Result**: Executable repositories that the orchestrator can load and run, with complete traceability back to source `.ncd`.
+**Result**: Executable repositories that the orchestrator can load and run, with complete traceability back to source `.pf.ncd`.
 
 ---
 
 **Ready to execute?** See the [Execution Section](../3_execution/README.md) to understand how the orchestrator runs these repositories.
-
-**Need to edit or convert?** See [Editor](editor.md) for tools to work with all NormCode formats.

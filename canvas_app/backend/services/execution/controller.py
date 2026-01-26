@@ -520,7 +520,7 @@ class ExecutionController:
         self._agent_registry = AgentRegistry(default_base_dir=base_dir)
         self._agent_mapping = AgentMappingService()
         
-        self._add_log("info", "", f"Created project-scoped agent registry for: {project_name or project_id or 'unknown'}")
+        self._add_log("info", "", f"Created project-scoped agent registry for: {project_name or 'unknown'}")
         
         # Try to load project-specific agent configuration
         if agent_config or project_name:
@@ -571,13 +571,26 @@ class ExecutionController:
         self.body = self._agent_registry.get_body(default_agent_id)
         self._add_log("info", "", f"Using agent '{default_agent_id}' for execution (project-scoped)")
         
-        # Inject canvas tools into the body
-        from .tool_injection import inject_canvas_tools, setup_tool_monitoring
-        canvas_tools = inject_canvas_tools(self.body, self._emit_sync)
-        self.user_input_tool = canvas_tools.user_input_tool
-        self.chat_tool = canvas_tools.chat_tool
-        self.canvas_tool = canvas_tools.canvas_tool
-        self.parser_tool = canvas_tools.parser_tool
+        # Inject canvas tools into the body (use unified CanvasIntegrationTool)
+        from .tool_injection import inject_canvas_integration, setup_tool_monitoring
+        canvas_result = inject_canvas_integration(
+            self.body, 
+            self._emit_sync,
+            use_unified_tool=True  # Enable me/you/it perspectives
+        )
+        # If unified tool, canvas_result is CanvasIntegrationTool, otherwise CanvasToolSet
+        if hasattr(canvas_result, 'user_input_tool'):
+            # Unified tool
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = self.body.chat  # Injected by full_injection
+            self.canvas_tool = canvas_result  # The unified tool IS the canvas tool
+            self.parser_tool = canvas_result.parser_tool
+        else:
+            # Old style CanvasToolSet
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = canvas_result.chat_tool
+            self.canvas_tool = canvas_result.canvas_tool
+            self.parser_tool = canvas_result.parser_tool
         
         # Set up tool monitoring
         setup_tool_monitoring(
@@ -733,12 +746,32 @@ class ExecutionController:
         self._add_log("info", "", f"Execution paused at {self.current_inference or 'start'}")
     
     async def resume(self):
-        """Resume from paused state."""
+        """Resume from paused state.
+        
+        If there's no running task (e.g., after resume_from_checkpoint), 
+        this will create one like start() does.
+        """
+        if self.orchestrator is None:
+            raise RuntimeError("No repositories loaded. Call load_repositories first.")
+        
+        self._main_loop = asyncio.get_running_loop()
+        self._attach_infra_log_handlers()
+        
         self.status = ExecutionStatus.RUNNING
         self._pause_event.set()
         self._sync_status_to_registry()
+        
+        # If no task is running, create one (handles resume after checkpoint load)
+        if self._run_task is None or self._run_task.done():
+            self._stop_requested = False
+            if hasattr(self, 'chat_tool') and self.chat_tool:
+                self.chat_tool.set_execution_active(True)
+            self._run_task = asyncio.create_task(self._run_loop())
+            self._add_log("info", "", "Execution started (from resume)")
+        else:
+            self._add_log("info", "", "Execution resumed")
+        
         await self._emit("execution:resumed", {})
-        self._add_log("info", "", "Execution resumed")
     
     async def step(self):
         """Execute single inference then pause."""
@@ -1498,13 +1531,26 @@ class ExecutionController:
         default_agent_id = self._agent_mapping.default_agent
         self.body = self._agent_registry.get_body(default_agent_id)
         
-        # Inject canvas tools
-        from .tool_injection import inject_canvas_tools, setup_tool_monitoring
-        canvas_tools = inject_canvas_tools(self.body, self._emit_sync)
-        self.user_input_tool = canvas_tools.user_input_tool
-        self.chat_tool = canvas_tools.chat_tool
-        self.canvas_tool = canvas_tools.canvas_tool
-        self.parser_tool = canvas_tools.parser_tool
+        # Inject canvas tools (use unified CanvasIntegrationTool)
+        from .tool_injection import inject_canvas_integration, setup_tool_monitoring
+        canvas_result = inject_canvas_integration(
+            self.body, 
+            self._emit_sync,
+            use_unified_tool=True  # Enable me/you/it perspectives
+        )
+        # If unified tool, canvas_result is CanvasIntegrationTool, otherwise CanvasToolSet
+        if hasattr(canvas_result, 'user_input_tool'):
+            # Unified tool
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = self.body.chat
+            self.canvas_tool = canvas_result
+            self.parser_tool = canvas_result.parser_tool
+        else:
+            # Old style CanvasToolSet
+            self.user_input_tool = canvas_result.user_input_tool
+            self.chat_tool = canvas_result.chat_tool
+            self.canvas_tool = canvas_result.canvas_tool
+            self.parser_tool = canvas_result.parser_tool
         
         setup_tool_monitoring(
             self.body,
@@ -1670,7 +1716,10 @@ class ExecutionController:
         llm_model: str = "demo",
         base_dir: Optional[str] = None,
         max_cycles: int = 50,
-        paradigm_dir: Optional[str] = None
+        paradigm_dir: Optional[str] = None,
+        agent_config: Optional[str] = None,
+        project_dir: Optional[str] = None,
+        project_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Resume execution from an existing checkpoint."""
         try:
@@ -1682,7 +1731,10 @@ class ExecutionController:
         
         concepts_data, inferences_data, base_dir = await self._load_repos_and_body(
             concepts_path, inferences_path, inputs_path,
-            llm_model, base_dir, paradigm_dir
+            llm_model, base_dir, paradigm_dir,
+            agent_config=agent_config,
+            project_dir=project_dir,
+            project_name=project_name,
         )
         
         self._add_log("info", "", f"Resuming run {run_id} from checkpoint...")
@@ -1720,9 +1772,9 @@ class ExecutionController:
             "max_cycles": max_cycles,
             "db_path": db_path,
             "paradigm_dir": paradigm_dir,
-            "agent_config": agent_config if 'agent_config' in locals() else None,
-            "project_dir": project_dir if 'project_dir' in locals() else base_dir,
-            "project_name": project_name if 'project_name' in locals() else None,
+            "agent_config": agent_config,
+            "project_dir": project_dir or base_dir,
+            "project_name": project_name,
         }
         
         await self._emit("execution:loaded", {
@@ -1739,6 +1791,11 @@ class ExecutionController:
             self._add_log("debug", "", f"Checkpoint manager initialized for run: {run_id}")
         else:
             self._add_log("warning", "", "Checkpoint manager NOT initialized after resume")
+        
+        if agent_config:
+            self._add_log("info", "", f"Agent config loaded: {agent_config}")
+        else:
+            self._add_log("warning", "", "No agent config provided - using default agent")
 
         return {
             "success": True,
@@ -1762,7 +1819,10 @@ class ExecutionController:
         llm_model: str = "demo",
         base_dir: Optional[str] = None,
         max_cycles: int = 50,
-        paradigm_dir: Optional[str] = None
+        paradigm_dir: Optional[str] = None,
+        agent_config: Optional[str] = None,
+        project_dir: Optional[str] = None,
+        project_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Fork from an existing checkpoint with a new run_id."""
         import uuid as uuid_module
@@ -1779,7 +1839,10 @@ class ExecutionController:
         
         concepts_data, inferences_data, base_dir = await self._load_repos_and_body(
             concepts_path, inferences_path, inputs_path,
-            llm_model, base_dir, paradigm_dir
+            llm_model, base_dir, paradigm_dir,
+            agent_config=agent_config,
+            project_dir=project_dir,
+            project_name=project_name,
         )
         
         self._add_log("info", "", f"Forking from {source_run_id} to new run {new_run_id}...")
@@ -1818,9 +1881,9 @@ class ExecutionController:
             "max_cycles": max_cycles,
             "db_path": db_path,
             "paradigm_dir": paradigm_dir,
-            "agent_config": agent_config if 'agent_config' in locals() else None,
-            "project_dir": project_dir if 'project_dir' in locals() else base_dir,
-            "project_name": project_name if 'project_name' in locals() else None,
+            "agent_config": agent_config,
+            "project_dir": project_dir or base_dir,
+            "project_name": project_name,
         }
         
         await self._emit("execution:loaded", {
@@ -1838,6 +1901,11 @@ class ExecutionController:
             self._add_log("debug", "", f"Checkpoint manager initialized for run: {new_run_id}")
         else:
             self._add_log("warning", "", "Checkpoint manager NOT initialized after fork")
+        
+        if agent_config:
+            self._add_log("info", "", f"Agent config loaded: {agent_config}")
+        else:
+            self._add_log("warning", "", "No agent config provided - using default agent")
         
         return {
             "success": True,

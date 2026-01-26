@@ -162,6 +162,10 @@ export interface ResumeRequest {
   base_dir?: string;
   max_cycles?: number;
   paradigm_dir?: string;
+  // Agent profile fields (critical for proper body creation)
+  agent_config?: string;  // Path to .agent.json file
+  project_dir?: string;   // Project directory for resolving paths
+  project_name?: string;  // Project name for auto-discovery
 }
 
 export interface ForkRequest {
@@ -177,6 +181,10 @@ export interface ForkRequest {
   base_dir?: string;
   max_cycles?: number;
   paradigm_dir?: string;
+  // Agent profile fields (critical for proper body creation)
+  agent_config?: string;  // Path to .agent.json file
+  project_dir?: string;   // Project directory for resolving paths
+  project_name?: string;  // Project name for auto-discovery
 }
 
 export interface CheckpointLoadResult {

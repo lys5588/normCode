@@ -211,21 +211,24 @@ Flow indices provide unique addresses for each step:
 
 ```ncd
 :<:_concept_to_infer_ | ?{flow_index}: 1           /:Root concept (depth 0)
-    <= _functional_concept_1_ | ?{flow_index}: 1.1         /:First child (depth 1)
-    <- _input_value_1_ | ?{flow_index}: 1.2                /:Second child (depth 1)
-        <= _functional_concept_2_ | ?{flow_index}: 1.2.1       /:First grandchild (depth 2)
-        <- _nested_input_1_ | ?{flow_index}: 1.2.1.1           /:First great-grandchild (depth 3)
-        <- _nested_input_2_ | ?{flow_index}: 1.2.1.2           /:Second great-grandchild (depth 3)
-    <- _input_value_2_ | ?{flow_index}: 1.3                /:Third child (depth 1)
-    <* _context_value_ | ?{flow_index}: 1.4                /:Fourth child (depth 1)
+    <= _functional_concept_1_ | ?{flow_index}: 1.1         /:Functional ALWAYS .1
+    <- _input_value_1_ | ?{flow_index}: 1.2                /:Sibling of functional
+        <= _functional_concept_2_ | ?{flow_index}: 1.2.1       /:Nested functional is .1
+        <- _nested_input_1_ | ?{flow_index}: 1.2.2             /:Sibling of nested functional
+        <- _nested_input_2_ | ?{flow_index}: 1.2.3             /:Another sibling
+    <- _input_value_2_ | ?{flow_index}: 1.3                /:Sibling of 1.2
+    <* _context_value_ | ?{flow_index}: 1.4                /:Sibling of 1.3
 ```
+
+**⚠️ CRITICAL: The Sibling Pattern**:
+- Functional concept is ALWAYS `.1` under its parent
+- Value concept inputs are SIBLINGS (`.2`, `.3`, `.4`), NOT children (`.1.1`, `.1.2`)
+- Example: Under `1.2`, functional is `1.2.1`, inputs are `1.2.2`, `1.2.3` (NOT `1.2.1.1`, `1.2.1.2`)
 
 **Rules**:
 - All concept lines (`:<:`, `<=`, `<-`, `<*`) act as counters and receive flow indices
 - Index determined by indentation depth
 - Counters increment at each depth level
-- When moving to a deeper level, append a new counter (e.g., 1 → 1.1 → 1.1.1)
-- When returning to or continuing at the same level, increment the last counter (e.g., 1.1 → 1.2)
 - Comment lines inherit the last concept's flow index
 
 > **Deprecated**: Older versions marked flow_index only on the functional concept (`<=`) to identify inferences. Current practice marks it on **every concept line** for complete traceability.
@@ -268,14 +271,16 @@ Format for referencing external data:
     <= ::(summarize the text) | ?{flow_index}: 1.1 | ?{sequence}: imperative
     <- {clean text} | ?{flow_index}: 1.2
         <= ::(extract main content, removing headers) | ?{flow_index}: 1.2.1 | ?{sequence}: imperative
-        <- {raw document} | ?{flow_index}: 1.2.1.1
-            <= :>:({raw document}) | ?{flow_index}: 1.2.1.1.1 | ?{sequence}: imperative
+        <- {raw document} | ?{flow_index}: 1.2.2
+            | %{literal<$% str>}: "example document content"
 ```
 
 **Flow**:
-1. Get external input (1.2.1.1.1) `{raw document}` (1.2.1.1)
+1. `{raw document}` (1.2.2) is a ground concept with literal value
 2. Extract main content (1.2.1) → `{clean text}` (1.2)
 3. Summarize (1.1) → `{document summary}` (1)
+
+**Note**: `{raw document}` is `1.2.2` (sibling of `1.2.1`), NOT `1.2.1.1` (child).
 
 ---
 
@@ -323,13 +328,13 @@ Format for referencing external data:
     <= &[{}] %>[{sentiment}, {entities}, {topics}] | ?{flow_index}: 1.1 | ?{sequence}: grouping
     <- {sentiment} | ?{flow_index}: 1.2
         <= ::(analyze sentiment) | ?{flow_index}: 1.2.1 | ?{sequence}: imperative
-        <- {text} | ?{flow_index}: 1.2.1.1
+        <- {text} | ?{flow_index}: 1.2.2
     <- {entities} | ?{flow_index}: 1.3
         <= ::(extract entities) | ?{flow_index}: 1.3.1 | ?{sequence}: imperative
-        <- {text} | ?{flow_index}: 1.3.1.1
+        <- {text} | ?{flow_index}: 1.3.2
     <- {topics} | ?{flow_index}: 1.4
         <= ::(classify topics) | ?{flow_index}: 1.4.1 | ?{sequence}: imperative
-        <- {text} | ?{flow_index}: 1.4.1.1
+        <- {text} | ?{flow_index}: 1.4.2
 ```
 
 **Flow**:

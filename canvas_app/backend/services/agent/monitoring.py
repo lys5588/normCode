@@ -222,16 +222,32 @@ class MonitoredToolProxy:
         
         return wrapped_executor
     
+    # Types that should be omitted from monitoring (internal implementation details)
+    _OMIT_TYPE_NAMES = frozenset({
+        'Body', 'MonitoredToolProxy', 'CanvasToolSet', 'CanvasIntegrationTool',
+        'FirstPersonPerspective', 'SecondPersonPerspective', 'ThirdPersonPerspective',
+        'CanvasModelEnv', 'ExecutionController',
+    })
+    
+    def _should_omit(self, value: Any) -> bool:
+        """Check if a value should be omitted from monitoring output."""
+        type_name = type(value).__name__
+        return type_name in self._OMIT_TYPE_NAMES
+    
     def _sanitize_inputs(self, args: tuple, kwargs: dict) -> Dict[str, Any]:
         """Serialize inputs for logging, preserving full structure."""
         result = {}
         
-        # Serialize all args
+        # Serialize all args, skipping internal types
         for i, arg in enumerate(args):
+            if self._should_omit(arg):
+                continue  # Skip Body and other internal types
             result[f"arg{i}"] = self._serialize_value(arg)
         
-        # Serialize all kwargs
+        # Serialize all kwargs, skipping internal types
         for key, value in kwargs.items():
+            if self._should_omit(value):
+                continue  # Skip Body and other internal types
             result[key] = self._serialize_value(value)
         
         return result
@@ -284,14 +300,18 @@ class MonitoredToolProxy:
             return serialized
         # For other objects, try to get a useful representation
         if hasattr(value, '__dict__'):
+            type_name = type(value).__name__
+            # Skip internal types - just show type name
+            if type_name in self._OMIT_TYPE_NAMES:
+                return f"<{type_name}>"
             serialized_dict = self._serialize_value(value.__dict__, depth + 1, max_depth, max_str_len)
             if isinstance(serialized_dict, dict):
                 return {
-                    "_type": type(value).__name__,
+                    "_type": type_name,
                     **serialized_dict
                 }
             else:
-                return {"_type": type(value).__name__, "_value": serialized_dict}
+                return {"_type": type_name, "_value": serialized_dict}
         if hasattr(value, 'to_dict'):
             try:
                 return self._serialize_value(value.to_dict(), depth + 1, max_depth, max_str_len)

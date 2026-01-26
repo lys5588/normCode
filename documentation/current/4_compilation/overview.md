@@ -21,34 +21,52 @@ Natural Language Instruction
          ↓
     Phase 1: Derivation
          ↓
-    .ncds (draft straightforward)
+    _.ncds (draft straightforward)
          ↓
     Phase 2: Formalization
          ↓
-    .ncd (with flow indices and sequences)
+    _.ncd (with flow indices and sequences)
          ↓
     Phase 3: Post-Formalization
          ↓
-    .ncd (enriched with annotations)
+    _.pf.ncd (enriched with annotations)
          ↓
     Phase 4: Activation
          ↓
-    .concept.json + .inference.json
+    repos/concept_repo.json + repos/inference_repo.json
          ↓
     Orchestrator Execution
 ```
 
-### The Five Phases
+### The Four Compilation Phases
 
 | Phase | Input | Output | Purpose |
 |-------|-------|--------|---------|
-| **1. Derivation** | Natural language | `.ncds` | Extract structure and hierarchy |
-| **2. Formalization** | `.ncds` | `.ncd` (formal) | Add flow indices, sequence types, bindings |
-| **3. Post-Formalization** | `.ncd` (formal) | `.ncd` (enriched) | Add norms, resources, axis annotations |
-| **4. Activation** | `.ncd` (enriched) | JSON repositories | Generate executable format |
-| **5. Execution** | JSON repositories | Results | Run the plan (see Execution section) |
+| **1. Derivation** | Natural language | `_.ncds` | Extract structure and hierarchy |
+| **2. Formalization** | `_.ncds` | `_.ncd` (formal) | Add flow indices, sequence types, bindings |
+| **3. Post-Formalization** | `_.ncd` (formal) | `_.pf.ncd` (enriched) | Add norms, resources, axis annotations |
+| **4. Activation** | `_.pf.ncd` (enriched) | JSON repositories | Generate executable format |
 
-**Note**: Phase 5 (Execution) is covered in detail in the [Execution Section](../3_execution/README.md). This section focuses on phases 1-4.
+**Note**: Execution is covered in detail in the [Execution Section](../3_execution/README.md). This section focuses on the four compilation phases.
+
+### Combined Workflow Option
+
+In practice, **Phases 2 and 3 are often combined**, producing `_.pf.ncd` directly from `_.ncds`:
+
+```
+_.ncds (Draft)
+    ↓ Combined Formalization + Post-Formalization
+_.pf.ncd (Post-Formalized, ready for activation)
+    ↓ _.parse_to_nci.py
+_.pf.nci.json (Intermediate)
+    ↓ _.activate_nci.py
+repos/concept_repo.json + repos/inference_repo.json
+```
+
+This is especially common when:
+- Building complex workflows iteratively
+- Using LLM-assisted generation
+- Needing to see the complete picture (structure + configuration)
 
 ---
 
@@ -164,7 +182,7 @@ Add structural rigor to make the plan unambiguous and executable.
     <= ::(summarize this text) | ?{flow_index}: 1.1 | ?{sequence}: imperative
     <- {clean text} | ?{flow_index}: 1.2
         <= ::(extract main content) | ?{flow_index}: 1.2.1 | ?{sequence}: imperative
-        <- {raw document} | ?{flow_index}: 1.2.1.1
+        <- {raw document} | ?{flow_index}: 1.2.2
 ```
 
 **Key changes**:
@@ -172,6 +190,7 @@ Add structural rigor to make the plan unambiguous and executable.
 - Functional concepts have sequence types
 - Root concept marked with `:<:`
 - Semantic types added (`{}` for objects, `::()` for imperatives)
+- **⚠️ Sibling pattern**: `{raw document}` is `1.2.2` (sibling of `1.2.1`), NOT `1.2.1.1`
 
 ### Details
 
@@ -228,29 +247,32 @@ Confirms **reference structure** (axes, shape, element type) for tensor coherenc
 
 ### Example
 
-**Before Post-Formalization**:
+**Before Post-Formalization** (`.ncd`):
 ```ncd
 :<:{document summary} | ?{flow_index}: 1
     <= ::(summarize this text) | ?{flow_index}: 1.1 | ?{sequence}: imperative
     <- {clean text} | ?{flow_index}: 1.2
 ```
 
-**After Post-Formalization**:
+**After Post-Formalization** (`.pf.ncd`):
 ```ncd
 :<:{document summary} | ?{flow_index}: 1
     |%{ref_axes}: [_none_axis]
     |%{ref_element}: dict(summary: str)
     <= ::(summarize this text) | ?{flow_index}: 1.1 | ?{sequence}: imperative
-        |%{norm_input}: h_PromptTemplate-c_GenerateThinkJson-o_Literal
-        |%{h_input_norm}: in-memory
+        |%{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+        |%{v_input_provision}: provisions/prompts/summarize.md
+        |%{h_input_norm}: Literal
         |%{body_faculty}: llm
     <- {clean text} | ?{flow_index}: 1.2
         |%{ref_axes}: [_none_axis]
+        |%{ref_element}: str
 ```
 
 **Key changes**:
 - Annotation lines added (starting with `|%{...}`)
-- Paradigm specified
+- Paradigm specified with full naming convention
+- Prompt path declared
 - Reference structure declared
 - Ready for activation
 
@@ -321,13 +343,13 @@ See [Activation](activation.md) for complete specification.
 ### The Relationship Between Formats
 
 ```
-.ncds (draft)
-   ↓ Formalization
-.ncd (formal) + .ncn (companion)
-   ↓ Post-Formalization
-.ncd (enriched)
-   ↓ Activation
-.concept.json + .inference.json
+_.ncds (draft)
+   ↓ Formalization (+ Post-Formalization)
+_.pf.ncd (post-formalized)
+   ↓ Parser
+_.pf.nci.json (intermediate)
+   ↓ Activator
+repos/concept_repo.json + repos/inference_repo.json
    ↓ Load
 Orchestrator
 ```
@@ -336,35 +358,24 @@ Orchestrator
 
 | Format | Created By | Read By | Purpose |
 |--------|-----------|---------|---------|
-| **`.ncds`** | You/LLM | Compiler | Easy authoring (draft) |
-| **`.ncd`** | Compiler | Compiler/Orchestrator | Formal syntax |
-| **`.ncn`** | Compiler | Humans | Natural language companion |
-| **`.ncdn`** | Editor | Editor | Hybrid (NCD + NCN inline) |
-| **`.nc.json`** | Editor | Editor | Structured JSON |
-| **`.nci.json`** | Compiler | Compiler | Inference structure (intermediate) |
-| **`.concept.json`** | Activation | Orchestrator | Concept repository |
-| **`.inference.json`** | Activation | Orchestrator | Inference repository |
+| **`_.ncds`** | You/LLM | Compiler | Easy authoring (draft) |
+| **`_.ncd`** | Compiler | Compiler | Formal syntax (intermediate) |
+| **`_.pf.ncd`** | Compiler | Parser | Post-formalized with annotations |
+| **`_.pf.nci.json`** | Parser | Activator | Parsed inference structure |
+| **`concept_repo.json`** | Activator | Orchestrator | Concept repository |
+| **`inference_repo.json`** | Activator | Orchestrator | Inference repository |
 
-### Conversion Between Formats
+### The Activation Pipeline
 
-**Manual Tools**:
 ```bash
-# Convert .ncd to .ncdn (hybrid format)
-python update_format.py convert plan.ncd --to ncdn
+# Step 1: Parse the post-formalized NCD to NCI (intermediate format)
+python _.parse_to_nci.py
 
-# Generate all companions
-python update_format.py generate plan.ncd --all
-
-# Validate format
-python update_format.py validate plan.ncd
+# Step 2: Activate the NCI to generate repositories
+python _.activate_nci.py
 ```
 
-**Editor**:
-- Load any format
-- Edit interactively
-- Export to any format
-
-See [Editor](editor.md) for details.
+**Output**: `repos/concept_repo.json` and `repos/inference_repo.json`
 
 ---
 
@@ -417,14 +428,28 @@ This enables:
 
 **Format**: `1.2.3` where each number is a level in the tree.
 
-**Example**:
+**⚠️ CRITICAL: The Sibling Pattern**
+
 ```
 1         Root concept
-1.1         Functional concept (operation)
-1.2         Value concept (first input)
-1.2.1         Nested functional concept
-1.2.1.1         Nested value concept
-1.3         Value concept (second input)
+1.1         Functional concept (operation) - ALWAYS .1
+1.2         Value concept (first input) - sibling of .1
+1.2.1         Nested functional concept - child's .1
+1.2.2         Nested value concept - sibling of child's .1
+1.3         Value concept (second input) - sibling of 1.2
+```
+
+**Rules**:
+1. **Functional concept is always `.1`** under its parent
+2. **Value concept inputs are siblings** (`.2`, `.3`, `.4`), NOT children (`.1.1`, `.1.2`)
+3. **Same depth = same index length**
+
+**Common Mistake**:
+```
+# WRONG - nesting inputs under functional
+1.1       Functional
+1.1.1       Input 1  ← Should be 1.2
+1.1.2       Input 2  ← Should be 1.3
 ```
 
 **Purpose**:
@@ -539,50 +564,47 @@ This enables:
 
 ## Tools and Automation
 
-### Interactive Editor
+### Parser and Activator Scripts
 
-**Streamlit app** for visual editing:
-- Load/edit `.ncd`, `.ncn`, `.ncdn` files
-- Toggle between NCD and NCN views
-- Inline editing with live preview
-- Export to any format
+**The two key scripts for activation**:
 
-See [Editor](editor.md) for details.
-
-### Format Conversion Tools
-
-**Command-line utilities**:
 ```bash
-# Convert formats
-python update_format.py convert file.ncd --to ncdn
+# Parse _.pf.ncd to intermediate NCI format
+python _.parse_to_nci.py
+# Output: _.pf.nci.json
 
-# Validate
-python update_format.py validate file.ncd
-
-# Batch process
-python update_format.py batch-convert ./plans --from ncd --to ncdn
+# Activate NCI to generate repositories
+python _.activate_nci.py
+# Output: repos/concept_repo.json + repos/inference_repo.json
 ```
 
-### Compiler API
+### Example Project Structure
 
-**Python interface** (if implemented):
-```python
-from compiler import NormCodeCompiler
-
-compiler = NormCodeCompiler()
-
-# Phase 1: Derivation
-ncds = compiler.derive_from_nl("Summarize this document...")
-
-# Phase 2: Formalization
-ncd = compiler.formalize(ncds)
-
-# Phase 3: Post-Formalization
-enriched_ncd = compiler.post_formalize(ncd)
-
-# Phase 4: Activation
-concept_repo, inference_repo = compiler.activate(enriched_ncd)
 ```
+project/
+├── _.ncds                    # Draft (optional)
+├── _.pf.ncd                  # Post-formalized plan
+├── _.parse_to_nci.py         # Parser script
+├── _.activate_nci.py         # Activator script
+├── _.pf.nci.json             # Intermediate (generated)
+├── repos/
+│   ├── concept_repo.json     # Concept definitions
+│   └── inference_repo.json   # Inference definitions
+└── provisions/
+    ├── prompts/              # Prompt templates
+    ├── scripts/              # Python scripts
+    └── paradigms/            # Paradigm JSON files
+```
+
+### LLM-Assisted Compilation
+
+Plans are typically created with LLM assistance:
+
+1. **Derivation**: LLM generates `_.ncds` from natural language
+2. **Formalization + Post-Formalization**: LLM generates `_.pf.ncd` directly
+3. **Activation**: Scripts parse and activate to JSON
+
+The documentation files in this folder guide LLMs on correct patterns.
 
 ---
 
@@ -616,7 +638,7 @@ After understanding the overview:
 - **[Formalization](formalization.md)** - Phase 2 in detail
 - **[Post-Formalization](post_formalization.md)** - Phase 3 in detail
 - **[Activation](activation.md)** - Phase 4 in detail
-- **[Editor](editor.md)** - Using the tools
+- **[Examples](examples/)** - Working examples with parser and activator
 
 ---
 
@@ -627,10 +649,21 @@ After understanding the overview:
 | Concept | Insight |
 |---------|---------|
 | **Progressive formalization** | Each phase adds specificity while preserving intent |
-| **Five phases** | Derivation → Formalization → Post-Formalization → Activation → Execution |
-| **Multiple formats** | Different representations for different purposes |
+| **Four phases** | Derivation → Formalization → Post-Formalization → Activation |
+| **Combined workflow** | Phases 2-3 often combined, producing `.pf.ncd` directly |
 | **Semi-formal philosophy** | Balance between flexibility and rigor |
-| **Tooling support** | Editor and conversion tools make it manageable |
+| **Parser + Activator** | Two scripts transform `.pf.ncd` to JSON repositories |
+
+### ⚠️ Critical Lessons from Debugging
+
+| Lesson | Detail |
+|--------|--------|
+| **Flow index sibling pattern** | Functional is `.1`, inputs are `.2`, `.3`, `.4` (NOT `.1.1`, `.1.2`) |
+| **Explicit input references** | Operators MUST declare inputs as sibling value concepts |
+| **LLM output format** | Prompts MUST specify `{"thinking": "...", "result": ...}` |
+| **Value selectors** | Use `%{selector_packed}: true` for bundled data |
+| **Loop state** | Use `%{is_invariant}: true` for persistent loop variables |
+| **Empty lists** | Initialize with placeholder `(1,)`, not empty `(0,)` |
 
 ### The Compilation Promise
 

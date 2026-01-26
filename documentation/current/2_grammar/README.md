@@ -305,8 +305,10 @@ A: `.ncn` is a natural language narrative of your `.ncd` plan. The compiler gene
     <= ::(summarize this text) | ?{flow_index}: 1.1 | ?{sequence}: imperative
     <- {clean text} | ?{flow_index}: 1.2
         <= ::(extract main content) | ?{flow_index}: 1.2.1 | ?{sequence}: imperative
-        <- {raw document} | ?{flow_index}: 1.2.1.1
+        <- {raw document} | ?{flow_index}: 1.2.2
 ```
+
+**⚠️ Note the sibling pattern**: `{raw document}` is `1.2.2` (sibling of `1.2.1`), NOT `1.2.1.1` (child).
 
 ---
 
@@ -328,7 +330,7 @@ A: `.ncn` is a natural language narrative of your `.ncd` plan. The compiler gene
     <= *. %>({documents}) %<({summary}) %:({document}) %@(1) | ?{flow_index}: 1.1 | ?{sequence}: looping
     <- {summary} | ?{flow_index}: 1.2
         <= ::(summarize this document) | ?{flow_index}: 1.2.1 | ?{sequence}: imperative
-        <- {document}*1 | ?{flow_index}: 1.2.1.1
+        <- {document}*1 | ?{flow_index}: 1.2.2
     <- {documents} | ?{flow_index}: 1.3
     <* {document}<$({documents})*> | ?{flow_index}: 1.4
 ```
@@ -362,8 +364,8 @@ A: `.ncn` is a natural language narrative of your `.ncd` plan. The compiler gene
 After mastering the grammar:
 
 - **[3. Execution](../3_execution/README.md)** - How plans run at runtime
-- **[4. Compilation](../4_compilation/README.md)** - The 5-phase compilation pipeline
-- **[5. Tools](../5_tools/README.md)** - CLI, editor, and executor
+- **[4. Compilation](../4_compilation/README.md)** - The 4-phase compilation pipeline
+- **[5. Tools](../5_tools/README.md)** - Canvas App (visualization, execution, debugging, editor)
 
 ---
 

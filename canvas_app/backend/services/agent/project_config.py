@@ -176,6 +176,7 @@ class ProjectAgentConfigService:
         project_name: str,
         default_llm_model: str = "demo",
         paradigm_dir: Optional[str] = None,
+        base_dir: Optional[str] = None,
     ) -> Tuple[ProjectAgentConfig, Path]:
         """
         Create a default agent config for a project.
@@ -185,14 +186,18 @@ class ProjectAgentConfigService:
             project_name: Project name
             default_llm_model: Default LLM model to use
             paradigm_dir: Optional paradigm directory
+            base_dir: Optional base directory for file operations (legacy support)
             
         Returns:
             Tuple of (config, config_path)
         """
+        from .config import FileSystemToolConfig
+        
         # Create default agent with tool-centric structure
         tools = AgentToolsConfig(
             llm=LLMToolConfig(model=default_llm_model),
             paradigm=ParadigmToolConfig(dir=paradigm_dir),
+            file_system=FileSystemToolConfig(enabled=True, base_dir=base_dir),
         )
         
         default_agent = AgentConfig(

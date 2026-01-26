@@ -14,6 +14,9 @@ Tools:
 - CanvasDisplayTool: Display artifacts on the Canvas (source, structure, graph)
 - CanvasFormatterTool: Data formatting and parsing for paradigm composition
 - CanvasCompositionTool: Function composition for paradigm execution
+- CanvasParserTool: NormCode parsing and serialization tool
+- CanvasParadigmTool: Domain-specific paradigm loading tool
+- CanvasModelRunnerTool: Model/paradigm execution tool
 """
 
 from .user_input_tool import CanvasUserInputTool
@@ -25,8 +28,13 @@ from .chat_tool import CanvasChatTool
 from .canvas_tool import CanvasDisplayTool
 from .formatter_tool import CanvasFormatterTool
 from .composition_tool import CanvasCompositionTool
+from .parser_tool import CanvasParserTool
+from .paradigm_tool import CanvasParadigmTool, create_canvas_paradigm_tool
+from .model_runner_tool import CanvasModelRunnerTool, CanvasModelEnv, CanvasModelSequenceRunner
+from .perception_router_tool import CanvasPerceptionRouter, PerceptualSign
 
 __all__ = [
+    # Core tools
     "CanvasUserInputTool",
     "CanvasFileSystemTool",
     "CanvasLLMTool",
@@ -36,5 +44,16 @@ __all__ = [
     "CanvasDisplayTool",
     "CanvasFormatterTool",
     "CanvasCompositionTool",
+    "CanvasParserTool",
+    # Paradigm/model execution tools
+    "CanvasParadigmTool",
+    "create_canvas_paradigm_tool",
+    "CanvasModelRunnerTool",
+    "CanvasModelEnv",
+    "CanvasModelSequenceRunner",
+    # Perception
+    "CanvasPerceptionRouter",
+    "PerceptualSign",
+    # Helpers
     "get_available_llm_models",
 ]

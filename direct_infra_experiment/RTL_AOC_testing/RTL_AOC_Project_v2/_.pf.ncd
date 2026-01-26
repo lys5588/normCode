@@ -1,0 +1,503 @@
+/: ========================================
+/: RTL AOC Verification Workflow
+/: ========================================
+/: Post-Formalized NormCode Plan (.pf.ncd)
+/:
+/: GOAL: Generate AOC schemas from ISA/MA specs, then verify RTL traces
+/:
+/: PHASES:
+/:   Phase 1: AOC Schema Generation
+/:     - Load ISA and MA specification files
+/:     - Get user clarification (intent blocks)
+/:     - Iteratively extract AOC canonicals until done
+/:     - Validate the generated AOC definitions
+/:   Phase 2: RTL Trace Verification
+/:     - Load RTL simulation trace
+/:     - Split into discrete cycles
+/:     - For each cycle: update active rules, verify trace
+/:     - Produce verification report
+/:
+/: PARADIGM SET:
+/:   File System:
+/:     - h_LiteralPath-c_ReadFile-o_Literal
+/:   LLM:
+/:     - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+/:     - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean
+/:   Python:
+/:     - v_ScriptLocation-h_Literal-c_Execute-o_Literal
+/:     - v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral
+/:
+
+:<:{verification report} | ?{flow_index}: 1
+    | %{ref_axes}: [_none_axis]
+    | %{ref_shape}: (1,)
+    | %{ref_element}: dict(aoc_definitions: dict, aoc_valid: bool, trace: list, verification_per_cycle: list)
+    <= ::(combine all testing information into verification report) | ?{flow_index}: 1.1 | ?{sequence}: imperative
+        | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+        | %{v_input_norm}: prompt_location
+        | %{v_input_provision}: provisions/prompts/combine_verification_report.md
+        | %{h_input_norm}: Literal
+        | %{body_faculty}: llm
+        | %{value_order}: [{all testing information}]
+
+    /: ============================================================
+    /: PHASE 1: AOC Schema Generation
+    /: ============================================================
+    
+    <- {AOC definitions} | ?{flow_index}: 1.2
+        | %{ref_axes}: [_none_axis]
+        | %{ref_shape}: (1,)
+        | %{ref_element}: dict(rules: list, metadata: dict)
+        <= $. %>({all AOC schema}) | ?{flow_index}: 1.2.1 | ?{sequence}: assigning
+            /: SPECIFICATION: Select the final AOC schema as output
+        
+        /: ----------------------------------------
+        /: Ground inputs: Load specification files
+        /: ----------------------------------------
+        <- {ISA spec text} | ?{flow_index}: 1.2.2
+            | %{ref_axes}: [_none_axis]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: str
+            <= ::(load ISA specification file) | ?{flow_index}: 1.2.2.1 | ?{sequence}: imperative
+                | %{norm_input}: h_LiteralPath-c_ReadFile-o_Literal
+                | %{h_input_norm}: LiteralPath
+                | %{body_faculty}: file_system
+            <- {ISA file path}<:{1}> | ?{flow_index}: 1.2.2.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: str
+                | %{literal<$% file_path>}: provisions/inputs/specs/isa_v1.md
+        
+        <- {MA spec text} | ?{flow_index}: 1.2.3
+            | %{ref_axes}: [_none_axis]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: str
+            <= ::(load microarchitecture specification file) | ?{flow_index}: 1.2.3.1 | ?{sequence}: imperative
+                | %{norm_input}: h_LiteralPath-c_ReadFile-o_Literal
+                | %{h_input_norm}: LiteralPath
+                | %{body_faculty}: file_system
+            <- {MA file path}<:{1}> | ?{flow_index}: 1.2.3.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: str
+                | %{literal<$% file_path>}: provisions/inputs/specs/uarch_v2.md
+        
+        /: ----------------------------------------
+        /: User decomposition of specs
+        /: ----------------------------------------
+        <- {intent blocks} | ?{flow_index}: 1.2.4
+            | %{ref_axes}: [intent_block]
+            | %{ref_shape}: (n_intent,)
+            | %{ref_element}: dict(id: str, text: str, type: str)
+            <= :>:(ask user to clarify and decompose the specs into intent blocks) | ?{flow_index}: 1.2.4.1 | ?{sequence}: imperative
+                | %{norm_input}: v_PromptLocation-h_Literal-c_UserTextEditor-o_JsonLiteral
+                | %{v_input_norm}: prompt_location
+                | %{v_input_provision}: provisions/prompts/phase1/decompose_specs.md
+                | %{h_input_norm}: Literal
+                | %{body_faculty}: user_input
+                | %{interaction_type}: text_editor
+            <- {ISA spec text}<:{1}> | ?{flow_index}: 1.2.4.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: str
+            <- {MA spec text}<:{2}> | ?{flow_index}: 1.2.4.3
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: str
+        
+        <- {all user inputs} | ?{flow_index}: 1.2.5
+            | %{ref_axes}: [_none_axis]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: dict(isa: str, ma: str, intent_blocks: list)
+            <= &[{}] %>[{ISA spec text}, {MA spec text}, {intent blocks}] | ?{flow_index}: 1.2.5.1 | ?{sequence}: grouping
+                /: GROUPING: Collect ISA, MA, and intent blocks together
+            <- {ISA spec text} | ?{flow_index}: 1.2.5.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: str
+            <- {MA spec text} | ?{flow_index}: 1.2.5.3
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: str
+            <- {intent blocks} | ?{flow_index}: 1.2.5.4
+                | %{ref_axes}: [intent_block]
+                | %{ref_element}: dict
+        
+        /: ----------------------------------------
+        /: Initialize counters before loop
+        /: ----------------------------------------
+        <- [counters] | ?{flow_index}: 1.2.6
+            | %{ref_axes}: [counter]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: int
+            <= $% %>([%(1)]) | ?{flow_index}: 1.2.6.1 | ?{sequence}: assigning
+                /: ABSTRACTION: Initialize counters to list containing only 1
+                | %{literal<$% counters>}: [1]
+        
+        /: ----------------------------------------
+        /: Initialize AOC schemas records before loop
+        /: ----------------------------------------
+        <- [AOC schemas records] | ?{flow_index}: 1.2.7
+            | %{ref_axes}: [canonical]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: dict(id: str, trigger: dict, obligation: dict, timing: dict, abort: dict)
+            <= $% %>([%({"__placeholder__": true})]) | ?{flow_index}: 1.2.7.1 | ?{sequence}: assigning
+                /: ABSTRACTION: Initialize AOC schemas records with placeholder (ensures non-empty shape for packed values)
+                | %{literal<$% aoc_schemas_records>}: [{"__placeholder__": true}]
+        
+        /: ----------------------------------------
+        /: Iterative extraction loop
+        /: ----------------------------------------
+        <- [all AOC schemas] | ?{flow_index}: 1.2.8
+            | %{ref_axes}: [canonical]
+            | %{ref_shape}: (n_canonical,)
+            | %{ref_element}: dict(id: str, trigger: dict, obligation: dict, timing: dict, abort: dict)
+            <= *. %>([counters]) %<({new AOC}) %:({counter}) %@(1) | ?{flow_index}: 1.2.8.1 | ?{sequence}: looping
+                /: LOOP: For each counter, extract a new AOC canonical
+                
+                <= $. %>({new AOC}) | ?{flow_index}: 1.2.8.1.1 | ?{sequence}: assigning
+                    /: LOOP RETURN: Return the new AOC for this iteration
+                
+                <- {new AOC} | ?{flow_index}: 1.2.8.1.2
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_shape}: (1,)
+                    | %{ref_element}: dict(id: str, trigger: dict, obligation: dict, timing: dict, abort: dict)
+                    <= ::(extract a new action-obligation canonical from specs) | ?{flow_index}: 1.2.8.1.2.1 | ?{sequence}: imperative
+                        | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+                        | %{v_input_norm}: prompt_location
+                        | %{v_input_provision}: provisions/prompts/phase1/extract_aoc_canonical.md
+                        | %{h_input_norm}: Literal
+                        | %{body_faculty}: llm
+                    <- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.2.2
+                        | %{ref_axes}: [_none_axis]
+                        | %{ref_element}: dict
+                        | %{selector_packed}: true
+                    <- [AOC schemas extracted so far]<:{2}> | ?{flow_index}: 1.2.8.1.2.3
+                        | %{ref_axes}: [canonical]
+                        | %{ref_element}: dict
+                        | %{selector_packed}: true
+                        <= &[#] %>[{AOC schema record}] | ?{flow_index}: 1.2.8.1.2.3.1 | ?{sequence}: grouping
+                            /: GROUPING: Collect all AOC schemas from records
+                        <- [AOC schemas records] | ?{flow_index}: 1.2.8.1.2.3.2
+                            | %{ref_axes}: [canonical]
+                            | %{ref_element}: dict
+                
+                <- [AOC schemas records] | ?{flow_index}: 1.2.8.1.3
+                    | %{ref_axes}: [canonical]
+                    | %{ref_shape}: (n_canonical,)
+                    | %{ref_element}: dict(id: str, trigger: dict, obligation: dict, timing: dict, abort: dict)
+                    | %{is_invariant}: true
+                    <= $+ %>([AOC schemas records]) %<({new AOC}) %:(_none_axis) | ?{flow_index}: 1.2.8.1.3.1 | ?{sequence}: assigning
+                        /: CONTINUATION: Append new AOC to AOC schemas records
+                    <- [AOC schemas records]<:{1}> | ?{flow_index}: 1.2.8.1.3.2
+                        | %{ref_axes}: [canonical]
+                        | %{ref_element}: dict
+                    <- {new AOC}<:{2}> | ?{flow_index}: 1.2.8.1.3.3
+                        | %{ref_axes}: [_none_axis]
+                        | %{ref_element}: dict
+                
+                <- <no more canonicals to process> | ?{flow_index}: 1.2.8.1.4
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_shape}: (1,)
+                    | %{ref_element}: %{truth_value}
+                    <= ::(judge if there are more canonicals to process)<ALL True> | ?{flow_index}: 1.2.8.1.4.1 | ?{sequence}: judgement
+                        | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean
+                        | %{v_input_norm}: prompt_location
+                        | %{v_input_provision}: provisions/prompts/phase1/judge_more_canonicals.md
+                        | %{h_input_norm}: Literal
+                        | %{body_faculty}: llm
+                    <- {all user inputs}<:{1}> | ?{flow_index}: 1.2.8.1.4.2
+                        | %{ref_axes}: [_none_axis]
+                        | %{ref_element}: dict
+                        | %{selector_packed}: true
+                    <- [AOC schemas extracted so far]<:{2}> | ?{flow_index}: 1.2.8.1.4.3
+                        | %{ref_axes}: [_none_axis]
+                        | %{ref_element}: list
+                        | %{selector_packed}: true
+                
+                /: Continue unless done: append next counter if NOT terminated
+                <- [counters] | ?{flow_index}: 1.2.8.1.5
+                    | %{ref_axes}: [counter]
+                    | %{ref_shape}: (n_counter,)
+                    | %{ref_element}: int
+                    | %{is_invariant}: true
+                    <= $+ %>([counters]) %<({next counter}) %:(counter) | ?{flow_index}: 1.2.8.1.5.1 | ?{sequence}: assigning
+                        /: CONTINUATION: Append next counter if session should NOT end
+                        <= @:!(<no more canonicals to process>) | ?{flow_index}: 1.2.8.1.5.1.1 | ?{sequence}: timing
+                            /: TIMING GATE: Only execute if NOT done
+                        <* <no more canonicals to process> | ?{flow_index}: 1.2.8.1.5.1.2
+                    <- [counters]<:{1}> | ?{flow_index}: 1.2.8.1.5.2
+                        | %{ref_axes}: [counter]
+                        | %{ref_element}: int
+                    <- {next counter}<:{2}> | ?{flow_index}: 1.2.8.1.5.3
+                        | %{ref_axes}: [_none_axis]
+                        | %{ref_element}: int
+                        <= ::(compute next counter as current counter plus one) | ?{flow_index}: 1.2.8.1.5.3.1 | ?{sequence}: imperative
+                            | %{norm_input}: v_ScriptLocation-h_Literal-c_Execute-o_Literal
+                            | %{v_input_norm}: script_location
+                            | %{v_input_provision}: provisions/scripts/increment_counter.py
+                            | %{v_function_name}: increment
+                            | %{h_input_norm}: Literal
+                            | %{body_faculty}: python_interpreter
+                        <- {current counter}<:{1}> | ?{flow_index}: 1.2.8.1.5.3.2
+                            | %{ref_axes}: [_none_axis]
+                            | %{ref_element}: int
+            
+            /: Loop base and context
+            <- [counters] | ?{flow_index}: 1.2.8.2
+                | %{ref_axes}: [counter]
+                | %{ref_element}: int
+            <* {current counter}<$([counters])*> | ?{flow_index}: 1.2.8.3
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: int
+                /: LOOP CONTEXT: Current counter from counters
+        
+        <- {all AOC schema} | ?{flow_index}: 1.2.9
+            | %{ref_axes}: [_none_axis]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: dict(rules: list, metadata: dict)
+            <= ::(clean up and consolidate all AOC schemas into unified definition) | ?{flow_index}: 1.2.9.1 | ?{sequence}: imperative
+                | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+                | %{v_input_norm}: prompt_location
+                | %{v_input_provision}: provisions/prompts/phase1/consolidate_aoc_schemas.md
+                | %{h_input_norm}: Literal
+                | %{body_faculty}: llm
+            <- [all AOC schemas list]<:{1}> | ?{flow_index}: 1.2.9.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_shape}: (1,)
+                | %{ref_element}: list
+                | %{selector_packed}: true
+                <= &[#] %>[{AOC schema record}] | ?{flow_index}: 1.2.9.2.1 | ?{sequence}: grouping
+                    /: GROUP: Collect all AOC schemas records into single list with shape (1,)
+                <- [AOC schemas records] | ?{flow_index}: 1.2.9.2.2
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_element}: dict
+    
+    /: ----------------------------------------
+    /: Validate the generated AOC
+    /: ----------------------------------------
+    <- <AOC is valid> | ?{flow_index}: 1.3
+        | %{ref_axes}: [_none_axis]
+        | %{ref_shape}: (1,)
+        | %{ref_element}: %{truth_value}
+        <= ::(judge if all AOC rules are valid)<ALL True> | ?{flow_index}: 1.3.1 | ?{sequence}: judgement
+            | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean
+            | %{v_input_norm}: prompt_location
+            | %{v_input_provision}: provisions/prompts/phase1/validate_aoc_rules.md
+            | %{h_input_norm}: Literal
+            | %{body_faculty}: llm
+        <- {AOC definitions}<:{1}> | ?{flow_index}: 1.3.2
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: dict
+
+    /: ============================================================
+    /: PHASE 2: Verification Against RTL Trace
+    /: ============================================================
+    
+    /: ----------------------------------------
+    /: Load and prepare trace data
+    /: ----------------------------------------
+    <- {RTL simulation trace} | ?{flow_index}: 1.4
+        | %{ref_axes}: [_none_axis]
+        | %{ref_shape}: (1,)
+        | %{ref_element}: dict(events: list, metadata: dict)
+        <= ::(load RTL trace from simulation output file) | ?{flow_index}: 1.4.1 | ?{sequence}: imperative
+            | %{norm_input}: h_LiteralPath-c_ReadFile-o_Literal
+            | %{h_input_norm}: LiteralPath
+            | %{body_faculty}: file_system
+        <- {trace file path}<:{1}> | ?{flow_index}: 1.4.2
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: str
+            | %{literal<$% file_path>}: provisions/inputs/trace/rtl_trace.json
+    
+    <- [trace per cycle] | ?{flow_index}: 1.5
+        | %{ref_axes}: [cycle]
+        | %{ref_shape}: (n_cycle,)
+        | %{ref_element}: dict(cycle_num: int, events: list)
+        <= ::(split RTL trace into discrete cycles) | ?{flow_index}: 1.5.1 | ?{sequence}: imperative
+            | %{norm_input}: v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral
+            | %{v_input_norm}: script_location
+            | %{v_input_provision}: provisions/scripts/split_trace_to_cycles.py
+            | %{v_function_name}: split_to_cycles
+            | %{h_input_norm}: Literal
+            | %{body_faculty}: python_interpreter
+        <- {RTL simulation trace}<:{1}> | ?{flow_index}: 1.5.2
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: dict
+    
+    /: ----------------------------------------
+    /: The verification loop
+    /: ----------------------------------------
+    <- [verification per cycle] | ?{flow_index}: 1.6
+        | %{ref_axes}: [cycle]
+        | %{ref_shape}: (n_cycle,)
+        | %{ref_element}: dict(cycle_num: int, status: str, violations: list, active_rules: list)
+        <= *. %>([trace per cycle]) %<({verification}) %:({cycle trace}) %^({previous active rules}) %@(1) | ?{flow_index}: 1.6.1 | ?{sequence}: looping
+            /: LOOP: For each cycle trace, verify against active rules
+            /: Carries active rules state between iterations
+            
+            <= $. %>({verification}) | ?{flow_index}: 1.6.1.1 | ?{sequence}: assigning
+                /: LOOP RETURN: Return verification result for this iteration
+                <= @:'(<AOC is valid>) | ?{flow_index}: 1.6.1.1.1 | ?{sequence}: timing
+                    /: TIMING GATE: Only proceed if AOC is valid
+                <* <AOC is valid> | ?{flow_index}: 1.6.1.1.2
+            
+            <- {active rules} | ?{flow_index}: 1.6.1.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_shape}: (1,)
+                | %{ref_element}: dict(rules: list, pending: list, triggered: list)
+                <= ::(update active rules based on current cycle trace) | ?{flow_index}: 1.6.1.2.1 | ?{sequence}: imperative
+                    | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+                    | %{v_input_norm}: prompt_location
+                    | %{v_input_provision}: provisions/prompts/phase2/update_active_rules.md
+                    | %{h_input_norm}: Literal
+                    | %{body_faculty}: llm
+                <- {current cycle trace}<:{1}> | ?{flow_index}: 1.6.1.2.2
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_element}: dict
+                <- {previous active rules}<:{2}> | ?{flow_index}: 1.6.1.2.3
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_element}: dict
+                <- {AOC definitions}<:{3}> | ?{flow_index}: 1.6.1.2.4
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_element}: dict
+            
+            <- {verification} | ?{flow_index}: 1.6.1.3
+                | %{ref_axes}: [_none_axis]
+                | %{ref_shape}: (1,)
+                | %{ref_element}: dict(cycle_num: int, status: str, violations: list, active_rules: list)
+                <= ::(verify trace against active rules for this cycle) | ?{flow_index}: 1.6.1.3.1 | ?{sequence}: imperative
+                    | %{norm_input}: v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal
+                    | %{v_input_norm}: prompt_location
+                    | %{v_input_provision}: provisions/prompts/phase2/verify_cycle.md
+                    | %{h_input_norm}: Literal
+                    | %{body_faculty}: llm
+                <- {current cycle trace}<:{1}> | ?{flow_index}: 1.6.1.3.2
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_element}: dict
+                <- {active rules}<:{2}> | ?{flow_index}: 1.6.1.3.3
+                    | %{ref_axes}: [_none_axis]
+                    | %{ref_element}: dict
+        
+        /: Loop base and context
+        <- [trace per cycle] | ?{flow_index}: 1.6.2
+            | %{ref_axes}: [cycle]
+            | %{ref_element}: dict
+        <* {current cycle trace}<$([trace per cycle])*> | ?{flow_index}: 1.6.3
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: dict
+            /: LOOP CONTEXT: Current cycle trace from trace per cycle
+        <* {previous active rules}<$({active rules})*-1> | ?{flow_index}: 1.6.4
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: dict
+            | %{ref_default}: {}
+            /: CARRY STATE: Previous active rules from prior iteration
+
+    /: ============================================================
+    /: PHASE 3: Report Generation
+    /: ============================================================
+    /: Collect all testing information and generate final report
+    
+    <- {all testing information} | ?{flow_index}: 1.7
+        | %{ref_axes}: [_none_axis]
+        | %{ref_shape}: (1,)
+        | %{ref_element}: dict
+        <= &[{}] %>[{AOC definitions}, {AOC validity}, [verification results], [trace data], {all user inputs}] | ?{flow_index}: 1.7.1 | ?{sequence}: grouping
+            /: GROUPING: Collect all testing information into single dict
+        <- {AOC definitions} | ?{flow_index}: 1.7.2
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: dict
+        <- {AOC validity} | ?{flow_index}: 1.7.3
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: bool
+            <= $. %>(<AOC is valid>) | ?{flow_index}: 1.7.3.1 | ?{sequence}: assigning
+                /: SPECIFICATION: Select AOC validity as object
+            <- <AOC is valid> | ?{flow_index}: 1.7.3.2
+                | %{ref_axes}: [_none_axis]
+                | %{ref_element}: %{truth_value}
+        <- [verification results] | ?{flow_index}: 1.7.4
+            | %{ref_axes}: [_none_axis]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: list
+            <= &[#] %>[{verification record}] | ?{flow_index}: 1.7.4.1 | ?{sequence}: grouping
+                /: GROUPING: Collapse verification per cycle into single list
+            <- [verification per cycle] | ?{flow_index}: 1.7.4.2
+                | %{ref_axes}: [cycle]
+                | %{ref_element}: dict
+        <- [trace data] | ?{flow_index}: 1.7.5
+            | %{ref_axes}: [_none_axis]
+            | %{ref_shape}: (1,)
+            | %{ref_element}: list
+            <= &[#] %>[{trace record}] | ?{flow_index}: 1.7.5.1 | ?{sequence}: grouping
+                /: GROUPING: Collapse trace per cycle into single list
+            <- [trace per cycle] | ?{flow_index}: 1.7.5.2
+                | %{ref_axes}: [cycle]
+                | %{ref_element}: dict
+        <- {all user inputs} | ?{flow_index}: 1.7.6
+            | %{ref_axes}: [_none_axis]
+            | %{ref_element}: dict
+    
+
+/: ========================================
+/: SUMMARY: RTL AOC Verification Workflow
+/: ========================================
+/:
+/: PHASE 1 - AOC SCHEMA GENERATION:
+/:   1.2.2  Load ISA spec file
+/:   1.2.3  Load MA spec file
+/:   1.2.4  User clarifies intent blocks
+/:   1.2.5  Group all inputs together
+/:   1.2.6  Initialize counters
+/:   1.2.7  Initialize AOC schemas records (empty list)
+/:   1.2.8  Loop: extract AOC canonicals until done
+/:          - Extract new AOC
+/:          - Append to AOC schemas records
+/:          - Judge if more canonicals to process
+/:          - Conditionally continue
+/:   1.2.9  Consolidate into unified AOC definition
+/:   1.3    Validate AOC rules
+/:
+/: PHASE 2 - RTL TRACE VERIFICATION:
+/:   1.4    Load RTL simulation trace
+/:   1.5    Split trace into cycles
+/:   1.6    Loop over cycles:
+/:          - Update active rules (carry state)
+/:          - Verify cycle against active rules
+/:          - Produce per-cycle verification result
+/:
+/: OUTPUT:
+/:   {verification report} containing:
+/:   - AOC definitions
+/:   - AOC validity
+/:   - Trace data
+/:   - Per-cycle verification results
+/:
+/: KEY PATTERNS USED:
+/:   - Self-terminating loop (continuation via $+ with @:! timing gate)
+/:   - State carry between iterations (%^ modifier)
+/:   - Conditional execution (timing gates)
+/:   - Judgement for validation
+/:   - Grouping for data collection
+/:
+/: PARADIGMS:
+/:   - h_LiteralPath-c_ReadFile-o_Literal (file loading)
+/:   - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Literal (LLM generation)
+/:   - v_PromptLocation-h_Literal-c_GenerateThinkJson-o_Boolean (LLM judgement)
+/:   - v_ScriptLocation-h_Literal-c_Execute-o_Literal (Python scripts)
+/:   - v_ScriptLocation-h_Literal-c_Execute-o_ListLiteral (Python list output)
+/:
+/: PROVISIONS REQUIRED:
+/:   prompts/phase1/
+/:     - decompose_specs.md
+/:     - extract_aoc_canonical.md
+/:     - judge_more_canonicals.md
+/:     - consolidate_aoc_schemas.md
+/:     - validate_aoc_rules.md
+/:   prompts/phase2/
+/:     - update_active_rules.md
+/:     - verify_cycle.md
+/:   prompts/
+/:     - combine_verification_report.md
+/:   scripts/
+/:     - increment_counter.py
+/:     - split_trace_to_cycles.py
+/:   inputs/specs/
+/:     - isa_v1.md
+/:     - uarch_v2.md
+/:   inputs/trace/
+/:     - rtl_trace.json
+

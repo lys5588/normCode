@@ -1,0 +1,32 @@
+{
+  "default_agent": "default",
+  "agents": [
+    {
+      "id": "default",
+      "name": "Canvas Assistant v2.0 Agent",
+      "description": "Default agent for Canvas Assistant v2.0",
+      "tools": {
+        "llm": {
+          "model": "qwen-turbo-latest"
+        },
+        "paradigm": {
+          "dir": "provisions/paradigms"
+        },
+        "file_system": {
+          "enabled": true
+        },
+        "python_interpreter": {
+          "enabled": true,
+          "timeout": 30
+        },
+        "user_input": {
+          "enabled": true,
+          "mode": "blocking"
+        }
+      }
+    }
+  ],
+  "description": "Agent configuration for Canvas Assistant v2.0",
+  "created_at": "2026-01-26T00:53:07.926400",
+  "updated_at": "2026-01-26T01:12:11.316148"
+}

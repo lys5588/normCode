@@ -1,0 +1,55 @@
+/: The Root
+:<:{Verification Report}
+    <= ::(combine to a report with AOC, AOC validity, Trace, verification per Cycle)
+
+    /: Load the Rules ONCE (Outside the Loop)
+    <- {AOC Definitions}
+        <= ::(load aoc rules from spec)
+        <- {spec file}
+    
+    /: Validate AOC
+    <- <the AOC is valid>
+        <= ::(validate AOC rules)<ALL True> /: JUDGEMENT added
+        <- {AOC Definitions}
+
+    /: The Input: The raw source of truth (Context)
+    <- {RTL Simulation Trace}
+        <= ::(validate and load aoc rules from spec) /: This represents the external RTL sim process
+        <- {trace file}
+
+    /: Context: The trace split into discrete ticks
+    <* {Trace per cycle}
+        <= ::(individuate cycles)
+        <- {RTL Simulation Trace}
+
+    /: The Core Loop: Produce a status for every cycle
+    <- {verification per cycle}
+        <= *. %>({Trace per cycle}) %*({Current Cycle Trace}) %:({Cycle}) %^({Pervious Active Rules}) %@(1)
+
+            <= $. %>({verification})
+                /: Specification: Select the verification result for this iteration
+                <= @: <the AOC is valid>
+                    /: Proceed only if AOC is valid
+                <* <the AOC is valid>
+
+            /: Update Active Rules Logic
+            <- {Active Rules}
+                <= ::(update active rules)<ALL Valid> /: JUDGEMENT added
+                    /: Input 1: Current Trace (assigned by loop)
+                <- {current cycle trace}
+                    /: Input 2: Previous State (Carried)
+                <- {Pervious Active Rules}
+                    /: Input 3: The Static Rules (From Outside Loop)
+                <- {AOC Definitions}
+            
+            <- {verification}
+                <= ::(verify trace per cycle)
+                    /: Input: The data for *this* specific cycle
+                <- {current cycle trace} /: (assigned by loop)
+                <- {Active Rules}
+            
+        <- {Trace per cycle} /: the collection to loop over.
+        <* {Current Cycle Trace}<$({Trace per cycle})*>
+            /: Context: The explicit handle for the current item (for reference)
+        <* {Previous Active Rules}<$({Active Rules})*-1>
+            /: Defines the carrying over.

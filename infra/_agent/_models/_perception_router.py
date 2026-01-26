@@ -217,5 +217,11 @@ class PerceptionRouter:
         elif norm == "save_dir":
             return f"{{%{{save_dir}}: {content}}}"
 
-        # Fallback: Unknown Norm -> Return Signifier as is
-        return content
+        # Fallback: Unknown Norm -> Try to evaluate as Python literal
+        # This handles cases like %(1) where we want the integer 1, not the string '1'
+        import ast
+        try:
+            return ast.literal_eval(content)
+        except (ValueError, SyntaxError):
+            # If it's not a valid Python literal, return as string
+            return content

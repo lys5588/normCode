@@ -22,16 +22,19 @@ The **Orchestrator** is the runtime heart of NormCode. While plans define *what*
 
 ### The Execution Model
 
-The Orchestrator operates on a **dependency-driven, bottom-up** execution model:
+The Orchestrator operates on a **top-to-bottom, inside-out** execution model:
+
+- **Top-to-bottom**: The waitlist is sorted by flow index (1 → 1.1 → 1.2 → 1.2.1 → ...)
+- **Inside-out**: Dependencies resolve from children to parents
 
 ```
 An inference executes when:
-1. All child inferences are complete
+1. All child inferences (supporting items) are complete
 2. Functional concept is ready
 3. Value concepts are ready
 ```
 
-**Key Insight**: Unlike sequential or top-down execution, NormCode resolves dependencies dynamically. Ready inferences execute immediately; blocked inferences wait.
+**Key Insight**: The orchestrator scans the sorted waitlist top-to-bottom, but only executes inferences whose children have completed—creating an inside-out completion pattern. Ready inferences execute immediately; blocked inferences wait.
 
 ### Component Overview
 
@@ -617,6 +620,8 @@ while not orchestrator.is_complete():
 
 ## Tools for Running Plans
 
+> **Primary Tool**: The **[Canvas App](../5_tools/README.md)** provides a unified visual interface for execution, debugging, and inspection. The tools below are legacy alternatives.
+
 ### 1. Command Line Interface
 
 **Basic Execution**:
@@ -863,7 +868,7 @@ for cycle in history:
 
 | Concept | Insight |
 |---------|---------|
-| **Bottom-up execution** | Dependencies resolve dynamically |
+| **Top-to-bottom, inside-out** | Waitlist sorted by flow index; dependencies resolve children-to-parent |
 | **Blackboard is truth** | Single source for all status |
 | **Cycles make progress** | Each cycle executes ready inferences |
 | **Loops require reset** | Child inferences re-run per iteration |
@@ -890,7 +895,7 @@ for cycle in history:
 - **[Overview](overview.md)** - High-level execution model
 - **[Reference System](reference_system.md)** - How data is stored
 - **[Agent Sequences](agent_sequences.md)** - What happens in each inference
-- **[Tools Section](../5_tools/README.md)** - Using CLI and Streamlit app
+- **[Tools Section](../5_tools/README.md)** - Canvas App for visualization, execution, debugging
 
 ---
 

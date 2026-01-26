@@ -1,0 +1,19 @@
+{
+  "id": "canvas-assistant-arc",
+  "name": "Canvas Assistant Archive",
+  "description": "Chat-driven assistant for NormCode Canvas - helps with plans, execution, and exploration",
+  "created_at": "2024-12-25T00:00:00Z",
+  "updated_at": "2026-01-18T16:10:00.000000",
+  "repositories": {
+    "concepts": "repos/chat.concept.json",
+    "inferences": "repos/chat.inference.json",
+    "inputs": null
+  },
+  "execution": {
+    "max_cycles": 200,
+    "db_path": "./assistant.db",
+    "agent_config": "compiler.agent.json"
+  },
+  "breakpoints": [],
+  "ui_preferences": {}
+}

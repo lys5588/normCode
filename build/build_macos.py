@@ -104,6 +104,24 @@ BUILD_REQUIREMENTS = [
 ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024]
 
 
+def update_launcher_version():
+    """Update launcher version from centralized config."""
+    import re
+    
+    launcher_path = BUILD_DIR / "launcher" / "desktop_launcher.py"
+    if launcher_path.exists():
+        content = launcher_path.read_text(encoding="utf-8")
+        new_content = re.sub(
+            r'^__version__\s*=\s*["\'].*["\']',
+            generate_launcher_version_header(),
+            content,
+            flags=re.MULTILINE
+        )
+        if new_content != content:
+            launcher_path.write_text(new_content, encoding="utf-8")
+            print(f"  [OK] Updated launcher version to {VERSION}")
+
+
 def print_header(text: str):
     """Print a formatted header."""
     print()
@@ -909,6 +927,9 @@ Examples:
     print(f"  Display Name: {APP_DISPLAY_NAME}")
     print(f"  macOS: {platform.mac_ver()[0]}")
     print(f"  Architecture: {platform.machine()}")
+    
+    # Update launcher version from centralized config
+    update_launcher_version()
     
     # Clean if requested
     if args.clean:

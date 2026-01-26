@@ -12,7 +12,7 @@
 | **Phase 2**: Execution Integration | ✅ Complete | 100% |
 | **Phase 3**: Debugging Features | ✅ Complete | 100% |
 | **Phase 4**: Modification & Re-run | ✅ Complete | 100% |
-| **Phase 5**: Polish & Advanced | ❌ Not Started | 0% |
+| **Phase 5**: Polish & Advanced | 🔄 In Progress | ~10% |
 
 ### What's Complete
 
@@ -43,37 +43,41 @@
 
 ---
 
-## Phase 4: Modification & Re-run (Remaining)
+## Phase 4: Modification & Re-run (✅ COMPLETE)
 
 **Goal**: Enable interactive modification and retry of plan execution.
 
-### 4.1 Value Override Dialog
+**Status**: All Phase 4 features have been implemented and are production-ready.
 
-**Priority**: HIGH  
-**Estimated Effort**: 2-3 days
+### 4.1 Value Override Dialog ✅
 
-Allow users to inject or modify values at any ground or computed node.
+Allows users to inject or modify values at any ground or computed node.
 
-#### Requirements
+**Features Implemented**:
+- Modal for editing tensor values (scalar, 1D, 2D)
+- JSON editor for complex structures
+- Validation before apply
+- `POST /api/execution/override/{concept_name}` endpoint
+- Overridden nodes show special badge
+- "Modified" indicator in detail panel
 
-1. **Override Dialog UI**
-   - Modal for editing tensor values
-   - Support scalar, 1D, 2D editing
-   - JSON editor for complex structures
-   - Validation before apply
+### 4.2 Function Modification ✅
 
-2. **Backend Support**
-   - `POST /api/execution/override/{concept_name}` endpoint
-   - Update concept reference in orchestrator
-   - Mark dependent nodes as stale
-   - Optionally trigger re-run
+Allows changing paradigm, prompt, or output type for function nodes.
 
-3. **Visual Feedback**
-   - Overridden nodes show special badge
-   - "Modified" indicator in detail panel
-   - Stale descendants highlighted
+### 4.3 Selective Re-run ✅
 
-#### Implementation
+Re-run execution from any node, with all dependents re-executing.
+
+### 4.4 Checkpoint Resume/Fork ✅
+
+Resume or branch from saved execution states.
+
+---
+
+## Phase 4 Implementation Reference (Archived)
+
+The following shows the original implementation plan for reference:
 
 **Backend** (`execution_service.py`):
 ```python
@@ -562,5 +566,5 @@ Before applying override:
 
 ---
 
-**Last Updated**: December 2024  
-**Status**: Active Development
+**Last Updated**: January 2026  
+**Status**: Phase 5 (Polish & Advanced)

@@ -45,7 +45,7 @@ export function CheckpointPanel({ isOpen, onToggle }: CheckpointPanelProps) {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null); // Track which run is pending delete confirmation
   
   const { currentProject, projectPath, setIsLoaded } = useProjectStore();
-  const { maxCycles, dbPath } = useConfigStore();
+  const { maxCycles, dbPath, agentConfig } = useConfigStore();
   const { setGraphData } = useGraphStore();
   const { setProgress, setNodeStatuses, setRunId } = useExecutionStore();
   
@@ -204,6 +204,10 @@ export function CheckpointPanel({ isOpen, onToggle }: CheckpointPanelProps) {
         mode: reconciliationMode,
         base_dir: projectPath,
         max_cycles: maxCycles,
+        // Agent profile fields - critical for loading correct LLM config
+        agent_config: agentConfig || currentProject.execution?.agent_config || undefined,
+        project_dir: projectPath,
+        project_name: currentProject.name,
       });
       
       if (result.success) {
@@ -242,6 +246,10 @@ export function CheckpointPanel({ isOpen, onToggle }: CheckpointPanelProps) {
         mode: reconciliationMode,
         base_dir: projectPath,
         max_cycles: maxCycles,
+        // Agent profile fields - critical for loading correct LLM config
+        agent_config: agentConfig || currentProject.execution?.agent_config || undefined,
+        project_dir: projectPath,
+        project_name: currentProject.name,
       });
 
       if (result.success) {
@@ -314,7 +322,7 @@ export function CheckpointPanel({ isOpen, onToggle }: CheckpointPanelProps) {
   }
   
   return (
-    <div className="border-b border-slate-200 bg-white relative z-20">
+    <div className="border-b border-slate-200 bg-white">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-700">

@@ -8,7 +8,7 @@ Provides endpoints for:
 
 import logging
 from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from pathlib import Path
 from pydantic import BaseModel
 
@@ -297,7 +297,7 @@ async def create_or_update_agent(request: AgentConfigRequest):
             # Load existing agent config or create new one
             config_path = project_agent_config_service.get_agent_config_path(
                 project_dir=project_service.current_project_path,
-                project_name=project_service.current_project.name if project_service.current_project else None,
+                project_name=project_service.current_config.name if project_service.current_config else None,
             )
             
             if config_path:
@@ -775,23 +775,32 @@ async def get_agent_capabilities(agent_id: str):
     
     # Get effective paradigm_dir - check agent config first, then project config
     effective_paradigm_dir = config.paradigm_dir
+    project_base_dir = None
     
-    # If agent doesn't have a paradigm_dir, try to get from execution controller
-    if not effective_paradigm_dir:
-        try:
-            from services.execution_service import execution_controller
-            if execution_controller._load_config:
-                project_paradigm_dir = execution_controller._load_config.get("paradigm_dir")
-                project_base_dir = execution_controller._load_config.get("base_dir")
-                if project_paradigm_dir:
-                    # Resolve relative path
-                    paradigm_path = Path(project_paradigm_dir)
-                    if not paradigm_path.is_absolute() and project_base_dir:
-                        paradigm_path = Path(project_base_dir) / project_paradigm_dir
-                    if paradigm_path.exists():
-                        effective_paradigm_dir = str(paradigm_path)
-        except Exception:
-            pass  # Fall back to just agent config
+    # Try to get project base_dir from execution controller
+    try:
+        from services.execution_service import execution_controller_registry
+        active_project_id = execution_controller_registry.get_active_project_id()
+        if active_project_id:
+            controller = execution_controller_registry.get_controller(active_project_id)
+            if controller and controller._load_config:
+                project_base_dir = controller._load_config.get("base_dir")
+                # If agent doesn't have paradigm_dir, use project's paradigm_dir
+                if not effective_paradigm_dir:
+                    effective_paradigm_dir = controller._load_config.get("paradigm_dir")
+    except Exception:
+        pass
+    
+    # Resolve relative paradigm_dir against project base_dir
+    if effective_paradigm_dir:
+        paradigm_path = Path(effective_paradigm_dir)
+        if not paradigm_path.is_absolute() and project_base_dir:
+            paradigm_path = Path(project_base_dir) / effective_paradigm_dir
+        if paradigm_path.exists():
+            effective_paradigm_dir = str(paradigm_path)
+        else:
+            logger.warning(f"Paradigm directory not found: {paradigm_path}")
+            effective_paradigm_dir = None  # Reset so we fall back to defaults
     
     # Build tools list based on config
     tools = []
@@ -918,6 +927,84 @@ async def get_agent_capabilities(agent_id: str):
 
 
 # ============================================================================
+# File-based Agent Update Endpoints
+# ============================================================================
+
+class UpdateAgentInFileRequest(BaseModel):
+    """Request to update an agent directly in a .agent.json file."""
+    file_path: str
+    agent_id: str
+    updates: dict  # Can include name, description, tools
+
+
+@router.post("/update-in-file")
+async def update_agent_in_file(request: UpdateAgentInFileRequest):
+    """Update an agent configuration directly in a .agent.json file.
+    
+    This endpoint is used by the AgentConfigPreview to edit agents without
+    going through the in-memory registry. It directly modifies the file.
+    """
+    import json
+    from datetime import datetime
+    
+    file_path = Path(request.file_path)
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found: {request.file_path}")
+    
+    if not file_path.name.endswith('.agent.json'):
+        raise HTTPException(status_code=400, detail="File must be a .agent.json file")
+    
+    try:
+        # Load existing config
+        with open(file_path, 'r', encoding='utf-8') as f:
+            config_data = json.load(f)
+        
+        # Find the agent to update
+        agents = config_data.get('agents', [])
+        agent_found = False
+        
+        for i, agent in enumerate(agents):
+            if agent.get('id') == request.agent_id:
+                # Update the agent with provided updates
+                if 'name' in request.updates:
+                    agent['name'] = request.updates['name']
+                if 'description' in request.updates:
+                    agent['description'] = request.updates['description']
+                if 'tools' in request.updates:
+                    # Merge tools, preserving existing structure
+                    agent['tools'] = request.updates['tools']
+                
+                agents[i] = agent
+                agent_found = True
+                break
+        
+        if not agent_found:
+            raise HTTPException(status_code=404, detail=f"Agent '{request.agent_id}' not found in file")
+        
+        # Update timestamp
+        config_data['updated_at'] = datetime.utcnow().isoformat() + 'Z'
+        
+        # Save back to file
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(config_data, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"Updated agent '{request.agent_id}' in file: {file_path}")
+        
+        return {
+            "success": True,
+            "message": f"Agent '{request.agent_id}' updated in {file_path.name}",
+            "file_path": str(file_path),
+        }
+        
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON in file: {str(e)}")
+    except Exception as e:
+        logger.error(f"Failed to update agent in file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update: {str(e)}")
+
+
+# ============================================================================
 # Utility Endpoints
 # ============================================================================
 
@@ -926,4 +1013,166 @@ async def invalidate_all_bodies():
     """Invalidate all cached Body instances (force recreation on next use)."""
     agent_registry.invalidate_all_bodies()
     return {"success": True, "message": "All body instances invalidated"}
+
+
+# ============================================================================
+# Tool Trace Export
+# ============================================================================
+
+class ToolTraceExportRequest(BaseModel):
+    """Request to export tool call traces."""
+    traces: List[Dict[str, Any]]
+
+
+class ToolTraceExportResponse(BaseModel):
+    """Response from tool trace export."""
+    success: bool
+    message: str
+    file_path: Optional[str] = None
+
+
+@router.post("/traces/export", response_model=ToolTraceExportResponse)
+async def export_tool_traces(request: ToolTraceExportRequest):
+    """
+    Export tool call traces to a JSON file in the project's logs directory.
+    """
+    import json
+    from datetime import datetime
+    from services.execution_service import execution_controller_registry
+    
+    # Get active project to find logs directory
+    active_project_id = execution_controller_registry.get_active_project_id()
+    if not active_project_id:
+        raise HTTPException(status_code=400, detail="No active project")
+    
+    controller = execution_controller_registry.get_controller(active_project_id)
+    if not controller or not controller._load_config:
+        raise HTTPException(status_code=400, detail="No project configuration found")
+    
+    base_dir = controller._load_config.get("base_dir")
+    if not base_dir:
+        raise HTTPException(status_code=400, detail="No base directory configured")
+    
+    # Create logs directory if it doesn't exist
+    logs_dir = Path(base_dir) / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    trace_file = logs_dir / f"tool_traces_{timestamp}.json"
+    
+    try:
+        # Write traces to file
+        with open(trace_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                "exported_at": datetime.now().isoformat(),
+                "project_id": active_project_id,
+                "trace_count": len(request.traces),
+                "traces": request.traces
+            }, f, indent=2, ensure_ascii=False, default=str)
+        
+        logger.info(f"Exported {len(request.traces)} tool traces to: {trace_file}")
+        
+        return ToolTraceExportResponse(
+            success=True,
+            message=f"Exported {len(request.traces)} traces",
+            file_path=str(trace_file)
+        )
+    except Exception as e:
+        logger.error(f"Failed to export tool traces: {e}")
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+
+class TraceSessionStartRequest(BaseModel):
+    """Request to start a new trace session."""
+    run_id: Optional[str] = None
+
+
+class TraceSessionResponse(BaseModel):
+    """Response for trace session operations."""
+    success: bool
+    session_file: Optional[str] = None
+    message: str
+
+
+class TraceAppendRequest(BaseModel):
+    """Request to append a trace to the current session."""
+    session_file: str
+    trace: Dict[str, Any]
+
+
+@router.post("/traces/session/start", response_model=TraceSessionResponse)
+async def start_trace_session(request: TraceSessionStartRequest):
+    """
+    Start a new auto-export trace session. Creates a JSONL file for streaming traces.
+    """
+    import json
+    from datetime import datetime
+    from services.execution_service import execution_controller_registry
+    
+    active_project_id = execution_controller_registry.get_active_project_id()
+    if not active_project_id:
+        raise HTTPException(status_code=400, detail="No active project")
+    
+    controller = execution_controller_registry.get_controller(active_project_id)
+    if not controller or not controller._load_config:
+        raise HTTPException(status_code=400, detail="No project configuration found")
+    
+    base_dir = controller._load_config.get("base_dir")
+    if not base_dir:
+        raise HTTPException(status_code=400, detail="No base directory configured")
+    
+    logs_dir = Path(base_dir) / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_suffix = f"_{request.run_id[:8]}" if request.run_id else ""
+    session_file = logs_dir / f"tool_traces_live{run_suffix}_{timestamp}.jsonl"
+    
+    try:
+        # Write header line
+        with open(session_file, 'w', encoding='utf-8') as f:
+            header = {
+                "_type": "session_start",
+                "started_at": datetime.now().isoformat(),
+                "project_id": active_project_id,
+                "run_id": request.run_id
+            }
+            f.write(json.dumps(header, default=str) + "\n")
+        
+        logger.info(f"Started trace session: {session_file}")
+        
+        return TraceSessionResponse(
+            success=True,
+            session_file=str(session_file),
+            message="Trace session started"
+        )
+    except Exception as e:
+        logger.error(f"Failed to start trace session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/traces/session/append", response_model=TraceSessionResponse)
+async def append_trace(request: TraceAppendRequest):
+    """
+    Append a single trace to an existing session file.
+    """
+    import json
+    
+    session_path = Path(request.session_file)
+    if not session_path.exists():
+        raise HTTPException(status_code=404, detail="Session file not found")
+    
+    try:
+        with open(session_path, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(request.trace, default=str) + "\n")
+        
+        return TraceSessionResponse(
+            success=True,
+            session_file=str(session_path),
+            message="Trace appended"
+        )
+    except Exception as e:
+        logger.error(f"Failed to append trace: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 

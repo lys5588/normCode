@@ -1,0 +1,164 @@
+/: Canvas Assistant - Chat-Driven Command Loop
+/: Derived from _.instruction.md (v2.0 with Canvas Integration)
+
+:<: {session result}
+    <= return session completion status
+    /: Final output when session ends
+    
+    /: ══════════════════════════════════════════════════════════════════
+    /: GROUND CONCEPTS (exist before loop starts)
+    /: ══════════════════════════════════════════════════════════════════
+    
+    <- {canvas command schema}
+        <= load the command schema from file
+        <- {command schema file path}
+            /: Ground:provisions/schemas/canvas_commands.json
+    
+    <- [on-going messages]
+        /: !CORRECTION: it needs to be intitated first 
+        /: Invariant: accumulates across iterations
+        /: start_without_value: true (first iteration has no base)
+        <= initiate an empty list.
+
+
+    /: ══════════════════════════════════════════════════════════════════
+    /: MAIN LOOP - Iterate over messages (self-seeding)
+    /: ══════════════════════════════════════════════════════════════════
+    
+    <- [all canvas statuses]
+        <= for each message in conversation
+            <= return canvas status for this iteration
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 1: Wait for user input (BLOCKING)
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {current message}
+                <= read user message from chat
+                /: Uses me.vision.get_chat() - blocks until message arrives
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 2: Emit "thinking" status (v2.0)
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {thinking status emitted}
+                <= emit status: thinking
+                /: Uses me.hands.say("🔍 Understanding your request...")
+                <- {current message}
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 3: Summarize conversation context (v2.0)
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {context summary}
+                <= summarize on-going messages for context
+                /: LLM call: distill key points from conversation history
+                /: Provides continuity awareness to downstream steps
+                <- [on-going messages]
+            
+            <- {context notified}
+                <= notify chat with context summary
+                /: Uses me.hands.say("📋 Context: {summary}...")
+                /: Helps user understand what the assistant remembers
+                <- {context summary}
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 4: Classify message as canvas command
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {parsed command}
+                <= classify user message as canvas command with context
+                /: LLM call: understand intent, map to command schema
+                /: Uses context summary for better disambiguation
+                <- {current message}
+                <- {canvas command schema}
+                <- {context summary}
+                
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 5: Emit "executing" status (v2.0)
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {executing status emitted}
+                <= emit status: executing
+                /: Uses me.hands.say("⚙️ Executing command...")
+                <- {parsed command}
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 6: Execute the parsed command on canvas
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {command status}
+                <= execute parsed command on canvas
+                /: Uses me.hands.* or me.mind.* based on command type
+                <- {parsed command}
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 7: Emit "generating" status (v2.0)
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {generating status emitted}
+                <= emit status: generating
+                /: Uses me.hands.say("💭 Generating response...")
+                <- {command status}
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 8: Generate helpful response
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {response}
+                <= generate response based on command result with context
+                /: LLM call: create user-friendly response
+                /: Uses context summary for coherent, contextual replies
+                <- {current message}
+                <- {command status}
+                <- {context summary}
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 9: Send response to user
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {response sent}
+                <= send response to chat
+                /: Uses me.hands.say(response)
+                <- {response}
+            
+            /: ──────────────────────────────────────────────────────────
+            /: STEP 10: Bundle iteration results
+            /: ──────────────────────────────────────────────────────────
+            
+            <- {canvas status}
+                <= bundle message, context, command status, and response
+                <- {current message}
+                <- {context summary}
+                <- {command status}
+                <- {response sent}
+        
+            /: ──────────────────────────────────────────────────────────────
+            /: LOOP CONTROL: Judge termination and conditional append
+            /: ──────────────────────────────────────────────────────────────
+            /: !CORRECTION: loop correction happens inside the loop, as children. 
+            
+            <- <session should end>
+                <= judge if user wants to end the session
+                /: LLM call: check for quit/exit/bye intent
+                <- {current message}
+                <- [on-going messages]
+            
+            <- [on-going messages]
+                <= append current message if session should NOT end
+                    <= if session should NOT end
+                    /: Timing gate: @:! (<session should end>)
+                    <* <session should end>
+                <- {current message}
+
+        /: ══════════════════════════════════════════════════════════════════
+        /: LOOP BASE: Message history (self-seeding, starts empty)
+        /: ══════════════════════════════════════════════════════════════════
+
+        <- [on-going messages] 
+            /: !CORRECTION: to loop over collection needs to passed as a value sibling of loop
+
+        <* {message}
+            /: Loop context: current message from [on-going messages]
+    

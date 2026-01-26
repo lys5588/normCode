@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "design": "sample_cpu_v1",
+    "simulation_time": "2026-01-20T12:00:00Z",
+    "total_cycles": 500
+  },
+  "events": [
+    {"time": 100, "signal": "instr_issued", "value": {"iid": "0x42", "op": "ADD"}},
+    {"time": 105, "signal": "instr_issued", "value": {"iid": "0x43", "op": "SUB"}},
+    {"time": 150, "signal": "commit", "value": {"iid": "0x42"}},
+    {"time": 200, "signal": "commit", "value": {"iid": "0x43"}},
+    {"time": 250, "signal": "instr_issued", "value": {"iid": "0x44", "op": "LR"}},
+    {"time": 255, "signal": "LR_executed", "value": {"granule": "0x100"}},
+    {"time": 260, "signal": "instr_issued", "value": {"iid": "0x45", "op": "SC"}},
+    {"time": 265, "signal": "SC_executed", "value": {"granule": "0x100"}},
+    {"time": 266, "signal": "SC_result", "value": {"granule": "0x100", "result": "SUCCESS"}},
+    {"time": 270, "signal": "commit", "value": {"iid": "0x44"}},
+    {"time": 275, "signal": "commit", "value": {"iid": "0x45"}},
+    {"time": 300, "signal": "instr_issued", "value": {"iid": "0x50", "op": "DIV"}},
+    {"time": 350, "signal": "trap_taken", "value": {"iid": "0x50", "cause": "divide_by_zero"}},
+    {"time": 400, "signal": "instr_issued", "value": {"iid": "0x60", "op": "LOAD"}},
+    {"time": 450, "signal": "commit", "value": {"iid": "0x60"}}
+  ]
+}
+

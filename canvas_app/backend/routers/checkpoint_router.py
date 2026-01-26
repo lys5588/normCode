@@ -44,6 +44,10 @@ class ResumeRequest(BaseModel):
     base_dir: Optional[str] = None
     max_cycles: int = 50
     paradigm_dir: Optional[str] = None
+    # Agent profile fields (critical for proper body creation)
+    agent_config: Optional[str] = None  # Path to .agent.json file
+    project_dir: Optional[str] = None   # Project directory for resolving paths
+    project_name: Optional[str] = None  # Project name for auto-discovery
 
 
 class ForkRequest(BaseModel):
@@ -60,6 +64,10 @@ class ForkRequest(BaseModel):
     base_dir: Optional[str] = None
     max_cycles: int = 50
     paradigm_dir: Optional[str] = None
+    # Agent profile fields (critical for proper body creation)
+    agent_config: Optional[str] = None  # Path to .agent.json file
+    project_dir: Optional[str] = None   # Project directory for resolving paths
+    project_name: Optional[str] = None  # Project name for auto-discovery
 
 
 class LoadResult(BaseModel):
@@ -153,6 +161,9 @@ async def resume_execution(request: ResumeRequest):
             base_dir=request.base_dir,
             max_cycles=request.max_cycles,
             paradigm_dir=request.paradigm_dir,
+            agent_config=request.agent_config,
+            project_dir=request.project_dir,
+            project_name=request.project_name,
         )
         return LoadResult(**result)
     except Exception as e:
@@ -182,6 +193,9 @@ async def fork_execution(request: ForkRequest):
             base_dir=request.base_dir,
             max_cycles=request.max_cycles,
             paradigm_dir=request.paradigm_dir,
+            agent_config=request.agent_config,
+            project_dir=request.project_dir,
+            project_name=request.project_name,
         )
         return LoadResult(**result)
     except Exception as e:
