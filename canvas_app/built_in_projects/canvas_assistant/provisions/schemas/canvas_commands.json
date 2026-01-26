@@ -1,8 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Canvas Commands Schema v2.0",
+  "title": "Canvas Commands Schema v2.1",
   "description": "Schema for Canvas Assistant commands using Canvas Integration Tool",
-  "version": "2.0.0",
+  "version": "2.1.0",
+  "updated": "2026-01-26",
+  
+  "notes": {
+    "perspectives": "Commands map to me.vision (read), me.hands (act), me.mind (control)",
+    "say_vs_notify": "Use 'say' for permanent chat messages, 'notify' for temporary status"
+  },
   
   "command_categories": {
     "navigation": {
@@ -134,7 +140,7 @@
       "commands": {
         "run": {
           "method": "run",
-          "params": {"mode": {"type": "string", "enum": ["slow", "fast"], "default": "slow"}},
+          "params": {},
           "help": "Start/resume plan execution"
         },
         "step": {
@@ -151,6 +157,11 @@
           "method": "stop",
           "params": {},
           "help": "Stop execution"
+        },
+        "restart": {
+          "method": "restart",
+          "params": {},
+          "help": "Restart execution from beginning"
         },
         "add_breakpoint": {
           "method": "add_breakpoint",
@@ -182,7 +193,7 @@
       "commands": {
         "open_panel": {
           "method": "open_panel",
-          "params": {"panel": {"type": "string", "enum": ["chat", "agent", "editor", "inspector", "log", "settings"], "required": true}},
+          "params": {"panel": {"type": "string", "enum": ["chat", "agent", "log", "settings", "detail", "checkpoint", "workers", "deployment", "load"], "required": true}},
           "help": "Open a panel"
         },
         "close_panel": {
@@ -204,39 +215,132 @@
     },
     
     "queries": {
-      "description": "State and data queries",
-      "perspective": "me",
-      "faculty": "vision",
+      "description": "State and data queries (read-only)",
       "commands": {
         "query_project": {
+          "perspective": "me",
+          "faculty": "vision",
           "method": "get_project",
           "params": {},
-          "help": "Get project information"
+          "help": "Get project information",
+          "returns": "ProjectSnapshot with name, path, is_loaded, open_tabs"
         },
         "query_execution": {
+          "perspective": "me",
+          "faculty": "vision",
           "method": "get_execution",
           "params": {},
-          "help": "Get execution status"
+          "help": "Get execution status",
+          "returns": "ExecutionSnapshot with status, current_inference, progress, node_statuses"
         },
         "query_graph": {
+          "perspective": "me",
+          "faculty": "vision",
           "method": "get_canvas",
           "params": {},
-          "help": "Get visible graph state"
+          "help": "Get visible graph state",
+          "returns": "CanvasSnapshot with visible_nodes, visible_edges, selected, highlighted"
+        },
+        "query_full_view": {
+          "perspective": "me",
+          "faculty": "vision",
+          "method": "get_full_snapshot",
+          "params": {},
+          "help": "Get complete UI snapshot (canvas + panels + execution)",
+          "returns": "UserViewSnapshot combining all snapshots"
         },
         "query_node": {
+          "perspective": "me",
+          "faculty": "vision",
           "method": "get_node_details",
           "params": {"node_id": {"type": "string", "required": true}},
-          "help": "Get details of a specific node"
+          "help": "Get details of a specific node",
+          "returns": "NodeDetails with label, type, status, value, connections"
         },
         "query_value": {
+          "perspective": "me",
+          "faculty": "mind",
           "method": "get_concept_value",
           "params": {"concept_name": {"type": "string", "required": true}},
-          "help": "Get value of a concept"
+          "help": "Get computed value of a concept",
+          "returns": "The concept's value if computed, null otherwise"
         },
         "query_logs": {
+          "perspective": "me",
+          "faculty": "vision",
           "method": "get_logs",
-          "params": {"limit": {"type": "integer", "default": 20}},
-          "help": "Get recent log entries"
+          "params": {},
+          "help": "Get recent log entries",
+          "returns": "LogsSnapshot with entries array"
+        },
+        "query_panels": {
+          "perspective": "me",
+          "faculty": "vision",
+          "method": "get_panels",
+          "params": {},
+          "help": "Get panel visibility state",
+          "returns": "PanelsSnapshot with panel states"
+        },
+        "query_chat": {
+          "perspective": "me",
+          "faculty": "vision",
+          "method": "get_chat",
+          "params": {},
+          "help": "Get chat panel state (non-blocking)",
+          "returns": "ChatSnapshot with messages and pending_input"
+        }
+      }
+    },
+    
+    "mind_queries": {
+      "description": "Graph relationship queries (via Mind)",
+      "perspective": "me",
+      "faculty": "mind",
+      "commands": {
+        "get_ancestors": {
+          "method": "get_node_ancestors",
+          "params": {"node_id": {"type": "string", "required": true}},
+          "help": "Get all ancestor node IDs",
+          "returns": "List of node IDs"
+        },
+        "get_descendants": {
+          "method": "get_node_descendants",
+          "params": {"node_id": {"type": "string", "required": true}},
+          "help": "Get all descendant node IDs",
+          "returns": "List of node IDs"
+        },
+        "get_branch": {
+          "method": "get_node_branch",
+          "params": {"node_id": {"type": "string", "required": true}},
+          "help": "Get full branch (ancestors + self + descendants)",
+          "returns": "List of node IDs"
+        },
+        "get_same_concept": {
+          "method": "get_same_concept_nodes",
+          "params": {"node_id": {"type": "string", "required": true}},
+          "help": "Find all nodes representing the same concept",
+          "returns": "List of node IDs"
+        }
+      }
+    },
+    
+    "value_modification": {
+      "description": "Value override commands (via Mind)",
+      "perspective": "me",
+      "faculty": "mind",
+      "commands": {
+        "override_value": {
+          "method": "override_value",
+          "params": {
+            "concept_name": {"type": "string", "required": true},
+            "value": {"type": "any", "required": true}
+          },
+          "help": "Override a concept's value (for debugging/testing)"
+        },
+        "clear_override": {
+          "method": "clear_override",
+          "params": {"concept_name": {"type": "string", "required": true}},
+          "help": "Clear a value override"
         }
       }
     },
@@ -250,8 +354,43 @@
           "method": null,
           "params": {},
           "help": "Conversational message - no canvas action needed"
+        },
+        "help": {
+          "method": null,
+          "params": {},
+          "help": "Show help about available commands"
+        },
+        "greet": {
+          "method": null,
+          "params": {},
+          "help": "Greeting or introduction"
         }
       }
+    }
+  },
+  
+  "response_methods": {
+    "say": {
+      "perspective": "me",
+      "faculty": "hands",
+      "method": "say",
+      "description": "Send PERMANENT message (stays in chat history)",
+      "use_for": "Final responses, important information"
+    },
+    "notify": {
+      "perspective": "me",
+      "faculty": "hands",
+      "method": "notify",
+      "params": {"status_type": {"type": "string", "enum": ["thinking", "executing", "generating", "info", "warning", "error", "success"]}},
+      "description": "Send TEMPORARY notification (auto-dismisses, not in history)",
+      "use_for": "Status updates during processing"
+    },
+    "status": {
+      "perspective": "me",
+      "faculty": "hands",
+      "method": "status",
+      "params": {"status_type": {"type": "string", "enum": ["thinking", "executing", "generating", "success", "error"]}},
+      "description": "Convenience method for common status types with default messages"
     }
   },
   
@@ -264,6 +403,7 @@
     "start": "run",
     "execute": "run",
     "continue": "run",
+    "resume": "run",
     "next": "step",
     "halt": "pause",
     "breakpoint": "toggle_breakpoint",
@@ -274,7 +414,27 @@
     "unhighlight": "clear_highlight",
     "status": "query_execution",
     "info": "query_node",
-    "value": "query_value"
+    "value": "query_value",
+    "graph": "query_graph",
+    "view": "query_full_view",
+    "logs": "query_logs",
+    "project": "query_project",
+    "ancestors": "get_ancestors",
+    "descendants": "get_descendants",
+    "branch": "get_branch",
+    "hi": "greet",
+    "hello": "greet",
+    "thanks": "chat",
+    "bye": "chat"
+  },
+  
+  "dispatch_rules": {
+    "description": "How to execute commands based on faculty",
+    "examples": {
+      "hands_command": "result = canvas.me.hands.{method}(**params)",
+      "vision_query": "result = canvas.me.vision.{method}(**params)",
+      "mind_command": "result = canvas.me.mind.{method}(**params)",
+      "chat_command": "No action needed, just respond conversationally"
+    }
   }
 }
-

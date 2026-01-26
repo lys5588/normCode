@@ -1,0 +1,349 @@
+[
+  {
+    "id": "c-final-report",
+    "concept_name": "{final report}",
+    "type": "{}",
+    "flow_indices": [
+      "1"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": true,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(title: str, abstract: str, sections: list, conclusion: str, references: list)",
+    "natural_name": "final report"
+  },
+  {
+    "id": "fc-integrate-all-sections-into-cohesive-report-with-a",
+    "concept_name": "::(integrate all sections into cohesive report with abstract, conclusion, and references)",
+    "type": "({})",
+    "flow_indices": [
+      "1.1"
+    ],
+    "description": "integrate all sections into cohesive report with abstract, conclusion, and references",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}307(provisions/prompts/integrate_report.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "integrate all sections into cohesive report with abstract, conclusion, and references"
+  },
+  {
+    "id": "c-report-topic",
+    "concept_name": "{report topic}",
+    "type": "{}",
+    "flow_indices": [
+      "1.2",
+      "1.3.2.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "str",
+    "natural_name": "report topic"
+  },
+  {
+    "id": "fc-3d-urban-scene-generation",
+    "concept_name": "$% %>(%{<3D Urban Scene Generation>})",
+    "type": "({})",
+    "flow_indices": [
+      "1.2.1"
+    ],
+    "description": "$% %>(%{<3D Urban Scene Generation>})",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$% %>(%{<3D Urban Scene Generation>})"
+  },
+  {
+    "id": "c-outline",
+    "concept_name": "{outline}",
+    "type": "{}",
+    "flow_indices": [
+      "1.3",
+      "1.4.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(title: str, sections: list[dict(name: str, subsections: list, scope: str, depth: str)])",
+    "natural_name": "outline"
+  },
+  {
+    "id": "fc-create-structured-outline-with-main-sections-and-s",
+    "concept_name": "::(create structured outline with main sections and subsections)",
+    "type": "({})",
+    "flow_indices": [
+      "1.3.1"
+    ],
+    "description": "create structured outline with main sections and subsections",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}142(provisions/prompts/create_outline.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "create structured outline with main sections and subsections"
+  },
+  {
+    "id": "c-topic-areas",
+    "concept_name": "{topic areas}",
+    "type": "{}",
+    "flow_indices": [
+      "1.3.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(areas: list[dict(name: str, description: str)])",
+    "natural_name": "topic areas"
+  },
+  {
+    "id": "fc-brainstorm-and-identify-key-areas-to-cover-for-3d-",
+    "concept_name": "::(brainstorm and identify key areas to cover for 3D Urban Scene Generation)",
+    "type": "({})",
+    "flow_indices": [
+      "1.3.2.1"
+    ],
+    "description": "brainstorm and identify key areas to cover for 3D Urban Scene Generation",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}be6(provisions/prompts/brainstorm_topics.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "brainstorm and identify key areas to cover for 3D Urban Scene Generation"
+  },
+  {
+    "id": "c-sections",
+    "concept_name": "[sections]",
+    "type": "[]",
+    "flow_indices": [
+      "1.4",
+      "1.5.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "section",
+    "reference_axis_names": [
+      "section"
+    ],
+    "reference_element_type": "dict(name: str, subsections: list, scope: str, depth: str)",
+    "natural_name": "sections"
+  },
+  {
+    "id": "fc-extract-sections-list-from-outline",
+    "concept_name": "::(extract sections list from outline)",
+    "type": "({})",
+    "flow_indices": [
+      "1.4.1"
+    ],
+    "description": "extract sections list from outline",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}653(provisions/prompts/extract_sections.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "extract sections list from outline"
+  },
+  {
+    "id": "c-all-section-drafts",
+    "concept_name": "[all section drafts]",
+    "type": "[]",
+    "flow_indices": [
+      "1.5",
+      "1.6.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "section",
+    "reference_axis_names": [
+      "section"
+    ],
+    "reference_element_type": "dict(section_name: str, content: str, citations: list, figures: list)",
+    "natural_name": "all section drafts"
+  },
+  {
+    "id": "fc-sections-section-draft-section-1",
+    "concept_name": "*. %>([sections]) %<({section draft}) %:({section}) %@(1)",
+    "type": "({})",
+    "flow_indices": [
+      "1.5.1"
+    ],
+    "description": "*. %>([sections]) %<({section draft}) %:({section}) %@(1)",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "*. %>([sections]) %<({section draft}) %:({section}) %@(1)"
+  },
+  {
+    "id": "fc-section-draft",
+    "concept_name": "$. %>({section draft})",
+    "type": "({})",
+    "flow_indices": [
+      "1.5.1.1"
+    ],
+    "description": "$. %>({section draft})",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "$. %>({section draft})"
+  },
+  {
+    "id": "c-section-draft",
+    "concept_name": "{section draft}",
+    "type": "{}",
+    "flow_indices": [
+      "1.5.1.2"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "dict(section_name: str, content: str, citations: list, figures: list)",
+    "natural_name": "section draft"
+  },
+  {
+    "id": "fc-research-and-write-this-section-with-citations-fig",
+    "concept_name": "::(research and write this section with citations, figures, and technical details)",
+    "type": "({})",
+    "flow_indices": [
+      "1.5.1.2.1"
+    ],
+    "description": "research and write this section with citations, figures, and technical details",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{prompt_location}678(provisions/prompts/write_section.md)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "paradigm",
+    "natural_name": "research and write this section with citations, figures, and technical details"
+  },
+  {
+    "id": "c-current-section",
+    "concept_name": "{current section}",
+    "type": "{}",
+    "flow_indices": [
+      "1.5.1.2.2",
+      "1.5.3"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": null,
+    "natural_name": "current section"
+  },
+  {
+    "id": "c-all-section-drafts-collection",
+    "concept_name": "{all section drafts collection}",
+    "type": "{}",
+    "flow_indices": [
+      "1.6"
+    ],
+    "description": null,
+    "is_ground_concept": false,
+    "is_final_concept": false,
+    "is_invariant": null,
+    "reference_data": null,
+    "axis_name": "_none_axis",
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "list[dict(section_name: str, content: str, citations: list, figures: list)]",
+    "natural_name": "all section drafts collection"
+  },
+  {
+    "id": "fc-all-section-drafts",
+    "concept_name": "&[#] %>[{[all section drafts]}]",
+    "type": "({})",
+    "flow_indices": [
+      "1.6.1"
+    ],
+    "description": "&[#] %>[{[all section drafts]}]",
+    "is_ground_concept": true,
+    "is_final_concept": false,
+    "reference_data": [
+      "%{dummy}(_)"
+    ],
+    "reference_axis_names": [
+      "_none_axis"
+    ],
+    "reference_element_type": "operator",
+    "natural_name": "&[#] %>[{[all section drafts]}]"
+  }
+]

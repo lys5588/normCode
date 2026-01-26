@@ -67,6 +67,16 @@ export interface ChatInputRequest {
   source?: 'controller' | 'execution';
 }
 
+// Temporary status/notification (does NOT persist in chat history)
+export type ChatStatusType = 'thinking' | 'executing' | 'generating' | 'info' | 'warning' | 'error' | 'success';
+
+export interface ChatNotification {
+  id: string;
+  content: string;
+  type: ChatStatusType;
+  timestamp: Date;
+}
+
 // Controller status types
 export type ControllerStatusType = 
   | 'disconnected' 
@@ -102,6 +112,9 @@ interface ChatState {
   currentFlowIndex: string | null;
   isControllerProjectOpen: boolean;
   
+  // Temporary notification/status (ephemeral, not in chat history)
+  currentNotification: ChatNotification | null;
+  
   // Error state
   errorMessage: string | null;
   
@@ -127,6 +140,10 @@ interface ChatState {
   // Buffer actions
   updateBufferStatus: (status: ChatBufferStatus) => void;
   clearBuffer: () => void;
+  
+  // Notification actions (temporary status that doesn't persist)
+  showNotification: (content: string, type?: ChatStatusType) => void;
+  clearNotification: () => void;
   
   // Controller actions (NEW)
   loadControllers: () => Promise<void>;
@@ -178,6 +195,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
   currentFlowIndex: null,
   isControllerProjectOpen: false,
   errorMessage: null,
+  
+  // Notification state
+  currentNotification: null,
   
   // Panel visibility
   togglePanel: () => {
@@ -641,6 +661,31 @@ export const useChatStore = create<ChatState>((set, get) => ({
       bufferedMessage: null,
       isInputDisabled: false,
     });
+  },
+  
+  // Notification actions (temporary status)
+  showNotification: (content, type = 'info') => {
+    const notification: ChatNotification = {
+      id: `notif_${Date.now()}`,
+      content,
+      type,
+      timestamp: new Date(),
+    };
+    set({ currentNotification: notification });
+    
+    // Auto-clear after 5 seconds (unless it's a persistent type)
+    if (type !== 'error') {
+      setTimeout(() => {
+        const { currentNotification } = get();
+        if (currentNotification?.id === notification.id) {
+          set({ currentNotification: null });
+        }
+      }, 5000);
+    }
+  },
+  
+  clearNotification: () => {
+    set({ currentNotification: null });
   },
   
   refreshBufferStatus: async () => {

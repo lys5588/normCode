@@ -43,6 +43,7 @@ from .injection import (
     inject_backward_compatible_tools,
     full_injection,
 )
+from .faculties import submit_vision_input, buffer_vision_message
 
 __all__ = [
     # Main tool
@@ -69,5 +70,9 @@ __all__ = [
     "inject_canvas_integration",
     "inject_backward_compatible_tools",
     "full_injection",
+    
+    # Vision input handling (for API integration)
+    "submit_vision_input",
+    "buffer_vision_message",
 ]
 

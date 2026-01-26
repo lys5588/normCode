@@ -181,7 +181,7 @@
       "flow_info": {
         "flow_index": "1.4.1.3"
       },
-      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
+      "paradigm": "h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{current message}": 1
@@ -232,7 +232,7 @@
       "flow_info": {
         "flow_index": "1.4.1.5"
       },
-      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
+      "paradigm": "h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{context summary}": 1
@@ -282,7 +282,7 @@
       "flow_info": {
         "flow_index": "1.4.1.7"
       },
-      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
+      "paradigm": "h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{parsed command}": 1
@@ -328,7 +328,7 @@
       "flow_info": {
         "flow_index": "1.4.1.9"
       },
-      "paradigm": "h_Literal-c_CanvasIntegrationSay-o_LiteralStatus",
+      "paradigm": "h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus",
       "body_faculty": "canvas_integration",
       "value_order": {
         "{command status}": 1
@@ -469,6 +469,7 @@
     "concept_to_infer": "[on-going messages]",
     "function_concept": "$+ %>([on-going messages]) %<({current message}) %:(message)",
     "value_concepts": [
+      "[on-going messages]",
       "{current message}"
     ],
     "context_concepts": [],

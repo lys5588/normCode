@@ -436,6 +436,57 @@ class ExecutionController:
         except Exception as e:
             logger.debug(f"Registry progress sync skipped: {e}")
     
+    async def _sync_statuses_from_blackboard(self) -> List[str]:
+        """
+        Sync node_statuses and completed_count from the orchestrator's blackboard.
+        
+        This is called after each inference execution to detect any nodes that
+        were reset during loop iterations. The orchestrator may reset child nodes
+        when a loop hasn't completed all iterations yet.
+        
+        Returns:
+            List of flow_indices that were reset (changed from completed to pending)
+        """
+        if not self.orchestrator or not self.orchestrator.blackboard:
+            return []
+        
+        reset_nodes = []
+        new_completed_count = 0
+        
+        for flow_index, current_status in self.node_statuses.items():
+            # Get actual status from blackboard
+            blackboard_status = await asyncio.to_thread(
+                self.orchestrator.blackboard.get_item_status, flow_index
+            )
+            
+            # Map blackboard status to NodeStatus
+            if blackboard_status == 'completed':
+                new_status = NodeStatus.COMPLETED
+                new_completed_count += 1
+            elif blackboard_status == 'in_progress':
+                new_status = NodeStatus.RUNNING
+            elif blackboard_status == 'failed':
+                new_status = NodeStatus.FAILED
+            else:
+                new_status = NodeStatus.PENDING
+            
+            # Detect if node was reset (completed -> pending)
+            if current_status == NodeStatus.COMPLETED and new_status == NodeStatus.PENDING:
+                reset_nodes.append(flow_index)
+                self._add_log("debug", flow_index, "Node reset by loop iteration")
+            
+            # Update our tracking
+            self.node_statuses[flow_index] = new_status
+        
+        # Update completed count
+        old_count = self.completed_count
+        self.completed_count = new_completed_count
+        
+        if reset_nodes:
+            self._add_log("info", "", f"Loop reset {len(reset_nodes)} nodes: {old_count} -> {new_completed_count} completed")
+        
+        return reset_nodes
+    
     # =========================================================================
     # Repository Loading
     # =========================================================================
@@ -1104,9 +1155,20 @@ class ExecutionController:
                 )
                 duration = time.time() - start_time
                 
+                # Sync statuses from blackboard to detect loop resets
+                # This must happen BEFORE we emit events so we report accurate counts
+                reset_nodes = await self._sync_statuses_from_blackboard()
+                
+                # Emit events for any nodes that were reset by loop iteration
+                if reset_nodes:
+                    for reset_fi in reset_nodes:
+                        await self._emit("inference:updated", {
+                            "flow_index": reset_fi,
+                            "status": "pending"
+                        })
+                
                 if new_status == 'completed':
-                    self.node_statuses[flow_index] = NodeStatus.COMPLETED
-                    self.completed_count += 1
+                    # Note: status already updated by _sync_statuses_from_blackboard
                     self._sync_progress_to_registry()
                     await self._emit("inference:completed", {
                         "flow_index": flow_index,
@@ -1131,7 +1193,7 @@ class ExecutionController:
                         self._add_log("info", flow_index, "Run-to target reached - execution paused")
                         break
                 else:
-                    self.node_statuses[flow_index] = NodeStatus.PENDING
+                    # Note: status already updated by _sync_statuses_from_blackboard
                     next_retries.append(item)
                     await self._emit("inference:retry", {
                         "flow_index": flow_index,

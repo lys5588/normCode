@@ -176,7 +176,6 @@ function App() {
   const panels = usePanelStore((s) => s.panels);
   const openPanel = usePanelStore((s) => s.openPanel);
   const closePanel = usePanelStore((s) => s.closePanel);
-  const togglePanel = usePanelStore((s) => s.togglePanel);
   
   // Derived panel states for cleaner usage
   const showLoadPanel = panels.load;

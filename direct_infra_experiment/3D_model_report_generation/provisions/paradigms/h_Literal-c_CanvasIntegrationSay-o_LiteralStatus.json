@@ -1,13 +1,15 @@
 {
   "metadata": {
-    "description": "BLOCKING: Wait for user to send a chat message via Canvas Integration Tool (me.vision.wait_for_message). No inputs required - blocks until user sends a message.",
+    "description": "Send a message to the user via Canvas Integration Tool (me.hands.say). Used for status emissions and responses.",
     "inputs": {
       "vertical": {},
-      "horizontal": {}
+      "horizontal": {
+        "message": "The message content to send (string or dict with 'content' field)"
+      }
     },
     "outputs": {
-      "type": "Literal",
-      "description": "The user message dict with role, content, and timestamp"
+      "type": "LiteralStatus",
+      "description": "ActionResult dict with success, action, message fields (literal, no perception sign)"
     }
   },
   "env_spec": {
@@ -16,14 +18,18 @@
         "tool_name": "canvas_integration",
         "affordances": [
           {
-            "affordance_name": "wait_for_message",
-            "call_code": "result = tool.me.vision.wait_for_message"
+            "affordance_name": "say",
+            "call_code": "result = tool.me.hands.say"
           }
         ]
       },
       {
         "tool_name": "formatter_tool",
         "affordances": [
+          {
+            "affordance_name": "get",
+            "call_code": "result = tool.get"
+          },
           {
             "affordance_name": "wrap",
             "call_code": "result = tool.wrap"
@@ -45,30 +51,42 @@
     "steps": [
       {
         "step_index": 1,
-        "affordance": "canvas_integration.wait_for_message",
+        "affordance": "canvas_integration.say",
         "params": {},
-        "result_key": "wait_fn"
+        "result_key": "say_fn"
       },
       {
         "step_index": 2,
+        "affordance": "formatter_tool.get",
+        "params": {},
+        "result_key": "get_fn"
+      },
+      {
+        "step_index": 3,
         "affordance": "formatter_tool.wrap",
         "params": {},
         "result_key": "wrap_fn"
       },
       {
-        "step_index": 3,
+        "step_index": 4,
         "affordance": "composition_tool.compose",
         "params": {
           "plan": [
             {
-              "output_key": "chat_message",
-              "function": {"__type__": "MetaValue", "key": "wait_fn"},
-              "params": {}
+              "output_key": "message_content",
+              "function": {"__type__": "MetaValue", "key": "get_fn"},
+              "params": {"dictionary": "__initial_input__"},
+              "literal_params": {"key": "input_1"}
+            },
+            {
+              "output_key": "say_result",
+              "function": {"__type__": "MetaValue", "key": "say_fn"},
+              "params": {"message": "message_content"}
             },
             {
               "output_key": "final_result",
               "function": {"__type__": "MetaValue", "key": "wrap_fn"},
-              "params": {"__positional__": "chat_message"},
+              "params": {"__positional__": "say_result"},
               "literal_params": {"type": "literal"}
             }
           ],

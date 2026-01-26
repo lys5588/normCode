@@ -1,0 +1,19 @@
+{
+  "id": "03cfdd73",
+  "name": "3D_model_report_generation",
+  "description": "3D_model_report_generation",
+  "created_at": "2026-01-26T16:26:12.508208",
+  "updated_at": "2026-01-26T16:26:12.508208",
+  "repositories": {
+    "concepts": "repos\\concept_repo.json",
+    "inferences": "repos\\inference_repo.json",
+    "inputs": null
+  },
+  "execution": {
+    "max_cycles": 50,
+    "db_path": "orchestration.db",
+    "agent_config": "3dmodelreportgeneration.agent.json"
+  },
+  "breakpoints": [],
+  "ui_preferences": {}
+}

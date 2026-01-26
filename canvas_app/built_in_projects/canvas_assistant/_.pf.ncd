@@ -86,10 +86,11 @@
                 | %{ref_shape}: (1,)
                 | %{ref_element}: dict(success: bool, action: str)
                 <= ::(emit thinking status to user) | ?{flow_index}: 1.4.1.3.1 | ?{sequence}: imperative
-                    | %{norm_input}: h_Literal-c_CanvasIntegrationSay-o_LiteralStatus
+                    | %{norm_input}: h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus
                     | %{body_faculty}: canvas_integration
-                    | %{method}: me.hands.say
+                    | %{method}: me.hands.notify
                     | %{message}: "🔍 Understanding your request..."
+                    /: Temporary notification - does not persist in chat
                 <- {current message} | ?{flow_index}: 1.4.1.3.2
                     /: Dependency: wait for message before emitting status
             
@@ -121,10 +122,11 @@
                 | %{ref_shape}: (1,)
                 | %{ref_element}: dict(success: bool, action: str)
                 <= ::(notify chat with context summary using {1}) | ?{flow_index}: 1.4.1.5.1 | ?{sequence}: imperative
-                    | %{norm_input}: h_Literal-c_CanvasIntegrationSay-o_LiteralStatus
+                    | %{norm_input}: h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus
                     | %{body_faculty}: canvas_integration
-                    | %{method}: me.hands.say
+                    | %{method}: me.hands.notify
                     | %{message_template}: "📋 Context: {context_summary.user_intent}"
+                    /: Temporary notification - does not persist in chat
                     /: Helps user understand what the assistant remembers
                 <- {context summary}<:{1}> | ?{flow_index}: 1.4.1.5.2
             
@@ -157,10 +159,11 @@
                 | %{ref_shape}: (1,)
                 | %{ref_element}: dict(success: bool, action: str)
                 <= ::(emit executing status to user) | ?{flow_index}: 1.4.1.7.1 | ?{sequence}: imperative
-                    | %{norm_input}: h_Literal-c_CanvasIntegrationSay-o_LiteralStatus
+                    | %{norm_input}: h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus
                     | %{body_faculty}: canvas_integration
-                    | %{method}: me.hands.say
+                    | %{method}: me.hands.notify
                     | %{message}: "⚙️ Executing command..."
+                    /: Temporary notification - does not persist in chat
                 <- {parsed command} | ?{flow_index}: 1.4.1.7.2
                     /: Dependency: wait for classification before emitting
             
@@ -188,10 +191,11 @@
                 | %{ref_shape}: (1,)
                 | %{ref_element}: dict(success: bool, action: str)
                 <= ::(emit generating status to user) | ?{flow_index}: 1.4.1.9.1 | ?{sequence}: imperative
-                    | %{norm_input}: h_Literal-c_CanvasIntegrationSay-o_LiteralStatus
+                    | %{norm_input}: h_Literal-c_CanvasIntegrationNotify-o_LiteralStatus
                     | %{body_faculty}: canvas_integration
-                    | %{method}: me.hands.say
+                    | %{method}: me.hands.notify
                     | %{message}: "💭 Generating response..."
+                    /: Temporary notification - does not persist in chat
                 <- {command status} | ?{flow_index}: 1.4.1.9.2
                     /: Dependency: wait for execution before emitting
             
@@ -276,10 +280,14 @@
                 | %{is_invariant}: true
                 <= $+ %>([on-going messages]) %<({current message}) %:(message) | ?{flow_index}: 1.4.1.14.1 | ?{sequence}: assigning
                     /: Append current message IF session should NOT end
+                    /: Inputs: {1} = source collection, {2} = item to append
                     <= @:!(<session should end>) | ?{flow_index}: 1.4.1.14.1.1 | ?{sequence}: timing
                         /: Timing gate: execute only if <session should end> is FALSE
                     <* <session should end> | ?{flow_index}: 1.4.1.14.1.2
-                <- {current message} | ?{flow_index}: 1.4.1.14.2
+                <- [on-going messages]<:{1}> | ?{flow_index}: 1.4.1.14.2
+                    /: Source collection to append to
+                <- {current message}<:{2}> | ?{flow_index}: 1.4.1.14.3
+                    /: Item to append
         
         /: ══════════════════════════════════════════════════════════════════════
         /: LOOP INPUT AND CONTEXT (siblings of loop operator)

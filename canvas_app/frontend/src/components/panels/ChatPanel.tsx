@@ -336,6 +336,7 @@ export function ChatPanel() {
     controllerStatus,
     controllerPath,
     isControllerProjectOpen,
+    currentNotification,
     closePanel,
     clearMessages,
     setInputValue,
@@ -343,6 +344,7 @@ export function ChatPanel() {
     openControllerProject,
     syncControllerProjectState,
     refreshBufferStatus,
+    clearNotification,
   } = useChatStore();
   
   // Watch for tab changes
@@ -476,6 +478,33 @@ export function ChatPanel() {
           </>
         )}
       </div>
+      
+      {/* Temporary notification/status indicator */}
+      {currentNotification && (
+        <div 
+          className={`px-4 py-2 border-t flex items-center justify-between ${
+            currentNotification.type === 'thinking' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+            currentNotification.type === 'executing' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+            currentNotification.type === 'generating' ? 'bg-purple-50 border-purple-200 text-purple-700' :
+            currentNotification.type === 'success' ? 'bg-green-50 border-green-200 text-green-700' :
+            currentNotification.type === 'warning' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' :
+            currentNotification.type === 'error' ? 'bg-red-50 border-red-200 text-red-700' :
+            'bg-slate-50 border-slate-200 text-slate-700'
+          }`}
+        >
+          <div className="flex items-center gap-2 text-sm">
+            <Loader2 size={14} className="animate-spin" />
+            <span>{currentNotification.content}</span>
+          </div>
+          <button
+            onClick={clearNotification}
+            className="p-1 hover:bg-white/50 rounded transition-colors"
+            title="Dismiss"
+          >
+            <X size={12} />
+          </button>
+        </div>
+      )}
       
       {/* Buffered message indicator */}
       {bufferedMessage && (
