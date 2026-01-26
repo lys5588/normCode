@@ -820,17 +820,23 @@ canvas.me.say("I'm analyzing node 1.3")
 ```python
 canvas = body.canvas
 
+# Show status (TEMPORARY - auto-dismisses, not in chat history)
+canvas.me.hands.notify("🔍 Analyzing project...", "thinking")
+
 # Gather data privately (user sees nothing)
 config = canvas.you.files.read("project.json")
 value = canvas.you.blackboard.get("ResultConcept")
 trace = canvas.you.history.get_trace("1.3")
+
+# Update status
+canvas.me.hands.status("executing")  # Shows "⚙️ Executing command..."
 
 # Analyze
 issues = []
 if value is None:
     issues.append("ResultConcept has no value")
 
-# Show findings (now user sees)
+# Show findings (PERMANENT - stays in chat history)
 canvas.me.say(f"Investigation complete. Found {len(issues)} issues.")
 ```
 
@@ -907,8 +913,14 @@ canvas.execute_command("run")        → canvas.me.mind.run()
 canvas.highlight("1.3")              → canvas.me.hands.highlight_node("1.3")
 
 # OLD: CanvasChatTool
-chat.write_message(msg)              → canvas.me.say(msg)
+chat.write_message(msg)              → canvas.me.say(msg)           # Permanent message
 chat.read_input(prompt)              → canvas.you.input.request(prompt)
+
+# NEW: Temporary notifications (2026-01-26)
+# Use notify() for ephemeral status updates that don't clutter chat history
+canvas.me.hands.notify("🔍 Thinking...")      # Temporary, auto-dismisses
+canvas.me.hands.status("executing")           # Convenience method with defaults
+canvas.me.hands.say("Here is the result!")    # Permanent, stays in history
 
 # OLD: CanvasParserTool (unchanged, just new access path)
 parser.parse_ncdn(content)           → canvas.you.parser.parse(content)
@@ -978,6 +990,16 @@ canvas_app/backend/
 | **Contains** | 11 tools (UserInput, Parser, FileSystem, Python, LLM, Prompt, Paradigm, ModelRunner, Composition, Perception, Formatter) + Database |
 | **Configuration** | Via `canvas.configure(...)` |
 | **Backward Compat** | Direct tool access via `canvas.*_tool` properties |
+
+### Chat Message Types (2026-01-26)
+
+| Method | Persists? | Use For | WebSocket Event |
+|--------|-----------|---------|-----------------|
+| `canvas.me.hands.say(msg)` | ✅ Yes | Actual responses | `chat:message` |
+| `canvas.me.hands.notify(msg, type)` | ❌ No | Status updates | `chat:notification` |
+| `canvas.me.hands.status(type)` | ❌ No | Common statuses | `chat:status` |
+
+Status types: `"thinking"`, `"executing"`, `"generating"`, `"success"`, `"error"`, `"info"`, `"warning"`
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "description": "Block and wait for user to send a chat message via Canvas Integration Tool (me.vision.get_chat). No inputs required - this is a blocking read operation.",
+    "description": "BLOCKING: Wait for user to send a chat message via Canvas Integration Tool (me.vision.wait_for_message). No inputs required - blocks until user sends a message.",
     "inputs": {
       "vertical": {},
       "horizontal": {}
@@ -16,8 +16,8 @@
         "tool_name": "canvas_integration",
         "affordances": [
           {
-            "affordance_name": "get_chat",
-            "call_code": "result = tool.me.vision.get_chat"
+            "affordance_name": "wait_for_message",
+            "call_code": "result = tool.me.vision.wait_for_message"
           }
         ]
       },
@@ -45,9 +45,9 @@
     "steps": [
       {
         "step_index": 1,
-        "affordance": "canvas_integration.get_chat",
+        "affordance": "canvas_integration.wait_for_message",
         "params": {},
-        "result_key": "get_chat_fn"
+        "result_key": "wait_fn"
       },
       {
         "step_index": 2,
@@ -62,7 +62,7 @@
           "plan": [
             {
               "output_key": "chat_message",
-              "function": {"__type__": "MetaValue", "key": "get_chat_fn"},
+              "function": {"__type__": "MetaValue", "key": "wait_fn"},
               "params": {}
             },
             {

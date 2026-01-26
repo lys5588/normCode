@@ -324,9 +324,10 @@ async def send_message(request: SendMessageRequest):
     Send a message to the controller.
     
     This is the main endpoint for user chat input. The message is:
-    1. Added to history
-    2. If there's a pending input request, it fulfills that request
-    3. Otherwise, it's buffered for the controller to read
+    1. Tries canvas integration buffer first (new unified interface)
+    2. Falls back to legacy chat controller service
+    3. If there's a pending input request, it fulfills that request
+    4. Otherwise, it's buffered for the controller to read
     
     Args:
         request: The message to send
@@ -334,6 +335,23 @@ async def send_message(request: SendMessageRequest):
     Returns:
         Success status and message ID
     """
+    # First try canvas integration buffer (new unified interface)
+    try:
+        from canvas_integration import buffer_vision_message
+        result = buffer_vision_message(request.content)
+        if result.get("success") and result.get("delivered"):
+            logger.debug("Message delivered via canvas_integration buffer")
+            # Still record in chat history via the service
+            service = get_chat_controller_service()
+            service.add_message("user", request.content, request.metadata)
+            return SendMessageResponse(
+                success=True,
+                message_id="canvas_integration",
+            )
+    except Exception as e:
+        logger.debug(f"Canvas integration buffer failed (trying legacy): {e}")
+    
+    # Fall back to legacy chat controller service
     service = get_chat_controller_service()
     
     try:
@@ -378,7 +396,9 @@ async def submit_input_response(request_id: str, response: ChatInputResponse):
     Submit a response to a pending input request.
     
     When the controller requests input from the user, this endpoint
-    is used to submit the response.
+    is used to submit the response. Routes to either:
+    - Legacy chat controller service
+    - Canvas Integration Tool (new unified interface)
     
     Args:
         request_id: The input request ID
@@ -387,8 +407,17 @@ async def submit_input_response(request_id: str, response: ChatInputResponse):
     Returns:
         Success status
     """
-    service = get_chat_controller_service()
+    # First try canvas integration (new unified interface)
+    try:
+        from canvas_integration import submit_vision_input
+        if submit_vision_input(request_id, response.value):
+            logger.debug(f"Input submitted via canvas_integration: {request_id}")
+            return {"success": True}
+    except Exception as e:
+        logger.debug(f"Canvas integration submit failed (trying legacy): {e}")
     
+    # Fall back to legacy chat controller service
+    service = get_chat_controller_service()
     success = service.submit_input_response(request_id, response.value)
     
     if not success:

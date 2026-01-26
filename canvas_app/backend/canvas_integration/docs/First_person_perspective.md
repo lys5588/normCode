@@ -416,7 +416,50 @@ class IHands(Protocol):
         ...
     
     def say(self, message: str) -> 'ActionResult':
-        """Type and send a message in one action."""
+        """
+        Send a PERMANENT message to chat (added to history).
+        
+        Use this for actual conversation responses that should persist.
+        The message appears in the chat panel and is stored in message history.
+        
+        Emits: chat:message with full message object (id, role, content, timestamp)
+        """
+        ...
+    
+    def notify(self, message: str, status_type: str = "info") -> 'ActionResult':
+        """
+        Send a TEMPORARY notification/status to chat (NOT added to history).
+        
+        Use this for ephemeral status updates like:
+        - "🔍 Understanding your request..."
+        - "⚙️ Executing command..."
+        - "💭 Generating response..."
+        
+        These appear briefly in the chat UI and auto-dismiss after ~5 seconds.
+        They do NOT clutter the chat history.
+        
+        Args:
+            message: The notification content
+            status_type: "thinking", "executing", "generating", "info", 
+                        "warning", "error", "success"
+        
+        Emits: chat:notification (handled by frontend notification bar)
+        """
+        ...
+    
+    def status(self, status_type: str, message: str = None) -> 'ActionResult':
+        """
+        Emit a typed status indicator (convenience method).
+        
+        Provides default messages for common status types:
+        - "thinking"   → "🔍 Understanding your request..."
+        - "executing"  → "⚙️ Executing command..."
+        - "generating" → "💭 Generating response..."
+        - "success"    → "✅ Done!"
+        - "error"      → "❌ Something went wrong"
+        
+        Emits: chat:status (handled by frontend status indicator)
+        """
         ...
     
     def respond_to_prompt(self, response: str) -> 'ActionResult':

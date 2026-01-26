@@ -54,7 +54,9 @@
                 <= summarize on-going messages for context
                 /: LLM call: distill key points from conversation history
                 /: Provides continuity awareness to downstream steps
-                <- [on-going messages]
+                <- {all on-going messages}
+                    <= collect all on-going messages /: &[#]
+                    <- [on-going messages]
             
             <- {context notified}
                 <= notify chat with context summary
@@ -151,6 +153,7 @@
                     /: Timing gate: @:! (<session should end>)
                     <* <session should end>
                 <- {current message}
+                <- [on-going messages]
 
         /: ══════════════════════════════════════════════════════════════════
         /: LOOP BASE: Message history (self-seeding, starts empty)

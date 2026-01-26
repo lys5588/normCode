@@ -5,6 +5,9 @@ Vision faculty for First Person perspective.
 """
 
 import logging
+import threading
+import time
+import uuid
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 from ..types import (
@@ -35,6 +38,75 @@ if TYPE_CHECKING:
     from ..facades.system import ServiceContainer
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Module-level registry for pending input requests (shared across Vision instances)
+# =============================================================================
+_pending_requests: Dict[str, Dict[str, Any]] = {}
+_pending_events: Dict[str, threading.Event] = {}
+_pending_lock = threading.Lock()
+_message_buffer: Optional[str] = None
+_buffer_lock = threading.Lock()
+
+
+def submit_vision_input(request_id: str, value: str) -> bool:
+    """
+    Submit a response to a pending Vision input request.
+    
+    Called by the API when user submits a message via chat.
+    
+    Args:
+        request_id: The request ID
+        value: The user's response
+        
+    Returns:
+        True if request was found and completed
+    """
+    with _pending_lock:
+        if request_id not in _pending_requests:
+            logger.warning(f"No pending vision request found: {request_id}")
+            return False
+        
+        _pending_requests[request_id]["response"] = value
+        _pending_requests[request_id]["completed"] = True
+        _pending_events[request_id].set()
+    
+    logger.debug(f"Vision input submitted for {request_id}")
+    return True
+
+
+def buffer_vision_message(message: str) -> Dict[str, Any]:
+    """
+    Buffer a message for a waiting Vision.wait_for_message() call.
+    
+    Args:
+        message: The user's message
+        
+    Returns:
+        Dict with success status
+    """
+    global _message_buffer
+    
+    with _buffer_lock:
+        if _message_buffer is not None:
+            return {"success": False, "buffer_full": True}
+        _message_buffer = message
+    
+    # Check if there's a pending request waiting
+    with _pending_lock:
+        for req_id, request in _pending_requests.items():
+            if not request.get("completed"):
+                # Deliver immediately
+                request["response"] = message
+                request["completed"] = True
+                _pending_events[req_id].set()
+                with _buffer_lock:
+                    _message_buffer = None
+                logger.debug(f"Delivered buffered message to pending vision request {req_id}")
+                return {"success": True, "delivered": True}
+    
+    return {"success": True, "delivered": False}
 
 
 class Vision:
@@ -194,17 +266,100 @@ class Vision:
     
     def get_chat(self) -> ChatSnapshot:
         """
-        Look at the chat panel.
+        Look at the current chat panel state (non-blocking snapshot).
+        
+        For blocking wait, use wait_for_message() instead.
         """
-        # Chat state would typically come from chat service
-        # For now, return empty snapshot
+        # Check if there's a pending input request from this module
+        pending_input = None
+        with _pending_lock:
+            for req_id, request in _pending_requests.items():
+                if not request.get("completed"):
+                    pending_input = PendingInput(
+                        prompt=request.get("prompt", ""),
+                        input_type="text",
+                    )
+                    break
+        
+        # Check if there's a buffered message
+        buffered = None
+        with _buffer_lock:
+            buffered = _message_buffer
+        
         return ChatSnapshot(
             is_visible=True,
-            messages=[],
-            pending_input=None,
-            input_field_value="",
-            is_input_focused=False,
+            messages=[],  # Message history managed by frontend
+            pending_input=pending_input,
+            input_field_value=buffered or "",
+            is_input_focused=pending_input is not None,
         )
+    
+    def wait_for_message(self, prompt: Optional[str] = None) -> Dict[str, Any]:
+        """
+        BLOCKING: Wait for user to send a chat message.
+        
+        This is a blocking operation that waits until the user sends a message.
+        Uses the Canvas Integration Tool's built-in blocking mechanism.
+        
+        Args:
+            prompt: Optional prompt to display to the user
+            
+        Returns:
+            Dict with {role: str, content: str, timestamp: float}
+        """
+        global _message_buffer
+        
+        # First check if there's a buffered message we can consume immediately
+        with _buffer_lock:
+            if _message_buffer is not None:
+                content = _message_buffer
+                _message_buffer = None
+                logger.debug(f"Consumed buffered message: {content[:50]}...")
+                return {
+                    "role": "user",
+                    "content": content,
+                    "timestamp": time.time(),
+                }
+        
+        # Create a pending request with threading event
+        request_id = str(uuid.uuid4())[:8]
+        event = threading.Event()
+        
+        with _pending_lock:
+            _pending_requests[request_id] = {
+                "id": request_id,
+                "prompt": prompt or "",
+                "completed": False,
+                "response": None,
+            }
+            _pending_events[request_id] = event
+        
+        # Emit WebSocket event to notify frontend we're waiting for input
+        self._emit("chat:input_request", {
+            "id": request_id,
+            "prompt": prompt or "Enter your message:",
+            "input_type": "text",
+            "source": "canvas_integration",  # Identifies this as coming from canvas integration
+        })
+        
+        logger.info(f"Vision.wait_for_message blocking on request {request_id}")
+        
+        # Block until response is received
+        event.wait()
+        
+        # Get response and clean up
+        with _pending_lock:
+            response = _pending_requests[request_id].get("response", "")
+            del _pending_requests[request_id]
+            del _pending_events[request_id]
+        
+        logger.info(f"Vision.wait_for_message received response for {request_id}")
+        
+        return {
+            "role": "user",
+            "content": response or "",
+            "timestamp": time.time(),
+        }
     
     # =========================================================================
     # Panels View

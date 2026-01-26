@@ -75,6 +75,38 @@ The frontend handles all event types:
 | `chat:respond` | `hands.respond_to_prompt()` | `useWebSocket.ts` → `chatStore` | ✅ Complete |
 | `chat:select_option` | `hands.select_prompt_option()` | `useWebSocket.ts` → `chatStore` | ✅ Complete |
 
+### Chat Message Types (IMPLEMENTED - 2026-01-26)
+
+The Hands faculty now distinguishes between **permanent messages** and **temporary notifications**:
+
+| Event | Backend Method | Frontend Handler | Persists? | Status |
+|-------|----------------|------------------|-----------|--------|
+| `chat:message` | `hands.say()` | `useWebSocket.ts` → `chatStore.addMessageFromApi` | ✅ Yes | ✅ Complete |
+| `chat:notification` | `hands.notify()` | `useWebSocket.ts` → `chatStore.showNotification` | ❌ No | ✅ Complete |
+| `chat:status` | `hands.status()` | `useWebSocket.ts` → `chatStore.showNotification` | ❌ No | ✅ Complete |
+
+**Message Types Explained:**
+
+1. **`say(message)`** - Permanent messages
+   - Added to chat history
+   - Emits full message object: `{id, role, content, timestamp, metadata}`
+   - Use for: Actual conversation responses
+
+2. **`notify(message, type)`** - Temporary notifications  
+   - NOT added to chat history
+   - Auto-dismisses after 5 seconds
+   - Emits: `{content, type, metadata}`
+   - Use for: Status updates like "🔍 Thinking...", "⚙️ Executing..."
+
+3. **`status(type, message?)`** - Convenience method
+   - Shortcut for common status types with default messages
+   - Types: "thinking", "executing", "generating", "success", "error"
+
+**Frontend UI:**
+- Notifications display in a color-coded bar above the input area
+- Colors: thinking=blue, executing=amber, generating=purple, success=green, error=red
+- User can dismiss manually or they auto-clear
+
 ---
 
 ## Implementation Details
@@ -102,13 +134,17 @@ This provides:
 
 ### Backend Files Modified
 1. ✅ `canvas_integration/faculties/hands.py` - Uses `_emit_canvas_command()` for canvas operations
-2. ✅ `services/agent/config.py` - Added `CanvasIntegrationToolConfig` dataclass
+2. ✅ `canvas_integration/faculties/hands.py` - Added `say()`, `notify()`, `status()` methods (2026-01-26)
+3. ✅ `services/agent/config.py` - Added `CanvasIntegrationToolConfig` dataclass
 
 ### Frontend Files Modified
 1. ✅ `src/hooks/useWebSocket.ts` - Added panel and chat action handlers
-2. ✅ `src/components/graph/GraphCanvas.tsx` - Added all new command handlers
-3. ✅ `src/stores/panelStore.ts` - NEW: Panel visibility state management
-4. ✅ `src/stores/agentStore.ts` - Updated `CanvasIntegrationConfig` with perspectives
+2. ✅ `src/hooks/useWebSocket.ts` - Added `chat:notification` and `chat:status` handlers (2026-01-26)
+3. ✅ `src/components/graph/GraphCanvas.tsx` - Added all new command handlers
+4. ✅ `src/stores/panelStore.ts` - NEW: Panel visibility state management
+5. ✅ `src/stores/agentStore.ts` - Updated `CanvasIntegrationConfig` with perspectives
+6. ✅ `src/stores/chatStore.ts` - Added `ChatNotification` type and `showNotification`/`clearNotification` actions (2026-01-26)
+7. ✅ `src/components/panels/ChatPanel.tsx` - Added notification display bar (2026-01-26)
 
 ### New Files Created
 1. ✅ `src/stores/panelStore.ts` - Panel visibility state for WebSocket access
@@ -116,6 +152,7 @@ This provides:
 ### Additional UI Enhancements (IMPLEMENTED)
 1. ✅ `src/components/panels/ToolConfigCards.tsx` - Updated `CanvasIntegrationSection` with perspectives UI
 2. ✅ `src/App.tsx` - Migrated panel state to use `panelStore` for WebSocket control
+3. ✅ `ChatPanel.tsx` - Notification bar with color-coded status types (2026-01-26)
 
 ---
 
@@ -127,6 +164,9 @@ To test the integration:
 2. **Panel Events**: Call `me.hands.open_panel("agent")` 
 3. **Chat Actions**: Call `me.hands.type_in_chat("Hello")` then `me.hands.send_chat_message()`
 4. **View Navigation**: Call `me.hands.fit_view()` or `me.hands.zoom_in()`
+5. **Permanent Messages**: Call `me.hands.say("Here is the result...")` - should appear in chat history
+6. **Temporary Notifications**: Call `me.hands.notify("🔍 Thinking...", "thinking")` - should show/auto-dismiss
+7. **Status Convenience**: Call `me.hands.status("executing")` - should show amber "⚙️ Executing..." bar
 
 All commands should be processed by the frontend via WebSocket events.
 

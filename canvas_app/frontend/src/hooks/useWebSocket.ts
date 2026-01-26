@@ -21,7 +21,7 @@ import { wsClient } from '../services/websocket';
 import { useExecutionStore, type UserInputRequest } from '../stores/executionStore';
 import { useAgentStore } from '../stores/agentStore';
 import { useProjectStore } from '../stores/projectStore';
-import { useChatStore, type ChatInputRequest, type MessageRole } from '../stores/chatStore';
+import { useChatStore, type ChatInputRequest, type MessageRole, type ChatStatusType } from '../stores/chatStore';
 import { useCanvasCommandStore } from '../stores/canvasCommandStore';
 import { usePanelStore, type PanelName } from '../stores/panelStore';
 import type { WebSocketEvent, StepProgress, RunMode, ExecutionStatus } from '../types/execution';
@@ -72,6 +72,10 @@ interface EventHandlerContext {
   setChatInputValue: (value: string) => void;
   submitChatInput: () => void;
   respondToInputRequest: (response: string) => void;
+  
+  // Notification handlers (temporary status)
+  showNotification: (content: string, type?: ChatStatusType) => void;
+  clearNotification: () => void;
   
   // Canvas store actions
   addCanvasCommand: (type: string, params: Record<string, unknown>) => void;
@@ -603,6 +607,30 @@ const chatHandlers: Record<string, EventHandler> = {
     console.log(`[WS] Chat scroll requested: ${direction} by ${amount}`);
     // Future: could emit custom event for ChatPanel to handle
   },
+  
+  // =========================================================================
+  // Temporary Notification Handlers (from Hands.notify/status)
+  // =========================================================================
+  
+  'chat:notification': (data, ctx) => {
+    // Temporary notification that doesn't persist in chat history
+    const content = data.content as string;
+    const type = (data.type as ChatStatusType) || 'info';
+    if (content) {
+      ctx.showNotification(content, type);
+      console.log(`[WS] Notification (${type}):`, content.substring(0, 50));
+    }
+  },
+  
+  'chat:status': (data, ctx) => {
+    // Status indicator (thinking, executing, generating, etc.)
+    const type = data.type as ChatStatusType;
+    const message = data.message as string;
+    if (type || message) {
+      ctx.showNotification(message || `Status: ${type}`, type || 'info');
+      console.log(`[WS] Status: ${type}`, message || '');
+    }
+  },
 };
 
 // =============================================================================
@@ -946,6 +974,10 @@ export function useWebSocket() {
     }
   }, []);
   
+  // Notification handlers (temporary status)
+  const showNotification = useChatStore((s) => s.showNotification);
+  const clearNotification = useChatStore((s) => s.clearNotification);
+  
   // Canvas command store actions
   const addCanvasCommand = useCanvasCommandStore((s) => s.addCommand);
   
@@ -991,6 +1023,8 @@ export function useWebSocket() {
     setChatInputValue,
     submitChatInput,
     respondToInputRequest,
+    showNotification,
+    clearNotification,
   };
 
   const handleEvent = useCallback(
@@ -1053,7 +1087,8 @@ export function useWebSocket() {
       addAgent, updateAgent, deleteAgent, addMessageFromApi, setInputRequest,
       updateBufferStatus, clearBuffer, addCanvasCommand, reset,
       openPanel, closePanel, togglePanel, focusPanel,
-      setChatInputValue, submitChatInput, respondToInputRequest
+      setChatInputValue, submitChatInput, respondToInputRequest,
+      showNotification, clearNotification
     ]
   );
 
